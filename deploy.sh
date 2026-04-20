@@ -163,9 +163,9 @@ echo "  Laravel configured successfully"
 # ---- Step 8: Set permissions ----
 echo ""
 echo "[8/12] Setting permissions..."
-chown -R www:www "${SITE_DIR}"
-chmod -R 755 "${SITE_DIR}"
-chmod -R 775 "${SITE_DIR}/storage" "${SITE_DIR}/bootstrap/cache"
+chown -R www:www "${SITE_DIR}" 2>/dev/null || true
+chmod -R 755 "${SITE_DIR}" 2>/dev/null || true
+chmod -R 775 "${SITE_DIR}/storage" "${SITE_DIR}/bootstrap/cache" 2>/dev/null || true
 echo "  Permissions set"
 
 # ---- Step 9: Build Golang proxy ----
