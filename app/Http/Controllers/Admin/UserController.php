@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ApiKey;
 use App\Models\ModelPricing;
 use App\Models\User;
+use App\Models\UserInvitation;
 use App\Models\WalletTransaction;
 use App\Services\TokenTrackingService;
 use Illuminate\Http\Request;
@@ -30,7 +31,12 @@ class UserController extends Controller
 
         $users = $query->latest()->paginate(20)->withQueryString();
 
-        return view('admin.users.index', compact('users'));
+        $pendingInvitations = UserInvitation::pending()
+            ->with('invitedBy')
+            ->latest()
+            ->get();
+
+        return view('admin.users.index', compact('users', 'pendingInvitations'));
     }
 
     public function show(User $user)
