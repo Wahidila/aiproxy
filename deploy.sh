@@ -17,6 +17,7 @@ SITE_DIR="/www/wwwroot/${DOMAIN}"
 DB_NAME="ai_token_dashboard"
 DB_USER="aitoken"
 DB_PASS="GANTI_PASSWORD_DATABASE_ANDA"
+DB_ROOT_PASS="GANTI_PASSWORD_ROOT_MYSQL_AAPANEL"
 ADMIN_EMAIL="wahidilasp@gmail.com"
 ADMIN_PASS="GANTI_PASSWORD_ADMIN"
 ENOWXAI_API_KEY="enx-61b80f54548c7d42d22256755ac3b0bc67d4911cd21d6e689114b058437f254b"
@@ -94,9 +95,9 @@ fi
 # ---- Step 6: Create database ----
 echo ""
 echo "[6/12] Setting up database..."
-mysql -u root -e "CREATE DATABASE IF NOT EXISTS ${DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" 2>/dev/null
-mysql -u root -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';" 2>/dev/null
-mysql -u root -e "GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'localhost'; FLUSH PRIVILEGES;" 2>/dev/null
+mysql -u root -p"${DB_ROOT_PASS}" -e "CREATE DATABASE IF NOT EXISTS ${DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" 2>/dev/null
+mysql -u root -p"${DB_ROOT_PASS}" -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';" 2>/dev/null
+mysql -u root -p"${DB_ROOT_PASS}" -e "GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'localhost'; FLUSH PRIVILEGES;" 2>/dev/null
 echo "  Database: ${DB_NAME} (user: ${DB_USER})"
 
 # ---- Step 7: Configure Laravel .env ----
