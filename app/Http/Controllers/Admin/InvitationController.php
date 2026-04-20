@@ -44,8 +44,16 @@ class InvitationController extends Controller
             'invited_by' => $request->user()->id,
         ]);
 
-        // Send email
-        Mail::to($email)->send(new InvitationMail($invitation));
+        // Load relationship for email template
+        $invitation->load('invitedBy');
+
+        // Send email (with try-catch to avoid 500 if mail fails)
+        try {
+            Mail::to($email)->send(new InvitationMail($invitation));
+        } catch (\Exception $e) {
+            return redirect()->route('admin.users.index')
+                ->with('warning', "Undangan dibuat tapi email gagal dikirim: {$e->getMessage()}");
+        }
 
         return redirect()->route('admin.users.index')
             ->with('success', "Undangan berhasil dikirim ke {$email}.");
@@ -64,8 +72,16 @@ class InvitationController extends Controller
         // Refresh token and extend expiry
         $invitation->refreshToken();
 
-        // Resend email
-        Mail::to($invitation->email)->send(new InvitationMail($invitation->fresh()));
+        // Load relationship for email template
+        $invitation->load('invitedBy');
+
+        // Resend email (with try-catch to avoid 500 if mail fails)
+        try {
+            Mail::to($invitation->email)->send(new InvitationMail($invitation));
+        } catch (\Exception $e) {
+            return redirect()->route('admin.users.index')
+                ->with('warning', "Token diperbarui tapi email gagal dikirim: {$e->getMessage()}");
+        }
 
         return redirect()->route('admin.users.index')
             ->with('success', "Undangan berhasil dikirim ulang ke {$invitation->email}.");

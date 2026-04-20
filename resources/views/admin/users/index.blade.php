@@ -44,6 +44,11 @@
                     <p class="text-sm font-medium text-red-800">{{ session('error') }}</p>
                 </div>
             @endif
+            @if(session('warning'))
+                <div class="rounded-card border border-yellow-200 bg-yellow-50 p-4">
+                    <p class="text-sm font-medium text-yellow-800">{{ session('warning') }}</p>
+                </div>
+            @endif
 
             {{-- Search + Invite Form --}}
             <div class="bg-surface border border-oat rounded-card">
