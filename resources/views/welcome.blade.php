@@ -104,10 +104,17 @@
         /* Tool badge */
         .tool-badge { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; padding: 12px 16px; font-size: 14px; font-weight: 500; text-align: center; color: var(--color-text); }
         /* Model card */
-        .model-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; padding: 16px; }
-        .model-tier { font-size: 11px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; }
+        .model-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; }
+        .model-tier { font-size: 11px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; display: inline-block; }
         .model-tier-max { background: #fff0e6; color: var(--color-accent); }
         .model-tier-std { background: #f0f0ee; color: var(--color-muted); }
+        .model-prices { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--color-border); }
+        .model-price-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding: 2px 0; }
+        .model-price-label { color: var(--color-muted); }
+        .model-price-usd { color: var(--color-muted); font-size: 11px; }
+        .model-price-usd-strike { text-decoration: line-through; color: #b5b3ae; font-size: 11px; }
+        .model-price-idr { font-weight: 600; color: var(--color-text); font-size: 13px; }
+        .model-discount { display: inline-block; font-size: 10px; font-weight: 600; color: #16a34a; background: #dcfce7; padding: 1px 6px; border-radius: 4px; margin-left: 4px; }
         /* Footer */
         .footer { background: var(--color-dark); color: #9c9fa5; padding: 64px 0 32px; }
         .footer a { color: #9c9fa5; text-decoration: none; }
@@ -208,38 +215,82 @@
     <section class="section">
         <div class="container">
             <div style="text-align: center; margin-bottom: 48px;">
-                <p class="mono-label" style="margin-bottom: 12px;">MODEL TERSEDIA</p>
-                <h2 class="heading-section">26+ Model AI Premium</h2>
-                <p class="body-lg" style="margin-top: 16px;">Satu API, akses semua provider terbaik dunia</p>
+                <p class="mono-label" style="margin-bottom: 12px;">MODEL & HARGA</p>
+                <h2 class="heading-section">Harga per Model, Transparan</h2>
+                <p class="body-lg" style="margin-top: 16px;">Harga per 1M token (setelah diskon). Satu API, akses semua provider.</p>
             </div>
+            @php
+                $dbModels = \App\Models\ModelPricing::where('is_active', true)->orderByDesc('is_free_tier')->orderBy('model_name')->get();
+                $rate = (float) \App\Models\Setting::get('usd_to_idr_rate', 16500);
+                $modelCount = $dbModels->count();
+
+                function lpFormatIdr($v) {
+                    if ($v >= 1000000) return 'Rp ' . number_format($v / 1000000, 1, ',', '.') . 'jt';
+                    if ($v >= 1000) return 'Rp ' . number_format($v / 1000, 0, ',', '.') . 'K';
+                    return 'Rp ' . number_format($v, 0, ',', '.');
+                }
+            @endphp
             <div class="grid-4">
-                @php
-                $models = [
-                    ['name' => 'Claude Opus 4.6', 'tier' => 'MAX', 'provider' => 'Anthropic'],
-                    ['name' => 'Claude Sonnet 4.5', 'tier' => 'FREE', 'provider' => 'Anthropic'],
-                    ['name' => 'GPT-5.4', 'tier' => 'MAX', 'provider' => 'OpenAI'],
-                    ['name' => 'GPT-5.3 Codex', 'tier' => 'MAX', 'provider' => 'OpenAI'],
-                    ['name' => 'Gemini 2.5 Pro', 'tier' => 'MAX', 'provider' => 'Google'],
-                    ['name' => 'Gemini 3.1 Pro', 'tier' => 'MAX', 'provider' => 'Google'],
-                    ['name' => 'DeepSeek 3.2', 'tier' => 'FREE', 'provider' => 'DeepSeek'],
-                    ['name' => 'Kimi K2.5', 'tier' => 'MAX', 'provider' => 'Moonshot'],
-                    ['name' => 'MiniMax M2.5', 'tier' => 'FREE', 'provider' => 'MiniMax'],
-                    ['name' => 'GLM-5', 'tier' => 'FREE', 'provider' => 'Zhipu AI'],
-                    ['name' => 'Qwen3 Coder', 'tier' => 'MAX', 'provider' => 'Alibaba'],
-                    ['name' => 'GPT-5.2', 'tier' => 'MAX', 'provider' => 'OpenAI'],
-                ];
-                @endphp
-                @foreach($models as $model)
-                <div class="model-card">
-                    <span class="model-tier {{ $model['tier'] === 'MAX' ? 'model-tier-max' : ($model['tier'] === 'FREE' ? 'model-tier-std' : 'model-tier-std') }}">
-                        {{ $model['tier'] === 'FREE' ? 'FREE TIER' : 'PREMIUM' }}
-                    </span>
-                    <h4 style="font-size: 15px; font-weight: 600; margin: 10px 0 4px; color: var(--color-text);">{{ $model['name'] }}</h4>
-                    <p style="font-size: 13px; color: var(--color-muted); margin: 0;">{{ $model['provider'] }}</p>
-                </div>
+                @foreach($dbModels as $m)
+                    @php
+                        $disc = $m->discount_percent / 100;
+                        $inUsdFinal = $m->input_price_usd * (1 - $disc);
+                        $outUsdFinal = $m->output_price_usd * (1 - $disc);
+                        $inIdr = $inUsdFinal * $rate;
+                        $outIdr = $outUsdFinal * $rate;
+                        $hasDiscount = $m->discount_percent > 0;
+                    @endphp
+                    <div class="model-card">
+                        <div>
+                            <span class="model-tier {{ $m->is_free_tier ? 'model-tier-std' : 'model-tier-max' }}">
+                                {{ $m->is_free_tier ? 'FREE TIER' : 'PREMIUM' }}
+                            </span>
+                            @if($hasDiscount)
+                                <span class="model-discount">-{{ $m->discount_percent }}%</span>
+                            @endif
+                        </div>
+                        <h4 style="font-size: 15px; font-weight: 600; margin: 10px 0 2px; color: var(--color-text);">{{ $m->model_name }}</h4>
+                        <p style="font-size: 12px; color: var(--color-muted); margin: 0 0 12px; font-family: monospace;">{{ $m->model_id }}</p>
+
+                        <div class="model-prices">
+                            <div class="model-price-row">
+                                <span class="model-price-label">
+                                    <i data-lucide="arrow-down-to-line" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle;"></i>
+                                    Input
+                                </span>
+                                <span>
+                                    @if($hasDiscount)
+                                        <span class="model-price-usd-strike">${{ number_format($m->input_price_usd, 2) }}</span>
+                                        <span class="model-price-usd">${{ number_format($inUsdFinal, 2) }}</span>
+                                    @else
+                                        <span class="model-price-usd">${{ number_format($m->input_price_usd, 2) }}</span>
+                                    @endif
+                                    <span class="model-price-idr">{{ lpFormatIdr($inIdr) }}</span>
+                                </span>
+                            </div>
+                            <div class="model-price-row">
+                                <span class="model-price-label">
+                                    <i data-lucide="arrow-up-from-line" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle;"></i>
+                                    Output
+                                </span>
+                                <span>
+                                    @if($hasDiscount)
+                                        <span class="model-price-usd-strike">${{ number_format($m->output_price_usd, 2) }}</span>
+                                        <span class="model-price-usd">${{ number_format($outUsdFinal, 2) }}</span>
+                                    @else
+                                        <span class="model-price-usd">${{ number_format($m->output_price_usd, 2) }}</span>
+                                    @endif
+                                    <span class="model-price-idr">{{ lpFormatIdr($outIdr) }}</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
                 @endforeach
             </div>
-            <p style="text-align: center; margin-top: 32px; color: var(--color-muted); font-size: 15px;">Dan 14+ model lainnya tersedia di dashboard...</p>
+            <p style="text-align: center; margin-top: 24px; color: var(--color-muted); font-size: 13px;">
+                <i data-lucide="info" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i>
+                Harga per 1M token. Kurs: 1 USD = Rp {{ number_format($rate, 0, ',', '.') }}. Harga dapat berubah sewaktu-waktu.
+            </p>
         </div>
     </section>
 
