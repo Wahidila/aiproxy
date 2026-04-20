@@ -9,7 +9,7 @@
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=inter:300,400,500,600,700&display=swap" rel="stylesheet" />
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -18,13 +18,13 @@
         <!-- Lucide Icons -->
         <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     </head>
-    <body class="font-sans antialiased" onload="lucide.createIcons()">
-        <div class="min-h-screen bg-gray-100">
+    <body class="font-sans antialiased text-off-black" onload="lucide.createIcons()">
+        <div class="min-h-screen bg-canvas">
             @include('layouts.navigation')
 
             <!-- Page Heading -->
             @if (isset($header))
-                <header class="bg-white shadow">
+                <header class="bg-surface border-b border-oat">
                     <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                         {{ $header }}
                     </div>

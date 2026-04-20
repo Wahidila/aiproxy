@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 class="font-semibold text-xl text-off-black leading-tight tracking-heading">
             {{ __('Dashboard') }}
         </h2>
     </x-slot>
@@ -32,7 +32,7 @@
                         <div class="flex-1">
                             <p class="text-red-800 font-medium">Semua saldo habis! Anda tidak dapat menggunakan API.</p>
                         </div>
-                        <a href="{{ route('donations.index') }}" class="ml-4 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition">
+                        <a href="{{ route('donations.index') }}" class="ml-4 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-btn hover:bg-red-700 transition">
                             Top Up Sekarang
                         </a>
                     </div>
@@ -42,24 +42,24 @@
             {{-- Wallet Balance Cards --}}
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {{-- Free Balance --}}
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-200 p-5">
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Saldo Free Trial</p>
-                    <p class="mt-2 text-3xl font-bold {{ $quota->free_balance > 0 ? 'text-green-600' : 'text-gray-400' }}">
+                <div class="bg-surface border border-oat rounded-card p-5">
+                    <p class="text-xs font-medium text-muted uppercase tracking-wide">Saldo Free Trial</p>
+                    <p class="mt-2 text-3xl font-bold {{ $quota->free_balance > 0 ? 'text-green-600' : 'text-warm-sand' }}">
                         {{ $quota->formatted_free_balance }}
                     </p>
-                    <p class="mt-1 text-xs text-gray-400">Model terbatas (free tier only)</p>
+                    <p class="mt-1 text-xs text-warm-sand">Model terbatas (free tier only)</p>
                 </div>
                 {{-- Paid Balance --}}
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-200 p-5">
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Saldo Top Up</p>
-                    <p class="mt-2 text-3xl font-bold {{ $quota->paid_balance > 0 ? 'text-indigo-600' : 'text-gray-400' }}">
+                <div class="bg-surface border border-oat rounded-card p-5">
+                    <p class="text-xs font-medium text-muted uppercase tracking-wide">Saldo Top Up</p>
+                    <p class="mt-2 text-3xl font-bold {{ $quota->paid_balance > 0 ? 'text-fin-orange' : 'text-warm-sand' }}">
                         {{ $quota->formatted_paid_balance }}
                     </p>
-                    <p class="mt-1 text-xs text-gray-400">Semua model (termasuk premium)</p>
+                    <p class="mt-1 text-xs text-warm-sand">Semua model (termasuk premium)</p>
                 </div>
                 {{-- Top Up Button --}}
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-200 p-5 flex items-center justify-center">
-                    <a href="{{ route('donations.index') }}" class="inline-flex items-center px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition shadow-sm">
+                <div class="bg-surface border border-oat rounded-card p-5 flex items-center justify-center">
+                    <a href="{{ route('donations.index') }}" class="inline-flex items-center px-6 py-3 bg-off-black text-white font-semibold rounded-btn hover:bg-off-black/90 transition">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                         </svg>
@@ -71,43 +71,43 @@
             {{-- Stats Cards --}}
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {{-- Total Biaya --}}
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-200 p-5">
-                    <p class="text-sm font-medium text-gray-500">Total Biaya (30 hari)</p>
-                    <p class="mt-2 text-2xl font-bold text-gray-900">{{ formatRupiah($stats['total_cost_spent']) }}</p>
+                <div class="bg-surface border border-oat rounded-card p-5">
+                    <p class="text-sm font-medium text-muted">Total Biaya (30 hari)</p>
+                    <p class="mt-2 text-2xl font-bold text-off-black">{{ formatRupiah($stats['total_cost_spent']) }}</p>
                 </div>
 
                 {{-- Total Requests --}}
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-200 p-5">
-                    <p class="text-sm font-medium text-gray-500">Total Requests</p>
-                    <p class="mt-2 text-2xl font-bold text-gray-900">{{ number_format($stats['total_requests']) }}</p>
+                <div class="bg-surface border border-oat rounded-card p-5">
+                    <p class="text-sm font-medium text-muted">Total Requests</p>
+                    <p class="mt-2 text-2xl font-bold text-off-black">{{ number_format($stats['total_requests']) }}</p>
                 </div>
 
                 {{-- Avg Response Time --}}
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-200 p-5">
-                    <p class="text-sm font-medium text-gray-500">Avg Response Time</p>
-                    <p class="mt-2 text-2xl font-bold text-gray-900">{{ number_format($stats['avg_response_time']) }} ms</p>
+                <div class="bg-surface border border-oat rounded-card p-5">
+                    <p class="text-sm font-medium text-muted">Avg Response Time</p>
+                    <p class="mt-2 text-2xl font-bold text-off-black">{{ number_format($stats['avg_response_time']) }} ms</p>
                 </div>
 
                 {{-- Model Favorit --}}
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-200 p-5">
-                    <p class="text-sm font-medium text-gray-500">Model Favorit</p>
-                    <p class="mt-2 text-2xl font-bold text-gray-900 truncate">{{ $stats['favorite_model'] ?? '-' }}</p>
+                <div class="bg-surface border border-oat rounded-card p-5">
+                    <p class="text-sm font-medium text-muted">Model Favorit</p>
+                    <p class="mt-2 text-2xl font-bold text-off-black truncate">{{ $stats['favorite_model'] ?? '-' }}</p>
                 </div>
             </div>
 
             {{-- Daily Cost Chart --}}
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-200">
+            <div class="bg-surface border border-oat rounded-card">
                 <div class="p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Biaya Harian (7 Hari Terakhir)</h3>
+                    <h3 class="text-lg font-semibold text-off-black tracking-sub mb-4">Biaya Harian (7 Hari Terakhir)</h3>
                     @php
                         $maxCost = collect($stats['daily_usage'])->max('cost_idr') ?: 1;
                     @endphp
                     <div class="flex items-end space-x-2" style="height: 160px;">
                         @foreach($stats['daily_usage'] as $date => $day)
                             <div class="flex-1 flex flex-col items-center justify-end h-full">
-                                <div class="w-full bg-indigo-500 rounded-t" style="height: {{ max(2, ($day['cost_idr'] / $maxCost) * 100) }}%;"></div>
-                                <p class="text-xs text-gray-500 mt-2">{{ \Carbon\Carbon::parse($date)->format('d/m') }}</p>
-                                <p class="text-xs text-gray-700 font-medium">{{ formatRupiah($day['cost_idr']) }}</p>
+                                <div class="w-full bg-fin-orange rounded-t" style="height: {{ max(2, ($day['cost_idr'] / $maxCost) * 100) }}%;"></div>
+                                <p class="text-xs text-muted mt-2">{{ \Carbon\Carbon::parse($date)->format('d/m') }}</p>
+                                <p class="text-xs text-off-black font-medium">{{ formatRupiah($day['cost_idr']) }}</p>
                             </div>
                         @endforeach
                     </div>
@@ -115,30 +115,30 @@
             </div>
 
             {{-- Cost by Model --}}
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-200">
+            <div class="bg-surface border border-oat rounded-card">
                 <div class="p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Biaya per Model</h3>
+                    <h3 class="text-lg font-semibold text-off-black tracking-sub mb-4">Biaya per Model</h3>
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
+                        <table class="min-w-full divide-y divide-oat">
+                            <thead class="bg-canvas">
                                 <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Model</th>
-                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Requests</th>
-                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Tokens</th>
-                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Biaya (IDR)</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-muted uppercase">Model</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-muted uppercase">Requests</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-muted uppercase">Tokens</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-muted uppercase">Biaya (IDR)</th>
                                 </tr>
                             </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
+                            <tbody class="bg-surface divide-y divide-oat">
                                 @forelse($stats['model_usage'] as $model => $data)
                                     <tr>
-                                        <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ $model }}</td>
-                                        <td class="px-4 py-3 text-sm text-gray-600 text-right">{{ number_format($data['requests'] ?? 0) }}</td>
-                                        <td class="px-4 py-3 text-sm text-gray-600 text-right">{{ formatTokenCount($data['tokens'] ?? 0) }}</td>
-                                        <td class="px-4 py-3 text-sm font-medium text-gray-900 text-right">{{ formatRupiah($data['cost_idr'] ?? 0) }}</td>
+                                        <td class="px-4 py-3 text-sm font-medium text-off-black">{{ $model }}</td>
+                                        <td class="px-4 py-3 text-sm text-muted text-right">{{ number_format($data['requests'] ?? 0) }}</td>
+                                        <td class="px-4 py-3 text-sm text-muted text-right">{{ formatTokenCount($data['tokens'] ?? 0) }}</td>
+                                        <td class="px-4 py-3 text-sm font-medium text-off-black text-right">{{ formatRupiah($data['cost_idr'] ?? 0) }}</td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="px-4 py-3 text-sm text-gray-500 text-center">Belum ada data penggunaan.</td>
+                                        <td colspan="4" class="px-4 py-3 text-sm text-muted text-center">Belum ada data penggunaan.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -148,38 +148,38 @@
             </div>
 
             {{-- Recent Transactions --}}
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-200">
+            <div class="bg-surface border border-oat rounded-card">
                 <div class="p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Transaksi Terakhir</h3>
+                    <h3 class="text-lg font-semibold text-off-black tracking-sub mb-4">Transaksi Terakhir</h3>
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
+                        <table class="min-w-full divide-y divide-oat">
+                            <thead class="bg-canvas">
                                 <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Waktu</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipe</th>
-                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Jumlah</th>
-                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Saldo Setelah</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Deskripsi</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-muted uppercase">Waktu</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-muted uppercase">Tipe</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-muted uppercase">Jumlah</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-muted uppercase">Saldo Setelah</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-muted uppercase">Deskripsi</th>
                                 </tr>
                             </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
+                            <tbody class="bg-surface divide-y divide-oat">
                                 @forelse($recentTransactions as $transaction)
                                     <tr>
-                                        <td class="px-4 py-3 text-sm text-gray-600">{{ $transaction->created_at->format('d/m/Y H:i') }}</td>
+                                        <td class="px-4 py-3 text-sm text-muted">{{ $transaction->created_at->format('d/m/Y H:i') }}</td>
                                         <td class="px-4 py-3 text-sm">
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-canvas text-off-black">
                                                 {{ $transaction->type_label }}
                                             </span>
                                         </td>
                                         <td class="px-4 py-3 text-sm font-medium text-right {{ $transaction->amount >= 0 ? 'text-green-600' : 'text-red-600' }}">
                                             {{ $transaction->formatted_amount }}
                                         </td>
-                                        <td class="px-4 py-3 text-sm text-gray-600 text-right">{{ formatRupiah($transaction->balance_after ?? 0) }}</td>
-                                        <td class="px-4 py-3 text-sm text-gray-600">{{ $transaction->description }}</td>
+                                        <td class="px-4 py-3 text-sm text-muted text-right">{{ formatRupiah($transaction->balance_after ?? 0) }}</td>
+                                        <td class="px-4 py-3 text-sm text-muted">{{ $transaction->description }}</td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="px-4 py-3 text-sm text-gray-500 text-center">Belum ada transaksi.</td>
+                                        <td colspan="5" class="px-4 py-3 text-sm text-muted text-center">Belum ada transaksi.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -189,30 +189,30 @@
             </div>
 
             {{-- Recent API Activity --}}
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-200">
+            <div class="bg-surface border border-oat rounded-card">
                 <div class="p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Aktivitas API Terakhir</h3>
+                    <h3 class="text-lg font-semibold text-off-black tracking-sub mb-4">Aktivitas API Terakhir</h3>
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
+                        <table class="min-w-full divide-y divide-oat">
+                            <thead class="bg-canvas">
                                 <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Waktu</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Model</th>
-                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Input</th>
-                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Output</th>
-                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
-                                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
-                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Response Time</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-muted uppercase">Waktu</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-muted uppercase">Model</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-muted uppercase">Input</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-muted uppercase">Output</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-muted uppercase">Total</th>
+                                    <th class="px-4 py-3 text-center text-xs font-medium text-muted uppercase">Status</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-muted uppercase">Response Time</th>
                                 </tr>
                             </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
+                            <tbody class="bg-surface divide-y divide-oat">
                                 @forelse($recentUsages as $usage)
                                     <tr>
-                                        <td class="px-4 py-3 text-sm text-gray-600">{{ $usage->created_at->format('d/m/Y H:i') }}</td>
-                                        <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ $usage->model }}</td>
-                                        <td class="px-4 py-3 text-sm text-gray-600 text-right">{{ formatTokenCount($usage->input_tokens) }}</td>
-                                        <td class="px-4 py-3 text-sm text-gray-600 text-right">{{ formatTokenCount($usage->output_tokens) }}</td>
-                                        <td class="px-4 py-3 text-sm text-gray-600 text-right">{{ formatTokenCount($usage->total_tokens) }}</td>
+                                        <td class="px-4 py-3 text-sm text-muted">{{ $usage->created_at->format('d/m/Y H:i') }}</td>
+                                        <td class="px-4 py-3 text-sm font-medium text-off-black">{{ $usage->model }}</td>
+                                        <td class="px-4 py-3 text-sm text-muted text-right">{{ formatTokenCount($usage->input_tokens) }}</td>
+                                        <td class="px-4 py-3 text-sm text-muted text-right">{{ formatTokenCount($usage->output_tokens) }}</td>
+                                        <td class="px-4 py-3 text-sm text-muted text-right">{{ formatTokenCount($usage->total_tokens) }}</td>
                                         <td class="px-4 py-3 text-sm text-center">
                                             @if($usage->status === 'success')
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Success</span>
@@ -220,11 +220,11 @@
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">{{ ucfirst($usage->status) }}</span>
                                             @endif
                                         </td>
-                                        <td class="px-4 py-3 text-sm text-gray-600 text-right">{{ number_format($usage->response_time) }} ms</td>
+                                        <td class="px-4 py-3 text-sm text-muted text-right">{{ number_format($usage->response_time) }} ms</td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="px-4 py-3 text-sm text-gray-500 text-center">Belum ada aktivitas API.</td>
+                                        <td colspan="7" class="px-4 py-3 text-sm text-muted text-center">Belum ada aktivitas API.</td>
                                     </tr>
                                 @endforelse
                             </tbody>

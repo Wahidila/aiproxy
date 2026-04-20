@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 class="font-semibold text-xl text-off-black leading-tight tracking-heading">
             {{ __('Top Up Saldo') }}
         </h2>
     </x-slot>
@@ -23,18 +23,18 @@
 
             {{-- Current Balances --}}
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-200 p-5 text-center">
-                    <p class="text-xs font-medium text-gray-500 uppercase">Saldo Free Trial</p>
-                    <p class="mt-2 text-3xl font-bold {{ $quota->free_balance > 0 ? 'text-green-600' : 'text-gray-400' }}">
+                <div class="bg-surface border border-oat rounded-card p-5 text-center">
+                    <p class="text-xs font-medium text-muted uppercase">Saldo Free Trial</p>
+                    <p class="mt-2 text-3xl font-bold {{ $quota->free_balance > 0 ? 'text-green-600' : 'text-warm-sand' }}">
                         {{ $quota->formatted_free_balance }}
                     </p>
                 </div>
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-200 p-5 text-center">
-                    <p class="text-xs font-medium text-gray-500 uppercase">Saldo Top Up</p>
-                    <p class="mt-2 text-3xl font-bold {{ $quota->paid_balance > 0 ? 'text-indigo-600' : 'text-gray-400' }}">
+                <div class="bg-surface border border-oat rounded-card p-5 text-center">
+                    <p class="text-xs font-medium text-muted uppercase">Saldo Top Up</p>
+                    <p class="mt-2 text-3xl font-bold {{ $quota->paid_balance > 0 ? 'text-fin-orange' : 'text-warm-sand' }}">
                         {{ $quota->formatted_paid_balance }}
                     </p>
-                    <p class="mt-1 text-xs text-gray-400">Top up masuk ke saldo ini</p>
+                    <p class="mt-1 text-xs text-warm-sand">Top up masuk ke saldo ini</p>
                 </div>
             </div>
 
@@ -66,20 +66,20 @@
                 </div>
             @else
                 {{-- Top Up Form --}}
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-200" x-data="{ amount: '' }">
+                <div class="bg-surface border border-oat rounded-card" x-data="{ amount: '' }">
                     <div class="p-6">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Form Top Up</h3>
+                        <h3 class="text-lg font-semibold text-off-black tracking-sub mb-4">Form Top Up</h3>
 
                         <form action="{{ route('donations.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                             @csrf
 
                             {{-- Amount Input --}}
                             <div>
-                                <label for="amount" class="block text-sm font-medium text-gray-700 mb-1">Nominal Top Up</label>
+                                <label for="amount" class="block text-sm font-medium text-off-black mb-1">Nominal Top Up</label>
                                 <input type="number" name="amount" id="amount" x-model="amount"
                                     min="{{ $minTopup }}" step="1000"
                                     placeholder="Nominal top up (min Rp {{ number_format($minTopup, 0, ',', '.') }})"
-                                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    class="w-full rounded-lg border-oat shadow-sm focus:border-fin-orange focus:ring-fin-orange"
                                     required>
                                 @error('amount')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -88,18 +88,18 @@
 
                             {{-- Quick Amount Buttons --}}
                             <div>
-                                <p class="text-sm text-gray-500 mb-2">Pilih nominal:</p>
+                                <p class="text-sm text-muted mb-2">Pilih nominal:</p>
                                 <div class="flex flex-wrap gap-2">
-                                    <button type="button" @click="amount = 20000" class="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 hover:bg-indigo-50 hover:border-indigo-300 transition">
+                                    <button type="button" @click="amount = 20000" class="px-4 py-2 text-sm font-medium rounded-btn border border-oat hover:bg-canvas hover:border-fin-orange transition">
                                         Rp 20.000
                                     </button>
-                                    <button type="button" @click="amount = 50000" class="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 hover:bg-indigo-50 hover:border-indigo-300 transition">
+                                    <button type="button" @click="amount = 50000" class="px-4 py-2 text-sm font-medium rounded-btn border border-oat hover:bg-canvas hover:border-fin-orange transition">
                                         Rp 50.000
                                     </button>
-                                    <button type="button" @click="amount = 100000" class="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 hover:bg-indigo-50 hover:border-indigo-300 transition">
+                                    <button type="button" @click="amount = 100000" class="px-4 py-2 text-sm font-medium rounded-btn border border-oat hover:bg-canvas hover:border-fin-orange transition">
                                         Rp 100.000
                                     </button>
-                                    <button type="button" @click="amount = 200000" class="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 hover:bg-indigo-50 hover:border-indigo-300 transition">
+                                    <button type="button" @click="amount = 200000" class="px-4 py-2 text-sm font-medium rounded-btn border border-oat hover:bg-canvas hover:border-fin-orange transition">
                                         Rp 200.000
                                     </button>
                                 </div>
@@ -107,13 +107,13 @@
 
                             {{-- QRIS Image --}}
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Scan QRIS untuk Pembayaran</label>
+                                <label class="block text-sm font-medium text-off-black mb-2">Scan QRIS untuk Pembayaran</label>
                                 <div class="flex justify-center">
                                     @if($qrisImage)
-                                        <img src="{{ Storage::url($qrisImage) }}" alt="QRIS" class="max-w-xs rounded-lg border border-gray-200 shadow-sm">
+                                        <img src="{{ Storage::url($qrisImage) }}" alt="QRIS" class="max-w-xs rounded-lg border border-oat shadow-sm">
                                     @else
-                                        <div class="w-64 h-64 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center">
-                                            <p class="text-gray-400 text-sm text-center">QRIS belum tersedia.<br>Hubungi admin.</p>
+                                        <div class="w-64 h-64 bg-canvas rounded-lg border-2 border-dashed border-oat flex items-center justify-center">
+                                            <p class="text-warm-sand text-sm text-center">QRIS belum tersedia.<br>Hubungi admin.</p>
                                         </div>
                                     @endif
                                 </div>
@@ -121,9 +121,9 @@
 
                             {{-- Payment Proof Upload --}}
                             <div>
-                                <label for="payment_proof" class="block text-sm font-medium text-gray-700 mb-1">Bukti Pembayaran</label>
+                                <label for="payment_proof" class="block text-sm font-medium text-off-black mb-1">Bukti Pembayaran</label>
                                 <input type="file" name="payment_proof" id="payment_proof" accept="image/*"
-                                    class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                                    class="w-full text-sm text-muted file:mr-4 file:py-2 file:px-4 file:rounded-btn file:border-0 file:text-sm file:font-medium file:bg-canvas file:text-fin-orange hover:file:bg-oat/30"
                                     required>
                                 @error('payment_proof')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -132,7 +132,7 @@
 
                             {{-- Submit --}}
                             <div>
-                                <button type="submit" class="w-full px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition shadow-sm">
+                                <button type="submit" class="w-full px-6 py-3 bg-off-black text-white font-semibold rounded-btn hover:bg-off-black/90 transition shadow-sm">
                                     Kirim Permintaan Top Up
                                 </button>
                             </div>
@@ -143,7 +143,7 @@
 
             {{-- Link to History --}}
             <div class="text-center">
-                <a href="{{ route('donations.history') }}" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">
+                <a href="{{ route('donations.history') }}" class="text-fin-orange hover:text-fin-orange/80 text-sm font-medium">
                     Lihat Riwayat Top Up &rarr;
                 </a>
             </div>

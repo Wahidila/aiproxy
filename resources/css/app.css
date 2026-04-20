@@ -1,3 +1,111 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    body {
+        color: #111111;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+}
+
+@layer components {
+    /* Typography - Intercom-inspired negative tracking headings */
+    .heading-display {
+        font-size: 3.5rem;
+        font-weight: 400;
+        line-height: 1.00;
+        letter-spacing: -0.03em;
+    }
+    .heading-section {
+        font-size: 2.25rem;
+        font-weight: 400;
+        line-height: 1.00;
+        letter-spacing: -0.02em;
+    }
+    .heading-sub {
+        font-size: 1.5rem;
+        font-weight: 400;
+        line-height: 1.00;
+        letter-spacing: -0.015em;
+    }
+    .heading-card {
+        font-size: 1.25rem;
+        font-weight: 500;
+        line-height: 1.00;
+        letter-spacing: -0.01em;
+    }
+    .heading-feature {
+        font-size: 1.125rem;
+        font-weight: 500;
+        line-height: 1.00;
+        letter-spacing: -0.01em;
+    }
+
+    /* Mono label - uppercase technical labels */
+    .mono-label {
+        font-size: 0.6875rem;
+        font-weight: 500;
+        line-height: 1.2;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+
+    /* Button hover animation - Intercom scale interaction */
+    .btn-intercom {
+        transition: all 150ms ease-in-out;
+    }
+    .btn-intercom:hover {
+        transform: scale(1.05);
+    }
+    .btn-intercom:active {
+        transform: scale(0.95);
+    }
+
+    /* Card styling - warm, no shadows */
+    .card {
+        background-color: #ffffff;
+        border: 1px solid #dedbd6;
+        border-radius: 8px;
+    }
+
+    /* Warm table styling */
+    .table-warm thead {
+        background-color: #faf9f6;
+    }
+    .table-warm th {
+        font-size: 0.6875rem;
+        font-weight: 500;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: #7b7b78;
+    }
+    .table-warm tbody tr {
+        border-bottom: 1px solid #dedbd6;
+    }
+    .table-warm tbody tr:last-child {
+        border-bottom: none;
+    }
+    .table-warm tbody tr:hover {
+        background-color: #faf9f6;
+    }
+}
+
+@layer utilities {
+    /* Scrollbar warm styling */
+    .scrollbar-warm::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    .scrollbar-warm::-webkit-scrollbar-track {
+        background: #faf9f6;
+    }
+    .scrollbar-warm::-webkit-scrollbar-thumb {
+        background: #dedbd6;
+        border-radius: 3px;
+    }
+    .scrollbar-warm::-webkit-scrollbar-thumb:hover {
+        background: #d3cec6;
+    }
+}

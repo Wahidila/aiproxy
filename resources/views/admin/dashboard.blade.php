@@ -2,10 +2,10 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <div>
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">
+                <h2 class="text-xl font-semibold leading-tight text-off-black tracking-heading">
                     {{ __('Admin Panel') }}
                 </h2>
-                <nav class="mt-1 text-sm text-gray-500">
+                <nav class="mt-1 text-sm text-muted">
                     <span>Dashboard</span>
                 </nav>
             </div>
@@ -39,12 +39,12 @@
             @endif
 
             {{-- API Proxy Control --}}
-            <div class="overflow-hidden rounded-lg bg-white shadow border border-gray-200">
+            <div class="bg-surface border border-oat rounded-card">
                 <div class="px-6 py-5">
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center gap-2">
-                            <i data-lucide="server" class="w-5 h-5 text-gray-600"></i>
-                            <h3 class="text-lg font-semibold text-gray-900">API Proxy Control</h3>
+                            <i data-lucide="server" class="w-5 h-5 text-muted"></i>
+                            <h3 class="text-lg font-semibold text-off-black tracking-sub">API Proxy Control</h3>
                         </div>
                     </div>
 
@@ -57,8 +57,8 @@
                                         <i data-lucide="cpu" class="w-5 h-5 {{ $golangStatus['online'] ? 'text-green-600' : 'text-red-600' }}"></i>
                                     </div>
                                     <div>
-                                        <p class="text-sm font-semibold text-gray-900">Golang Proxy</p>
-                                        <p class="text-xs text-gray-500">Port 8080 (primary)</p>
+                                        <p class="text-sm font-semibold text-off-black">Golang Proxy</p>
+                                        <p class="text-xs text-muted">Port 8080 (primary)</p>
                                     </div>
                                 </div>
                                 <div class="text-right">
@@ -76,41 +76,41 @@
                                 </div>
                             </div>
                             @if($golangStatus['online'] && isset($golangStatus['timestamp']))
-                                <p class="mt-2 text-xs text-gray-500">Last check: {{ $golangStatus['timestamp'] }}</p>
+                                <p class="mt-2 text-xs text-muted">Last check: {{ $golangStatus['timestamp'] }}</p>
                             @elseif(!$golangStatus['online'])
                                 <p class="mt-2 text-xs text-red-600">{{ $golangStatus['error'] ?? 'Cannot reach proxy' }}. Start via SSH: <code class="bg-red-100 px-1 rounded">systemctl start ai-token-proxy</code></p>
                             @endif
                         </div>
 
                         {{-- Laravel Fallback Toggle --}}
-                        <div class="rounded-lg border p-4 {{ $laravelFallback ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50' }}">
+                        <div class="rounded-lg border p-4 {{ $laravelFallback ? 'border-green-200 bg-green-50' : 'border-oat bg-canvas' }}">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-3">
-                                    <div class="flex h-10 w-10 items-center justify-center rounded-lg {{ $laravelFallback ? 'bg-green-100' : 'bg-gray-200' }}">
-                                        <i data-lucide="shield" class="w-5 h-5 {{ $laravelFallback ? 'text-green-600' : 'text-gray-500' }}"></i>
+                                    <div class="flex h-10 w-10 items-center justify-center rounded-lg {{ $laravelFallback ? 'bg-green-100' : 'bg-oat' }}">
+                                        <i data-lucide="shield" class="w-5 h-5 {{ $laravelFallback ? 'text-green-600' : 'text-muted' }}"></i>
                                     </div>
                                     <div>
-                                        <p class="text-sm font-semibold text-gray-900">Laravel Fallback API</p>
-                                        <p class="text-xs text-gray-500">Backup jika Golang offline</p>
+                                        <p class="text-sm font-semibold text-off-black">Laravel Fallback API</p>
+                                        <p class="text-xs text-muted">Backup jika Golang offline</p>
                                     </div>
                                 </div>
                                 <form method="POST" action="{{ route('admin.proxy.toggle-laravel') }}">
                                     @csrf
                                     <button type="submit"
-                                        class="relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 {{ $laravelFallback ? 'bg-green-500' : 'bg-gray-300' }}"
+                                        class="relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-fin-orange focus:ring-offset-2 {{ $laravelFallback ? 'bg-green-500' : 'bg-oat' }}"
                                         role="switch"
                                         aria-checked="{{ $laravelFallback ? 'true' : 'false' }}">
-                                        <span class="pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out {{ $laravelFallback ? 'translate-x-5' : 'translate-x-0' }}"></span>
+                                        <span class="pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white ring-0 transition duration-200 ease-in-out {{ $laravelFallback ? 'translate-x-5' : 'translate-x-0' }}"></span>
                                     </button>
                                 </form>
                             </div>
-                            <p class="mt-2 text-xs text-gray-500">
+                            <p class="mt-2 text-xs text-muted">
                                 @if($laravelFallback)
                                     <i data-lucide="check-circle" class="w-3 h-3 inline text-green-500"></i>
                                     Aktif &mdash; Laravel menangani <code class="bg-green-100 px-1 rounded">/api/v1/*</code> jika Golang mati.
                                 @else
-                                    <i data-lucide="x-circle" class="w-3 h-3 inline text-gray-400"></i>
-                                    Nonaktif &mdash; Request ke <code class="bg-gray-200 px-1 rounded">/api/v1/*</code> via Laravel akan ditolak (503).
+                                    <i data-lucide="x-circle" class="w-3 h-3 inline text-warm-sand"></i>
+                                    Nonaktif &mdash; Request ke <code class="bg-oat px-1 rounded">/api/v1/*</code> via Laravel akan ditolak (503).
                                 @endif
                             </p>
                         </div>
@@ -137,58 +137,58 @@
             {{-- Stat Cards --}}
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
                 {{-- Total Users --}}
-                <div class="overflow-hidden rounded-lg bg-white shadow">
+                <div class="bg-surface border border-oat rounded-card">
                     <div class="p-5">
                         <div class="flex items-center">
                             <div class="flex-shrink-0">
-                                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50">
-                                    <svg class="h-6 w-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-fin-orange-light">
+                                    <svg class="h-6 w-6 text-fin-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
                                     </svg>
                                 </div>
                             </div>
                             <div class="ml-4">
-                                <p class="text-sm font-medium text-gray-500">Total Users</p>
-                                <p class="text-2xl font-bold text-gray-900">{{ number_format($totalUsers) }}</p>
+                                <p class="text-sm font-medium text-muted">Total Users</p>
+                                <p class="text-2xl font-bold text-off-black">{{ number_format($totalUsers) }}</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {{-- Total Tokens Used --}}
-                <div class="overflow-hidden rounded-lg bg-white shadow">
+                <div class="bg-surface border border-oat rounded-card">
                     <div class="p-5">
                         <div class="flex items-center">
                             <div class="flex-shrink-0">
-                                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50">
-                                    <svg class="h-6 w-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-fin-orange-light">
+                                    <svg class="h-6 w-6 text-fin-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
                                     </svg>
                                 </div>
                             </div>
                             <div class="ml-4">
-                                <p class="text-sm font-medium text-gray-500">Total Tokens</p>
-                                <p class="text-2xl font-bold text-gray-900">{{ adminFormatTokens($totalTokensUsed) }}</p>
+                                <p class="text-sm font-medium text-muted">Total Tokens</p>
+                                <p class="text-2xl font-bold text-off-black">{{ adminFormatTokens($totalTokensUsed) }}</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {{-- Pending Donations --}}
-                <div class="overflow-hidden rounded-lg bg-white shadow">
+                <div class="bg-surface border border-oat rounded-card">
                     <div class="p-5">
                         <div class="flex items-center">
                             <div class="flex-shrink-0">
-                                <div class="flex h-10 w-10 items-center justify-center rounded-lg {{ $pendingDonations > 0 ? 'bg-red-50' : 'bg-indigo-50' }}">
-                                    <svg class="h-6 w-6 {{ $pendingDonations > 0 ? 'text-red-600' : 'text-indigo-600' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="flex h-10 w-10 items-center justify-center rounded-lg {{ $pendingDonations > 0 ? 'bg-red-50' : 'bg-fin-orange-light' }}">
+                                    <svg class="h-6 w-6 {{ $pendingDonations > 0 ? 'text-red-600' : 'text-fin-orange' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                     </svg>
                                 </div>
                             </div>
                             <div class="ml-4">
-                                <p class="text-sm font-medium text-gray-500">Pending Donations</p>
+                                <p class="text-sm font-medium text-muted">Pending Donations</p>
                                 <div class="flex items-center gap-2">
-                                    <p class="text-2xl font-bold text-gray-900">{{ $pendingDonations }}</p>
+                                    <p class="text-2xl font-bold text-off-black">{{ $pendingDonations }}</p>
                                     @if($pendingDonations > 0)
                                         <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
                                             Needs Review
@@ -201,7 +201,7 @@
                 </div>
 
                 {{-- Total Revenue --}}
-                <div class="overflow-hidden rounded-lg bg-white shadow">
+                <div class="bg-surface border border-oat rounded-card">
                     <div class="p-5">
                         <div class="flex items-center">
                             <div class="flex-shrink-0">
@@ -212,27 +212,27 @@
                                 </div>
                             </div>
                             <div class="ml-4">
-                                <p class="text-sm font-medium text-gray-500">Total Revenue</p>
-                                <p class="text-2xl font-bold text-gray-900">Rp {{ number_format($totalRevenue, 0, ',', '.') }}</p>
+                                <p class="text-sm font-medium text-muted">Total Revenue</p>
+                                <p class="text-2xl font-bold text-off-black">Rp {{ number_format($totalRevenue, 0, ',', '.') }}</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {{-- Active Users Today --}}
-                <div class="overflow-hidden rounded-lg bg-white shadow">
+                <div class="bg-surface border border-oat rounded-card">
                     <div class="p-5">
                         <div class="flex items-center">
                             <div class="flex-shrink-0">
-                                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50">
-                                    <svg class="h-6 w-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-fin-orange-light">
+                                    <svg class="h-6 w-6 text-fin-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                                     </svg>
                                 </div>
                             </div>
                             <div class="ml-4">
-                                <p class="text-sm font-medium text-gray-500">Active Today</p>
-                                <p class="text-2xl font-bold text-gray-900">{{ number_format($activeUsersToday) }}</p>
+                                <p class="text-sm font-medium text-muted">Active Today</p>
+                                <p class="text-2xl font-bold text-off-black">{{ number_format($activeUsersToday) }}</p>
                             </div>
                         </div>
                     </div>
@@ -242,28 +242,28 @@
             {{-- Quick Links --}}
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <a href="{{ route('admin.users.index') }}"
-                   class="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm hover:border-indigo-300 hover:shadow-md transition-all">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100">
-                        <svg class="h-5 w-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   class="flex items-center gap-3 rounded-card border border-oat bg-surface p-4 hover:border-fin-orange hover:shadow-sm transition-all">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-fin-orange-light">
+                        <svg class="h-5 w-5 text-fin-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
                         </svg>
                     </div>
                     <div>
-                        <p class="text-sm font-semibold text-gray-900">Manage Users</p>
-                        <p class="text-xs text-gray-500">View and manage all users</p>
+                        <p class="text-sm font-semibold text-off-black">Manage Users</p>
+                        <p class="text-xs text-muted">View and manage all users</p>
                     </div>
                 </a>
 
                 <a href="{{ route('admin.donations.index') }}"
-                   class="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm hover:border-indigo-300 hover:shadow-md transition-all">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-lg {{ $pendingDonations > 0 ? 'bg-red-100' : 'bg-indigo-100' }}">
-                        <svg class="h-5 w-5 {{ $pendingDonations > 0 ? 'text-red-600' : 'text-indigo-600' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   class="flex items-center gap-3 rounded-card border border-oat bg-surface p-4 hover:border-fin-orange hover:shadow-sm transition-all">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-lg {{ $pendingDonations > 0 ? 'bg-red-100' : 'bg-fin-orange-light' }}">
+                        <svg class="h-5 w-5 {{ $pendingDonations > 0 ? 'text-red-600' : 'text-fin-orange' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
                         </svg>
                     </div>
                     <div>
-                        <p class="text-sm font-semibold text-gray-900">Manage Donations</p>
-                        <p class="text-xs text-gray-500">
+                        <p class="text-sm font-semibold text-off-black">Manage Donations</p>
+                        <p class="text-xs text-muted">
                             @if($pendingDonations > 0)
                                 <span class="text-red-600 font-medium">{{ $pendingDonations }} pending</span>
                             @else
@@ -274,37 +274,37 @@
                 </a>
 
                 <a href="{{ route('admin.model-pricing.index') }}"
-                   class="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm hover:border-indigo-300 hover:shadow-md transition-all">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100">
-                        <svg class="h-5 w-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   class="flex items-center gap-3 rounded-card border border-oat bg-surface p-4 hover:border-fin-orange hover:shadow-sm transition-all">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-fin-orange-light">
+                        <svg class="h-5 w-5 text-fin-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
                         </svg>
                     </div>
                     <div>
-                        <p class="text-sm font-semibold text-gray-900">Model Pricing</p>
-                        <p class="text-xs text-gray-500">Configure per-model pricing & discounts</p>
+                        <p class="text-sm font-semibold text-off-black">Model Pricing</p>
+                        <p class="text-xs text-muted">Configure per-model pricing & discounts</p>
                     </div>
                 </a>
 
                 <a href="{{ route('admin.settings.index') }}"
-                   class="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm hover:border-indigo-300 hover:shadow-md transition-all">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100">
-                        <svg class="h-5 w-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   class="flex items-center gap-3 rounded-card border border-oat bg-surface p-4 hover:border-fin-orange hover:shadow-sm transition-all">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-fin-orange-light">
+                        <svg class="h-5 w-5 text-fin-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                         </svg>
                     </div>
                     <div>
-                        <p class="text-sm font-semibold text-gray-900">Settings</p>
-                        <p class="text-xs text-gray-500">Configure site & wallet settings</p>
+                        <p class="text-sm font-semibold text-off-black">Settings</p>
+                        <p class="text-xs text-muted">Configure site & wallet settings</p>
                     </div>
                 </a>
             </div>
 
             {{-- Daily Stats Chart --}}
-            <div class="overflow-hidden rounded-lg bg-white shadow">
+            <div class="bg-surface border border-oat rounded-card">
                 <div class="px-6 py-5">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Daily Stats (Last 7 Days)</h3>
+                    <h3 class="text-lg font-semibold text-off-black tracking-sub mb-4">Daily Stats (Last 7 Days)</h3>
 
                     @php
                         $maxTokens = 0;
@@ -322,23 +322,23 @@
                                     $tokenPercent = $maxTokens > 0 ? (($stat['tokens'] ?? 0) / $maxTokens) * 100 : 0;
                                 @endphp
                                 <div class="flex flex-1 flex-col items-center justify-end h-full">
-                                    <span class="mb-1 text-xs font-medium text-gray-600">
+                                    <span class="mb-1 text-xs font-medium text-muted">
                                         {{ adminFormatTokens($stat['tokens'] ?? 0) }}
                                     </span>
-                                    <div class="w-full rounded-t-md bg-indigo-500 transition-all duration-300 hover:bg-indigo-600"
+                                    <div class="w-full rounded-t-md bg-fin-orange transition-all duration-300 hover:bg-fin-orange/90"
                                          style="height: {{ max($tokenPercent, 2) }}%;"
                                          title="{{ number_format($stat['tokens'] ?? 0) }} tokens / {{ number_format($stat['requests'] ?? 0) }} requests"></div>
-                                    <span class="mt-2 text-xs text-gray-500">
+                                    <span class="mt-2 text-xs text-muted">
                                         {{ \Carbon\Carbon::parse($date)->format('d/m') }}
                                     </span>
-                                    <span class="text-xs text-gray-400">
+                                    <span class="text-xs text-warm-sand">
                                         {{ number_format($stat['requests'] ?? 0) }} req
                                     </span>
                                 </div>
                             @endforeach
                         </div>
                     @else
-                        <div class="flex h-48 items-center justify-center text-gray-400">
+                        <div class="flex h-48 items-center justify-center text-warm-sand">
                             <p>No usage data available</p>
                         </div>
                     @endif
@@ -349,21 +349,21 @@
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
                 {{-- Pending Donations --}}
-                <div class="overflow-hidden rounded-lg bg-white shadow">
+                <div class="bg-surface border border-oat rounded-card">
                     <div class="px-6 py-5">
                         <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-semibold text-gray-900">Pending Donations</h3>
-                            <a href="{{ route('admin.donations.index', ['status' => 'pending']) }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-800">
+                            <h3 class="text-lg font-semibold text-off-black tracking-sub">Pending Donations</h3>
+                            <a href="{{ route('admin.donations.index', ['status' => 'pending']) }}" class="text-sm font-medium text-fin-orange hover:text-fin-orange/80">
                                 View All
                             </a>
                         </div>
 
                         <div class="space-y-3">
                             @forelse($recentDonations->take(5) as $donation)
-                                <div class="flex items-center justify-between rounded-lg border border-gray-100 p-3 hover:bg-gray-50">
+                                <div class="flex items-center justify-between rounded-lg border border-oat p-3 hover:bg-canvas">
                                     <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-medium text-gray-900 truncate">{{ $donation->user->name }}</p>
-                                        <p class="text-xs text-gray-500">
+                                        <p class="text-sm font-medium text-off-black truncate">{{ $donation->user->name }}</p>
+                                        <p class="text-xs text-muted">
                                             Rp {{ number_format($donation->amount, 0, ',', '.') }}
                                             &middot;
                                             {{ $donation->created_at->diffForHumans() }}
@@ -372,17 +372,17 @@
                                     <div class="flex items-center gap-2 ml-3">
                                         <form method="POST" action="{{ route('admin.donations.approve', $donation) }}">
                                             @csrf
-                                            <button type="submit" class="inline-flex items-center rounded-md bg-green-600 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-green-700 transition-colors">
+                                            <button type="submit" class="inline-flex items-center rounded-btn bg-green-600 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-green-700 transition-colors">
                                                 Approve
                                             </button>
                                         </form>
-                                        <a href="{{ route('admin.donations.index') }}" class="inline-flex items-center rounded-md bg-gray-100 px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-200 transition-colors">
+                                        <a href="{{ route('admin.donations.index') }}" class="inline-flex items-center rounded-btn bg-canvas px-2.5 py-1.5 text-xs font-medium text-off-black hover:bg-oat transition-colors">
                                             View
                                         </a>
                                     </div>
                                 </div>
                             @empty
-                                <div class="py-8 text-center text-sm text-gray-400">
+                                <div class="py-8 text-center text-sm text-warm-sand">
                                     No pending donations
                                 </div>
                             @endforelse
@@ -391,33 +391,33 @@
                 </div>
 
                 {{-- Recent Users --}}
-                <div class="overflow-hidden rounded-lg bg-white shadow">
+                <div class="bg-surface border border-oat rounded-card">
                     <div class="px-6 py-5">
                         <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-semibold text-gray-900">Recent Users</h3>
-                            <a href="{{ route('admin.users.index') }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-800">
+                            <h3 class="text-lg font-semibold text-off-black tracking-sub">Recent Users</h3>
+                            <a href="{{ route('admin.users.index') }}" class="text-sm font-medium text-fin-orange hover:text-fin-orange/80">
                                 View All
                             </a>
                         </div>
 
                         <div class="space-y-3">
                             @forelse($recentUsers->take(5) as $user)
-                                <div class="flex items-center justify-between rounded-lg border border-gray-100 p-3 hover:bg-gray-50">
+                                <div class="flex items-center justify-between rounded-lg border border-oat p-3 hover:bg-canvas">
                                     <div class="flex items-center gap-3">
-                                        <div class="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-600">
+                                        <div class="flex h-9 w-9 items-center justify-center rounded-full bg-fin-orange-light text-sm font-semibold text-fin-orange">
                                             {{ strtoupper(substr($user->name, 0, 1)) }}
                                         </div>
                                         <div class="min-w-0">
-                                            <p class="text-sm font-medium text-gray-900 truncate">{{ $user->name }}</p>
-                                            <p class="text-xs text-gray-500 truncate">{{ $user->email }}</p>
+                                            <p class="text-sm font-medium text-off-black truncate">{{ $user->name }}</p>
+                                            <p class="text-xs text-muted truncate">{{ $user->email }}</p>
                                         </div>
                                     </div>
-                                    <span class="text-xs text-gray-400 whitespace-nowrap ml-3">
+                                    <span class="text-xs text-warm-sand whitespace-nowrap ml-3">
                                         {{ $user->created_at->format('d M Y') }}
                                     </span>
                                 </div>
                             @empty
-                                <div class="py-8 text-center text-sm text-gray-400">
+                                <div class="py-8 text-center text-sm text-warm-sand">
                                     No users yet
                                 </div>
                             @endforelse

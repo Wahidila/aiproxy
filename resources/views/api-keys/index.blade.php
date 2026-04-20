@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="text-xl font-semibold leading-tight text-gray-800">
+        <h2 class="text-xl font-semibold leading-tight text-off-black">
             API Keys
         </h2>
     </x-slot>
@@ -18,37 +18,37 @@
             {{-- ============================================================ --}}
             {{-- PANDUAN SETUP CUSTOM PROVIDER --}}
             {{-- ============================================================ --}}
-            <div class="overflow-hidden rounded-lg bg-white shadow" x-data="{ openGuide: 'kilo' }">
+            <div class="bg-surface border border-oat rounded-card" x-data="{ openGuide: 'kilo' }">
                 <div class="px-6 py-5">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-1">Panduan Setup Custom Provider</h3>
-                    <p class="text-sm text-gray-500 mb-4">Gunakan Base URL dan API Key di bawah untuk menghubungkan tool Anda.</p>
+                    <h3 class="text-lg font-semibold text-off-black tracking-sub mb-1">Panduan Setup Custom Provider</h3>
+                    <p class="text-sm text-muted mb-4">Gunakan Base URL dan API Key di bawah untuk menghubungkan tool Anda.</p>
 
                     {{-- Base URL + API Key info --}}
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
                         <div x-data="{ copied: false }">
-                            <label class="block text-xs font-medium text-gray-500 uppercase mb-1">Base URL</label>
+                            <label class="block text-xs font-medium text-muted uppercase mb-1">Base URL</label>
                             <div class="flex items-center gap-2">
-                                <code class="flex-1 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-mono text-gray-800 truncate">{{ $baseUrl }}</code>
+                                <code class="flex-1 rounded-btn border border-oat bg-canvas px-3 py-2 text-sm font-mono text-off-black truncate">{{ $baseUrl }}</code>
                                 <button @click="navigator.clipboard.writeText('{{ $baseUrl }}'); copied = true; setTimeout(() => copied = false, 2000)"
-                                        class="flex-shrink-0 inline-flex items-center rounded-md border border-gray-300 bg-white px-2.5 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50 transition">
+                                        class="flex-shrink-0 inline-flex items-center rounded-btn border border-oat bg-surface px-2.5 py-2 text-xs font-medium text-muted hover:bg-canvas transition">
                                     <span x-show="!copied"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></span>
                                     <span x-show="copied" x-cloak class="text-green-600">Copied!</span>
                                 </button>
                             </div>
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-gray-500 uppercase mb-1">API Key</label>
-                            <div class="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500">
+                            <label class="block text-xs font-medium text-muted uppercase mb-1">API Key</label>
+                            <div class="rounded-btn border border-oat bg-canvas px-3 py-2 text-sm text-muted">
                                 Buat API key di bawah, lalu copy dan paste ke tool Anda
                             </div>
                         </div>
                     </div>
 
                     {{-- Tab buttons --}}
-                    <div class="flex flex-wrap gap-1 border-b border-gray-200 mb-4">
+                    <div class="flex flex-wrap gap-1 border-b border-oat mb-4">
                         @foreach(['kilo' => 'Kilo Code', 'cursor' => 'Cursor', 'vscode' => 'VS Code (Continue)', 'curl' => 'cURL / API'] as $tab => $label)
                             <button @click="openGuide = '{{ $tab }}'"
-                                    :class="openGuide === '{{ $tab }}' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                                    :class="openGuide === '{{ $tab }}' ? 'border-fin-orange text-fin-orange' : 'border-transparent text-muted hover:text-off-black hover:border-oat'"
                                     class="px-4 py-2 text-sm font-medium border-b-2 transition whitespace-nowrap">
                                 {{ $label }}
                             </button>
@@ -57,9 +57,9 @@
 
                     {{-- Kilo Code Guide --}}
                     <div x-show="openGuide === 'kilo'" x-cloak>
-                        <div class="rounded-lg bg-indigo-50 p-4 space-y-2">
-                            <h4 class="text-sm font-semibold text-indigo-900">Setup di Kilo Code</h4>
-                            <ol class="list-decimal list-inside space-y-1.5 text-sm text-indigo-800">
+                        <div class="rounded-lg bg-fin-orange-light p-4 space-y-2">
+                            <h4 class="text-sm font-semibold text-off-black">Setup di Kilo Code</h4>
+                            <ol class="list-decimal list-inside space-y-1.5 text-sm text-off-black">
                                 <li>Buka Kilo Code, tekan <kbd class="px-1.5 py-0.5 bg-white rounded text-xs font-mono border">Ctrl+P</kbd> lalu pilih <strong>Providers: Manage Providers</strong></li>
                                 <li>Klik <strong>Add Custom Provider</strong></li>
                                 <li>Isi <strong>Name</strong>: bebas (misal "AI Token")</li>
@@ -117,9 +117,9 @@
 
                     {{-- cURL Guide --}}
                     <div x-show="openGuide === 'curl'" x-cloak>
-                        <div class="rounded-lg bg-gray-50 p-4 space-y-2">
-                            <h4 class="text-sm font-semibold text-gray-900">Menggunakan API langsung (cURL / HTTP)</h4>
-                            <p class="text-sm text-gray-600">API ini kompatibel dengan format OpenAI. Contoh request:</p>
+                        <div class="rounded-lg bg-canvas p-4 space-y-2">
+                            <h4 class="text-sm font-semibold text-off-black">Menggunakan API langsung (cURL / HTTP)</h4>
+                            <p class="text-sm text-muted">API ini kompatibel dengan format OpenAI. Contoh request:</p>
                             <div class="mt-2 relative" x-data="{ copied: false }">
                                 <pre class="bg-gray-900 text-gray-100 rounded-lg p-4 text-xs font-mono overflow-x-auto">curl -X POST {{ $baseUrl }}/chat/completions \
   -H "Authorization: Bearer <span class="text-green-300">API_KEY_ANDA</span>" \
@@ -135,7 +135,7 @@
                                     <span x-show="copied" x-cloak class="text-green-400">Copied!</span>
                                 </button>
                             </div>
-                            <div class="mt-3 text-xs text-gray-500">
+                            <div class="mt-3 text-xs text-muted">
                                 <p><strong>Endpoints:</strong></p>
                                 <ul class="list-disc list-inside mt-1 space-y-0.5">
                                     <li><code>POST /chat/completions</code> - Chat (OpenAI format)</li>
@@ -152,10 +152,10 @@
             {{-- ============================================================ --}}
             {{-- MODEL YANG TERSEDIA --}}
             {{-- ============================================================ --}}
-            <div class="overflow-hidden rounded-lg bg-white shadow" x-data="{ showAll: false }">
+            <div class="bg-surface border border-oat rounded-card" x-data="{ showAll: false }">
                 <div class="px-6 py-5">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-1">Model yang Tersedia</h3>
-                    <p class="text-sm text-gray-500 mb-4">Copy <strong>Model ID</strong> dan paste di konfigurasi tool Anda. Harga per 1M token (setelah diskon).</p>
+                    <h3 class="text-lg font-semibold text-off-black tracking-sub mb-1">Model yang Tersedia</h3>
+                    <p class="text-sm text-muted mb-4">Copy <strong>Model ID</strong> dan paste di konfigurasi tool Anda. Harga per 1M token (setelah diskon).</p>
 
                     {{-- Free Tier Models --}}
                     <div class="mb-5">
@@ -164,18 +164,18 @@
                             Tersedia untuk API key Free & Paid
                         </h4>
                         <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200 text-sm">
+                            <table class="min-w-full divide-y divide-oat text-sm">
                                 <thead class="bg-green-50">
                                     <tr>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Model ID</th>
-                                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nama</th>
-                                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Input /1M</th>
-                                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Output /1M</th>
-                                        <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase">Diskon</th>
-                                        <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase w-16"></th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-muted uppercase">Model ID</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-muted uppercase">Nama</th>
+                                        <th class="px-3 py-2 text-right text-xs font-medium text-muted uppercase">Input /1M</th>
+                                        <th class="px-3 py-2 text-right text-xs font-medium text-muted uppercase">Output /1M</th>
+                                        <th class="px-3 py-2 text-center text-xs font-medium text-muted uppercase">Diskon</th>
+                                        <th class="px-3 py-2 text-center text-xs font-medium text-muted uppercase w-16"></th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-100">
+                                <tbody class="divide-y divide-oat">
                                     @foreach($freeModels as $model)
                                         @php
                                             $disc = 1 - ($model->discount_percent / 100);
@@ -183,21 +183,21 @@
                                             $outIdr = $model->output_price_usd * $exchangeRate * $disc;
                                         @endphp
                                         <tr class="hover:bg-green-50/50" x-data="{ copied: false }">
-                                            <td class="px-3 py-2 font-mono text-gray-900 font-medium">{{ $model->model_id }}</td>
-                                            <td class="px-3 py-2 text-gray-600">{{ $model->model_name }}</td>
-                                            <td class="px-3 py-2 text-right text-gray-700">{{ apiKeysFormatRp($inIdr) }}</td>
-                                            <td class="px-3 py-2 text-right text-gray-700">{{ apiKeysFormatRp($outIdr) }}</td>
+                                            <td class="px-3 py-2 font-mono text-off-black font-medium">{{ $model->model_id }}</td>
+                                            <td class="px-3 py-2 text-muted">{{ $model->model_name }}</td>
+                                            <td class="px-3 py-2 text-right text-off-black">{{ apiKeysFormatRp($inIdr) }}</td>
+                                            <td class="px-3 py-2 text-right text-off-black">{{ apiKeysFormatRp($outIdr) }}</td>
                                             <td class="px-3 py-2 text-center">
                                                 @if($model->discount_percent > 0)
                                                     <span class="text-green-600 font-medium">-{{ $model->discount_percent }}%</span>
                                                 @else
-                                                    <span class="text-gray-400">-</span>
+                                                    <span class="text-warm-sand">-</span>
                                                 @endif
                                             </td>
                                             <td class="px-3 py-2 text-center">
                                                 <button @click="navigator.clipboard.writeText('{{ $model->model_id }}'); copied = true; setTimeout(() => copied = false, 1500)"
                                                         class="inline-flex items-center px-2 py-1 text-xs font-medium rounded border transition"
-                                                        :class="copied ? 'bg-green-100 border-green-300 text-green-700' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'">
+                                                        :class="copied ? 'bg-green-100 border-green-300 text-green-700' : 'bg-surface border-oat text-muted hover:bg-canvas'">
                                                     <span x-show="!copied">Copy ID</span>
                                                     <span x-show="copied" x-cloak>Copied!</span>
                                                 </button>
@@ -211,8 +211,8 @@
 
                     {{-- Paid Models (collapsible) --}}
                     <div>
-                        <button @click="showAll = !showAll" class="flex items-center gap-2 text-sm font-semibold text-indigo-700 mb-2 hover:text-indigo-900 transition">
-                            <span class="inline-flex items-center rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700">Premium</span>
+                        <button @click="showAll = !showAll" class="flex items-center gap-2 text-sm font-semibold text-fin-orange mb-2 hover:text-off-black transition">
+                            <span class="inline-flex items-center rounded-full bg-fin-orange-light px-2 py-0.5 text-xs font-medium text-fin-orange">Premium</span>
                             Model Premium (hanya API key Paid)
                             <svg :class="showAll ? 'rotate-180' : ''" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -220,40 +220,40 @@
                         </button>
                         <div x-show="showAll" x-cloak x-collapse>
                             <div class="overflow-x-auto">
-                                <table class="min-w-full divide-y divide-gray-200 text-sm">
-                                    <thead class="bg-indigo-50">
+                                <table class="min-w-full divide-y divide-oat text-sm">
+                                    <thead class="bg-fin-orange-light">
                                         <tr>
-                                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Model ID</th>
-                                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nama</th>
-                                            <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Input /1M</th>
-                                            <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Output /1M</th>
-                                            <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase">Diskon</th>
-                                            <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase w-16"></th>
+                                            <th class="px-3 py-2 text-left text-xs font-medium text-muted uppercase">Model ID</th>
+                                            <th class="px-3 py-2 text-left text-xs font-medium text-muted uppercase">Nama</th>
+                                            <th class="px-3 py-2 text-right text-xs font-medium text-muted uppercase">Input /1M</th>
+                                            <th class="px-3 py-2 text-right text-xs font-medium text-muted uppercase">Output /1M</th>
+                                            <th class="px-3 py-2 text-center text-xs font-medium text-muted uppercase">Diskon</th>
+                                            <th class="px-3 py-2 text-center text-xs font-medium text-muted uppercase w-16"></th>
                                         </tr>
                                     </thead>
-                                    <tbody class="divide-y divide-gray-100">
+                                    <tbody class="divide-y divide-oat">
                                         @foreach($paidModels as $model)
                                             @php
                                                 $disc = 1 - ($model->discount_percent / 100);
                                                 $inIdr = $model->input_price_usd * $exchangeRate * $disc;
                                                 $outIdr = $model->output_price_usd * $exchangeRate * $disc;
                                             @endphp
-                                            <tr class="hover:bg-indigo-50/50" x-data="{ copied: false }">
-                                                <td class="px-3 py-2 font-mono text-gray-900 font-medium">{{ $model->model_id }}</td>
-                                                <td class="px-3 py-2 text-gray-600">{{ $model->model_name }}</td>
-                                                <td class="px-3 py-2 text-right text-gray-700">{{ apiKeysFormatRp($inIdr) }}</td>
-                                                <td class="px-3 py-2 text-right text-gray-700">{{ apiKeysFormatRp($outIdr) }}</td>
+                                            <tr class="hover:bg-fin-orange-light/50" x-data="{ copied: false }">
+                                                <td class="px-3 py-2 font-mono text-off-black font-medium">{{ $model->model_id }}</td>
+                                                <td class="px-3 py-2 text-muted">{{ $model->model_name }}</td>
+                                                <td class="px-3 py-2 text-right text-off-black">{{ apiKeysFormatRp($inIdr) }}</td>
+                                                <td class="px-3 py-2 text-right text-off-black">{{ apiKeysFormatRp($outIdr) }}</td>
                                                 <td class="px-3 py-2 text-center">
                                                     @if($model->discount_percent > 0)
                                                         <span class="text-green-600 font-medium">-{{ $model->discount_percent }}%</span>
                                                     @else
-                                                        <span class="text-gray-400">-</span>
+                                                        <span class="text-warm-sand">-</span>
                                                     @endif
                                                 </td>
                                                 <td class="px-3 py-2 text-center">
                                                     <button @click="navigator.clipboard.writeText('{{ $model->model_id }}'); copied = true; setTimeout(() => copied = false, 1500)"
                                                             class="inline-flex items-center px-2 py-1 text-xs font-medium rounded border transition"
-                                                            :class="copied ? 'bg-green-100 border-green-300 text-green-700' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'">
+                                                            :class="copied ? 'bg-green-100 border-green-300 text-green-700' : 'bg-surface border-oat text-muted hover:bg-canvas'">
                                                         <span x-show="!copied">Copy ID</span>
                                                         <span x-show="copied" x-cloak>Copied!</span>
                                                     </button>
@@ -280,9 +280,9 @@
                         <div class="flex-1">
                             <p class="text-sm font-semibold text-green-800 mb-2">API Key berhasil dibuat!</p>
                             <div class="flex items-center gap-2 mb-2">
-                                <code class="flex-1 rounded-md border border-green-200 bg-white px-3 py-2 text-sm font-mono text-gray-900 break-all">{{ session('new_key') }}</code>
+                                <code class="flex-1 rounded-btn border border-green-200 bg-white px-3 py-2 text-sm font-mono text-off-black break-all">{{ session('new_key') }}</code>
                                 <button @click="navigator.clipboard.writeText('{{ session('new_key') }}'); copied = true; setTimeout(() => copied = false, 2000)"
-                                        class="inline-flex items-center rounded-md bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors">
+                                        class="inline-flex items-center rounded-btn bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors">
                                     <span x-show="!copied">Copy</span>
                                     <span x-show="copied" x-cloak>Copied!</span>
                                 </button>
@@ -314,59 +314,59 @@
             {{-- BALANCE INFO --}}
             {{-- ============================================================ --}}
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="rounded-lg bg-white shadow p-5">
-                    <p class="text-xs font-medium text-gray-500 uppercase">Saldo Free Trial</p>
+                <div class="bg-surface border border-oat rounded-card p-5">
+                    <p class="text-xs font-medium text-muted uppercase">Saldo Free Trial</p>
                     <p class="mt-1 text-2xl font-bold {{ $quota->free_balance > 0 ? 'text-green-600' : 'text-red-500' }}">{{ $quota->formatted_free_balance }}</p>
-                    <p class="mt-1 text-xs text-gray-400">Hanya untuk model free tier</p>
+                    <p class="mt-1 text-xs text-warm-sand">Hanya untuk model free tier</p>
                 </div>
-                <div class="rounded-lg bg-white shadow p-5">
-                    <p class="text-xs font-medium text-gray-500 uppercase">Saldo Top Up</p>
-                    <p class="mt-1 text-2xl font-bold {{ $quota->paid_balance > 0 ? 'text-indigo-600' : 'text-red-500' }}">{{ $quota->formatted_paid_balance }}</p>
-                    <p class="mt-1 text-xs text-gray-400">Untuk semua model (termasuk premium)</p>
+                <div class="bg-surface border border-oat rounded-card p-5">
+                    <p class="text-xs font-medium text-muted uppercase">Saldo Top Up</p>
+                    <p class="mt-1 text-2xl font-bold {{ $quota->paid_balance > 0 ? 'text-fin-orange' : 'text-red-500' }}">{{ $quota->formatted_paid_balance }}</p>
+                    <p class="mt-1 text-xs text-warm-sand">Untuk semua model (termasuk premium)</p>
                 </div>
             </div>
 
             {{-- ============================================================ --}}
             {{-- CREATE NEW API KEY --}}
             {{-- ============================================================ --}}
-            <div class="overflow-hidden rounded-lg bg-white shadow">
+            <div class="bg-surface border border-oat rounded-card">
                 <div class="px-6 py-5">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-3">Buat API Key Baru</h3>
+                    <h3 class="text-lg font-semibold text-off-black tracking-sub mb-3">Buat API Key Baru</h3>
 
                     <form method="POST" action="{{ route('api-keys.store') }}" class="space-y-4">
                         @csrf
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Nama</label>
+                                <label for="name" class="block text-sm font-medium text-off-black mb-1">Nama</label>
                                 <input type="text" name="name" id="name" required
                                     placeholder="Contoh: Cursor IDE, Kilo Code, dll"
-                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                    class="block w-full rounded-btn border-oat shadow-sm focus:border-fin-orange focus:ring-fin-orange sm:text-sm"
                                     value="{{ old('name') }}">
                                 @error('name')
                                     <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                                 @enderror
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Tipe Saldo</label>
+                                <label class="block text-sm font-medium text-off-black mb-1">Tipe Saldo</label>
                                 <div class="flex gap-3 mt-1" x-data="{ tier: '{{ old('tier', 'free') }}' }">
                                     <label class="flex items-center gap-2 cursor-pointer rounded-lg border-2 px-4 py-2.5 transition flex-1"
-                                           :class="tier === 'free' ? 'border-green-500 bg-green-50' : '{{ $quota->free_balance > 0 ? "border-gray-200 hover:border-green-300" : "border-gray-100 opacity-50" }}'">
+                                           :class="tier === 'free' ? 'border-green-500 bg-green-50' : '{{ $quota->free_balance > 0 ? "border-oat hover:border-green-300" : "border-oat opacity-50" }}'">
                                         <input type="radio" name="tier" value="free" x-model="tier"
                                             class="text-green-600 focus:ring-green-500"
                                             {{ $quota->free_balance <= 0 ? 'disabled' : '' }}>
                                         <div>
-                                            <span class="text-sm font-semibold text-gray-900">Free Tier</span>
-                                            <p class="text-xs text-gray-500">Model terbatas</p>
+                                            <span class="text-sm font-semibold text-off-black">Free Tier</span>
+                                            <p class="text-xs text-muted">Model terbatas</p>
                                         </div>
                                     </label>
                                     <label class="flex items-center gap-2 cursor-pointer rounded-lg border-2 px-4 py-2.5 transition flex-1"
-                                           :class="tier === 'paid' ? 'border-indigo-500 bg-indigo-50' : '{{ $quota->paid_balance > 0 ? "border-gray-200 hover:border-indigo-300" : "border-gray-100 opacity-50" }}'">
+                                           :class="tier === 'paid' ? 'border-fin-orange bg-fin-orange-light' : '{{ $quota->paid_balance > 0 ? "border-oat hover:border-fin-orange/50" : "border-oat opacity-50" }}'">
                                         <input type="radio" name="tier" value="paid" x-model="tier"
-                                            class="text-indigo-600 focus:ring-indigo-500"
+                                            class="text-fin-orange focus:ring-fin-orange"
                                             {{ $quota->paid_balance <= 0 ? 'disabled' : '' }}>
                                         <div>
-                                            <span class="text-sm font-semibold text-gray-900">Paid</span>
-                                            <p class="text-xs text-gray-500">Semua model</p>
+                                            <span class="text-sm font-semibold text-off-black">Paid</span>
+                                            <p class="text-xs text-muted">Semua model</p>
                                         </div>
                                     </label>
                                 </div>
@@ -377,7 +377,7 @@
                         </div>
                         <div>
                             <button type="submit"
-                                class="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 transition-colors">
+                                class="inline-flex items-center rounded-btn bg-off-black px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-off-black/90 transition-colors">
                                 <svg class="mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                                 </svg>
@@ -391,46 +391,46 @@
             {{-- ============================================================ --}}
             {{-- API KEYS TABLE --}}
             {{-- ============================================================ --}}
-            <div class="overflow-hidden rounded-lg bg-white shadow">
+            <div class="bg-surface border border-oat rounded-card">
                 <div class="px-6 py-5">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">API Keys Anda</h3>
+                    <h3 class="text-lg font-semibold text-off-black tracking-sub mb-4">API Keys Anda</h3>
 
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
+                        <table class="min-w-full divide-y divide-oat">
                             <thead>
                                 <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Nama</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Key</th>
-                                    <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">Tier</th>
-                                    <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Terakhir Digunakan</th>
-                                    <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Aksi</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted">Nama</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted">Key</th>
+                                    <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-muted">Tier</th>
+                                    <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-muted">Status</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted">Terakhir Digunakan</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-100">
+                            <tbody class="divide-y divide-oat">
                                 @forelse($apiKeys as $key)
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900">
+                                    <tr class="hover:bg-canvas">
+                                        <td class="whitespace-nowrap px-4 py-3 text-sm font-medium text-off-black">
                                             {{ $key->name }}
                                         </td>
                                         <td class="whitespace-nowrap px-4 py-3">
-                                            <code class="text-sm font-mono text-gray-600">{{ $key->masked_key }}</code>
+                                            <code class="text-sm font-mono text-muted">{{ $key->masked_key }}</code>
                                         </td>
                                         <td class="whitespace-nowrap px-4 py-3 text-center">
                                             @if($key->isFree())
                                                 <span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">Free</span>
                                             @else
-                                                <span class="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-700">Paid</span>
+                                                <span class="inline-flex items-center rounded-full bg-fin-orange-light px-2.5 py-0.5 text-xs font-medium text-fin-orange">Paid</span>
                                             @endif
                                         </td>
                                         <td class="whitespace-nowrap px-4 py-3 text-center">
                                             @if($key->is_active)
                                                 <span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">Active</span>
                                             @else
-                                                <span class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">Inactive</span>
+                                                <span class="inline-flex items-center rounded-full bg-canvas px-2.5 py-0.5 text-xs font-medium text-muted">Inactive</span>
                                             @endif
                                         </td>
-                                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
+                                        <td class="whitespace-nowrap px-4 py-3 text-sm text-muted">
                                             {{ $key->last_used_at ? $key->last_used_at->diffForHumans() : 'Belum pernah' }}
                                         </td>
                                         <td class="whitespace-nowrap px-4 py-3 text-right">
@@ -439,7 +439,7 @@
                                                     @csrf
                                                     @method('PATCH')
                                                     <button type="submit"
-                                                            class="inline-flex items-center rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors
+                                                            class="inline-flex items-center rounded-btn px-2.5 py-1.5 text-xs font-medium transition-colors
                                                                    {{ $key->is_active
                                                                        ? 'border border-yellow-300 bg-yellow-50 text-yellow-700 hover:bg-yellow-100'
                                                                        : 'border border-green-300 bg-green-50 text-green-700 hover:bg-green-100' }}">
@@ -451,7 +451,7 @@
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit"
-                                                            class="inline-flex items-center rounded-md border border-red-300 bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 transition-colors">
+                                                            class="inline-flex items-center rounded-btn border border-red-300 bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 transition-colors">
                                                         Hapus
                                                     </button>
                                                 </form>
@@ -460,7 +460,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="px-4 py-8 text-center text-sm text-gray-400">
+                                        <td colspan="6" class="px-4 py-8 text-center text-sm text-warm-sand">
                                             Belum ada API key. Buat satu di atas untuk mulai menggunakan layanan.
                                         </td>
                                     </tr>

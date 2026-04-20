@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center space-x-3">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            <h2 class="font-semibold text-xl text-off-black leading-tight tracking-heading">
                 {{ __('Admin Settings') }}
             </h2>
             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">Admin</span>
@@ -28,23 +28,23 @@
                 @csrf
 
                 {{-- Site Settings --}}
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-200">
+                <div class="bg-surface border border-oat rounded-card">
                     <div class="p-6">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Site Settings</h3>
+                        <h3 class="text-lg font-semibold text-off-black tracking-sub mb-4">Site Settings</h3>
                         <div class="space-y-4">
                             <div>
-                                <label for="site_name" class="block text-sm font-medium text-gray-700 mb-1">Site Name</label>
+                                <label for="site_name" class="block text-sm font-medium text-off-black mb-1">Site Name</label>
                                 <input type="text" name="site_name" id="site_name"
                                     value="{{ old('site_name', $settings['site_name'] ?? '') }}"
-                                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    class="w-full rounded-lg border-oat focus:border-fin-orange focus:ring-fin-orange">
                                 @error('site_name')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
                             </div>
                             <div>
-                                <label for="site_description" class="block text-sm font-medium text-gray-700 mb-1">Site Description</label>
+                                <label for="site_description" class="block text-sm font-medium text-off-black mb-1">Site Description</label>
                                 <textarea name="site_description" id="site_description" rows="3"
-                                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">{{ old('site_description', $settings['site_description'] ?? '') }}</textarea>
+                                    class="w-full rounded-lg border-oat focus:border-fin-orange focus:ring-fin-orange">{{ old('site_description', $settings['site_description'] ?? '') }}</textarea>
                                 @error('site_description')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
@@ -54,20 +54,20 @@
                 </div>
 
                 {{-- QRIS Settings --}}
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-200">
+                <div class="bg-surface border border-oat rounded-card">
                     <div class="p-6">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">QRIS Settings</h3>
+                        <h3 class="text-lg font-semibold text-off-black tracking-sub mb-4">QRIS Settings</h3>
                         <div class="space-y-4">
                             @if(!empty($settings['qris_image']))
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Current QRIS Image</label>
-                                    <img src="{{ Storage::url($settings['qris_image']) }}" alt="Current QRIS" class="max-w-xs rounded-lg border border-gray-200 shadow-sm">
+                                    <label class="block text-sm font-medium text-off-black mb-2">Current QRIS Image</label>
+                                    <img src="{{ Storage::url($settings['qris_image']) }}" alt="Current QRIS" class="max-w-xs rounded-lg border border-oat">
                                 </div>
                             @endif
                             <div>
-                                <label for="qris_image" class="block text-sm font-medium text-gray-700 mb-1">Upload New QRIS Image</label>
+                                <label for="qris_image" class="block text-sm font-medium text-off-black mb-1">Upload New QRIS Image</label>
                                 <input type="file" name="qris_image" id="qris_image" accept="image/*"
-                                    class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                                    class="w-full text-sm text-muted file:mr-4 file:py-2 file:px-4 file:rounded-btn file:border-0 file:text-sm file:font-medium file:bg-fin-orange-light file:text-fin-orange hover:file:bg-fin-orange-light/80">
                                 @error('qris_image')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
@@ -77,33 +77,33 @@
                 </div>
 
                 {{-- Wallet Settings --}}
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-200">
+                <div class="bg-surface border border-oat rounded-card">
                     <div class="p-6">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Wallet Settings</h3>
+                        <h3 class="text-lg font-semibold text-off-black tracking-sub mb-4">Wallet Settings</h3>
                         <div class="space-y-4">
                             <div>
-                                <label for="usd_to_idr_rate" class="block text-sm font-medium text-gray-700 mb-1">USD to IDR Rate</label>
+                                <label for="usd_to_idr_rate" class="block text-sm font-medium text-off-black mb-1">USD to IDR Rate</label>
                                 <input type="number" name="usd_to_idr_rate" id="usd_to_idr_rate" step="0.01"
                                     value="{{ old('usd_to_idr_rate', $settings['usd_to_idr_rate'] ?? 16000) }}"
-                                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    class="w-full rounded-lg border-oat focus:border-fin-orange focus:ring-fin-orange">
                                 @error('usd_to_idr_rate')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
                             </div>
                             <div>
-                                <label for="free_credit_amount" class="block text-sm font-medium text-gray-700 mb-1">Free Credit Amount (IDR)</label>
+                                <label for="free_credit_amount" class="block text-sm font-medium text-off-black mb-1">Free Credit Amount (IDR)</label>
                                 <input type="number" name="free_credit_amount" id="free_credit_amount"
                                     value="{{ old('free_credit_amount', $settings['free_credit_amount'] ?? 10000) }}"
-                                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    class="w-full rounded-lg border-oat focus:border-fin-orange focus:ring-fin-orange">
                                 @error('free_credit_amount')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
                             </div>
                             <div>
-                                <label for="min_topup_amount" class="block text-sm font-medium text-gray-700 mb-1">Min Top Up Amount (IDR)</label>
+                                <label for="min_topup_amount" class="block text-sm font-medium text-off-black mb-1">Min Top Up Amount (IDR)</label>
                                 <input type="number" name="min_topup_amount" id="min_topup_amount"
                                     value="{{ old('min_topup_amount', $settings['min_topup_amount'] ?? 10000) }}"
-                                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    class="w-full rounded-lg border-oat focus:border-fin-orange focus:ring-fin-orange">
                                 @error('min_topup_amount')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
@@ -114,7 +114,7 @@
 
                 {{-- Save Button --}}
                 <div class="flex justify-end">
-                    <button type="submit" class="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition shadow-sm">
+                    <button type="submit" class="px-6 py-3 bg-off-black text-white font-semibold rounded-btn hover:bg-off-black/90 transition">
                         Save Settings
                     </button>
                 </div>
