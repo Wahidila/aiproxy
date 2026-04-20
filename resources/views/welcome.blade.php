@@ -201,24 +201,6 @@
                     <p class="body-md">Gunakan Assistant Opus 4.6, GPT-5, Gemini, dan 26+ model AI untuk coding, writing, dan analisis.</p>
                 </div>
             </div>
-                    <h3 class="heading-feature" style="margin: 0 0 12px;">Daftar & Generate Key</h3>
-                    <p class="body-md">Buat akun gratis, generate API key dari dashboard. Langsung dapat Rp 100.000 free credit.</p>
-                </div>
-                <div class="card" style="text-align: center;">
-                    <div style="width: 48px; height: 48px; margin: 0 auto 20px; background: #fff0e6; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
-                        <span style="font-size: 20px; font-weight: 700; color: var(--color-accent);">2</span>
-                    </div>
-                    <h3 class="heading-feature" style="margin: 0 0 12px;">Pasang di Tool Anda</h3>
-                    <p class="body-md">Set Base URL dan API Key di Cursor, Kilo Code, VS Code, atau tool OpenAI-compatible lainnya.</p>
-                </div>
-                <div class="card" style="text-align: center;">
-                    <div style="width: 48px; height: 48px; margin: 0 auto 20px; background: #fff0e6; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
-                        <span style="font-size: 20px; font-weight: 700; color: var(--color-accent);">3</span>
-                    </div>
-                    <h3 class="heading-feature" style="margin: 0 0 12px;">Mulai Coding</h3>
-                    <p class="body-md">Gunakan Claude Opus 4.6, GPT-5, Gemini, dan 26+ model AI untuk coding, writing, dan analisis.</p>
-                </div>
-            </div>
         </div>
     </section>
 
