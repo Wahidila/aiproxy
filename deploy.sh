@@ -12,7 +12,7 @@ set -e
 # ============================================================
 
 # ===== EDIT VARIABEL INI =====
-DOMAIN="barbarabis.my.id"
+DOMAIN="aimurah.my.id"
 SITE_DIR="/www/wwwroot/${DOMAIN}"
 DB_NAME="ai_token_dashboard"
 DB_USER="aitoken"
