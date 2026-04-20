@@ -38,6 +38,102 @@
                 </div>
             @endif
 
+            {{-- API Proxy Control --}}
+            <div class="overflow-hidden rounded-lg bg-white shadow border border-gray-200">
+                <div class="px-6 py-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="server" class="w-5 h-5 text-gray-600"></i>
+                            <h3 class="text-lg font-semibold text-gray-900">API Proxy Control</h3>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {{-- Golang Proxy Status --}}
+                        <div class="rounded-lg border p-4 {{ $golangStatus['online'] ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50' }}">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="flex h-10 w-10 items-center justify-center rounded-lg {{ $golangStatus['online'] ? 'bg-green-100' : 'bg-red-100' }}">
+                                        <i data-lucide="cpu" class="w-5 h-5 {{ $golangStatus['online'] ? 'text-green-600' : 'text-red-600' }}"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-gray-900">Golang Proxy</p>
+                                        <p class="text-xs text-gray-500">Port 8080 (primary)</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    @if($golangStatus['online'])
+                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+                                            <span class="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+                                            ONLINE
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">
+                                            <span class="h-2 w-2 rounded-full bg-red-500"></span>
+                                            OFFLINE
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+                            @if($golangStatus['online'] && isset($golangStatus['timestamp']))
+                                <p class="mt-2 text-xs text-gray-500">Last check: {{ $golangStatus['timestamp'] }}</p>
+                            @elseif(!$golangStatus['online'])
+                                <p class="mt-2 text-xs text-red-600">{{ $golangStatus['error'] ?? 'Cannot reach proxy' }}. Start via SSH: <code class="bg-red-100 px-1 rounded">systemctl start ai-token-proxy</code></p>
+                            @endif
+                        </div>
+
+                        {{-- Laravel Fallback Toggle --}}
+                        <div class="rounded-lg border p-4 {{ $laravelFallback ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50' }}">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="flex h-10 w-10 items-center justify-center rounded-lg {{ $laravelFallback ? 'bg-green-100' : 'bg-gray-200' }}">
+                                        <i data-lucide="shield" class="w-5 h-5 {{ $laravelFallback ? 'text-green-600' : 'text-gray-500' }}"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-gray-900">Laravel Fallback API</p>
+                                        <p class="text-xs text-gray-500">Backup jika Golang offline</p>
+                                    </div>
+                                </div>
+                                <form method="POST" action="{{ route('admin.proxy.toggle-laravel') }}">
+                                    @csrf
+                                    <button type="submit"
+                                        class="relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 {{ $laravelFallback ? 'bg-green-500' : 'bg-gray-300' }}"
+                                        role="switch"
+                                        aria-checked="{{ $laravelFallback ? 'true' : 'false' }}">
+                                        <span class="pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out {{ $laravelFallback ? 'translate-x-5' : 'translate-x-0' }}"></span>
+                                    </button>
+                                </form>
+                            </div>
+                            <p class="mt-2 text-xs text-gray-500">
+                                @if($laravelFallback)
+                                    <i data-lucide="check-circle" class="w-3 h-3 inline text-green-500"></i>
+                                    Aktif &mdash; Laravel menangani <code class="bg-green-100 px-1 rounded">/api/v1/*</code> jika Golang mati.
+                                @else
+                                    <i data-lucide="x-circle" class="w-3 h-3 inline text-gray-400"></i>
+                                    Nonaktif &mdash; Request ke <code class="bg-gray-200 px-1 rounded">/api/v1/*</code> via Laravel akan ditolak (503).
+                                @endif
+                            </p>
+                        </div>
+                    </div>
+
+                    {{-- Status Summary --}}
+                    <div class="mt-3 rounded-md {{ $golangStatus['online'] ? 'bg-blue-50 border border-blue-100' : ($laravelFallback ? 'bg-yellow-50 border border-yellow-100' : 'bg-red-50 border border-red-100') }} p-3">
+                        <p class="text-xs font-medium {{ $golangStatus['online'] ? 'text-blue-700' : ($laravelFallback ? 'text-yellow-700' : 'text-red-700') }}">
+                            <i data-lucide="info" class="w-3.5 h-3.5 inline"></i>
+                            @if($golangStatus['online'] && !$laravelFallback)
+                                Normal &mdash; Semua API request ditangani oleh Golang proxy (recommended).
+                            @elseif($golangStatus['online'] && $laravelFallback)
+                                Keduanya aktif &mdash; Golang primary, Laravel sebagai backup.
+                            @elseif(!$golangStatus['online'] && $laravelFallback)
+                                Fallback mode &mdash; Golang offline, Laravel menangani semua API request.
+                            @else
+                                API tidak tersedia &mdash; Golang offline dan Laravel fallback dinonaktifkan. Aktifkan salah satu!
+                            @endif
+                        </p>
+                    </div>
+                </div>
+            </div>
+
             {{-- Stat Cards --}}
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
                 {{-- Total Users --}}

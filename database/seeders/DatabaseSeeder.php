@@ -29,6 +29,7 @@ class DatabaseSeeder extends Seeder
             'usd_to_idr_rate' => '16500',
             'free_credit_amount' => '100000',
             'min_topup_amount' => '10000',
+            'laravel_fallback_enabled' => '0',
         ];
 
         foreach ($defaults as $key => $value) {

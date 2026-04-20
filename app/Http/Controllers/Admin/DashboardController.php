@@ -4,8 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Donation;
+use App\Models\Setting;
 use App\Models\TokenUsage;
 use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 
 class DashboardController extends Controller
 {
@@ -40,6 +44,10 @@ class DashboardController extends Controller
             ];
         }
 
+        // Proxy status
+        $golangStatus = $this->checkGolangProxy();
+        $laravelFallback = Setting::get('laravel_fallback_enabled', '0') === '1';
+
         return view('admin.dashboard', compact(
             'totalUsers',
             'totalTokensUsed',
@@ -48,7 +56,47 @@ class DashboardController extends Controller
             'activeUsersToday',
             'recentDonations',
             'recentUsers',
-            'dailyStats'
+            'dailyStats',
+            'golangStatus',
+            'laravelFallback'
         ));
+    }
+
+    public function toggleLaravelFallback(Request $request)
+    {
+        $current = Setting::get('laravel_fallback_enabled', '0');
+        $new = $current === '1' ? '0' : '1';
+        Setting::set('laravel_fallback_enabled', $new);
+
+        // Clear cached value
+        Cache::forget('laravel_fallback_enabled');
+
+        $status = $new === '1' ? 'diaktifkan' : 'dinonaktifkan';
+        return redirect()->route('admin.dashboard')
+            ->with('success', "Laravel Fallback API berhasil {$status}.");
+    }
+
+    public function golangProxyStatus()
+    {
+        $status = $this->checkGolangProxy();
+        return response()->json($status);
+    }
+
+    private function checkGolangProxy(): array
+    {
+        try {
+            $response = Http::timeout(3)->get('http://127.0.0.1:8080/v1/health');
+            if ($response->successful()) {
+                $data = $response->json();
+                return [
+                    'online' => true,
+                    'proxy' => $data['proxy'] ?? 'golang',
+                    'timestamp' => $data['timestamp'] ?? null,
+                ];
+            }
+            return ['online' => false, 'error' => 'Unhealthy response: ' . $response->status()];
+        } catch (\Exception $e) {
+            return ['online' => false, 'error' => 'Connection refused'];
+        }
     }
 }

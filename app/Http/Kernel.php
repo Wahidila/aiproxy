@@ -67,5 +67,6 @@ class Kernel extends HttpKernel
         'admin' => \App\Http\Middleware\AdminMiddleware::class,
         'api.key' => \App\Http\Middleware\ValidateApiKey::class,
         'api.quota' => \App\Http\Middleware\CheckTokenQuota::class,
+        'api.fallback' => \App\Http\Middleware\CheckLaravelFallback::class,
     ];
 }

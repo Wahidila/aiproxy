@@ -51,6 +51,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
 
+    // Proxy control
+    Route::post('/proxy/toggle-laravel', [AdminDashboardController::class, 'toggleLaravelFallback'])->name('proxy.toggle-laravel');
+    Route::get('/proxy/golang-status', [AdminDashboardController::class, 'golangProxyStatus'])->name('proxy.golang-status');
+
     // User management
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
     Route::get('/users/export', [AdminUserController::class, 'export'])->name('users.export');
