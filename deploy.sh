@@ -79,6 +79,7 @@ echo ""
 echo "[5/12] Setting up project files..."
 if [ -d "${SITE_DIR}/.git" ]; then
     echo "  Git repo exists, pulling latest..."
+    git config --global --add safe.directory "${SITE_DIR}"
     cd "${SITE_DIR}"
     git pull origin main
 else
