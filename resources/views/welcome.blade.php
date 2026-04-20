@@ -115,6 +115,10 @@
         .model-price-usd-strike { text-decoration: line-through; color: #b5b3ae; font-size: 11px; }
         .model-price-idr { font-weight: 600; color: var(--color-text); font-size: 13px; }
         .model-discount { display: inline-block; font-size: 10px; font-weight: 600; color: #16a34a; background: #dcfce7; padding: 1px 6px; border-radius: 4px; margin-left: 4px; }
+        .model-card-highlight { border: 2px solid var(--color-accent); position: relative; }
+        .model-card-highlight::before { content: ''; position: absolute; inset: -2px; border-radius: 10px; background: transparent; box-shadow: 0 0 12px rgba(255,86,0,0.3), 0 0 24px rgba(255,86,0,0.15); animation: glow 2s ease-in-out infinite alternate; pointer-events: none; z-index: 0; }
+        @keyframes glow { from { box-shadow: 0 0 8px rgba(255,86,0,0.2), 0 0 16px rgba(255,86,0,0.1); } to { box-shadow: 0 0 16px rgba(255,86,0,0.4), 0 0 32px rgba(255,86,0,0.2); } }
+        .badge-free-now { position: absolute; top: -10px; right: 12px; background: var(--color-accent); color: #fff; font-size: 10px; font-weight: 700; letter-spacing: 0.8px; padding: 3px 10px; border-radius: 4px; text-transform: uppercase; z-index: 1; }
         /* Footer */
         .footer { background: var(--color-dark); color: #9c9fa5; padding: 64px 0 32px; }
         .footer a { color: #9c9fa5; text-decoration: none; }
@@ -240,7 +244,10 @@
                         $outIdr = $outUsdFinal * $rate;
                         $hasDiscount = $m->discount_percent > 0;
                     @endphp
-                    <div class="model-card">
+                    <div class="model-card {{ $m->model_id === 'claude-opus-4.6' ? 'model-card-highlight' : '' }}">
+                        @if($m->model_id === 'claude-opus-4.6')
+                            <span class="badge-free-now">FREE NOW</span>
+                        @endif
                         <div>
                             <span class="model-tier {{ $m->is_free_tier ? 'model-tier-std' : 'model-tier-max' }}">
                                 {{ $m->is_free_tier ? 'FREE TIER' : 'PREMIUM' }}
