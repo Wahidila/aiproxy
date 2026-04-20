@@ -1,0 +1,533 @@
+<x-app-layout>
+    <x-slot name="header">
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="text-xl font-semibold leading-tight text-gray-800">
+                    {{ __('User Detail') }}
+                </h2>
+                <nav class="mt-1 text-sm text-gray-500">
+                    <a href="{{ route('admin.dashboard') }}" class="hover:text-indigo-600">Admin</a>
+                    <span class="mx-1">/</span>
+                    <a href="{{ route('admin.users.index') }}" class="hover:text-indigo-600">Users</a>
+                    <span class="mx-1">/</span>
+                    <span class="text-gray-700 font-medium">{{ $user->name }}</span>
+                </nav>
+            </div>
+            <span class="inline-flex items-center rounded-md bg-orange-100 px-2.5 py-1 text-xs font-medium text-orange-700 ring-1 ring-inset ring-orange-600/20">
+                Admin
+            </span>
+        </div>
+    </x-slot>
+
+    @php
+        if (!function_exists('adminShowFormatRupiah')) {
+            function adminShowFormatRupiah($amount) {
+                return 'Rp ' . number_format($amount, 0, ',', '.');
+            }
+        }
+    @endphp
+
+    <div class="py-6">
+        <div class="mx-auto max-w-7xl sm:px-6 lg:px-8 space-y-6">
+
+            {{-- Flash Messages --}}
+            @if(session('success'))
+                <div class="rounded-lg border border-green-300 bg-green-50 p-4">
+                    <p class="text-sm font-medium text-green-800">{{ session('success') }}</p>
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div class="rounded-lg border border-red-300 bg-red-50 p-4">
+                    <p class="text-sm font-medium text-red-800">{{ session('error') }}</p>
+                </div>
+            @endif
+
+            {{-- User Info + Ban Status Card --}}
+            <div class="overflow-hidden rounded-lg bg-white shadow">
+                <div class="px-6 py-5">
+                    <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                        {{-- Left: User Info --}}
+                        <div class="flex items-center gap-4">
+                            <div class="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-indigo-100 text-2xl font-bold text-indigo-600">
+                                {{ strtoupper(substr($user->name, 0, 1)) }}
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900">{{ $user->name }}</h3>
+                                <p class="text-sm text-gray-500">{{ $user->email }}</p>
+                                <div class="mt-1 flex flex-wrap items-center gap-2">
+                                    @if($user->role === 'admin')
+                                        <span class="inline-flex items-center rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-700">
+                                            Admin
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">
+                                            User
+                                        </span>
+                                    @endif
+                                    <span class="text-xs text-gray-400">Joined {{ $user->created_at->format('d M Y H:i') }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Right: Ban Status --}}
+                        <div class="flex-shrink-0">
+                            @if($user->is_banned)
+                                <div class="rounded-lg border border-red-200 bg-red-50 p-4 max-w-sm">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span class="inline-flex items-center rounded-full bg-red-600 px-3 py-0.5 text-xs font-bold text-white">
+                                            BANNED
+                                        </span>
+                                    </div>
+                                    @if($user->ban_reason)
+                                        <p class="text-sm text-red-700 mb-1"><span class="font-medium">Reason:</span> {{ $user->ban_reason }}</p>
+                                    @endif
+                                    @if($user->banned_at)
+                                        <p class="text-xs text-red-500 mb-3">Banned at: {{ $user->banned_at->format('d M Y H:i') }}</p>
+                                    @endif
+                                    <form method="POST" action="{{ route('admin.users.unban', $user) }}">
+                                        @csrf
+                                        <button type="submit"
+                                                class="inline-flex items-center rounded-md bg-white px-3 py-1.5 text-sm font-medium text-red-700 shadow-sm ring-1 ring-inset ring-red-300 hover:bg-red-50 transition-colors">
+                                            Unban User
+                                        </button>
+                                    </form>
+                                </div>
+                            @else
+                                <div class="max-w-sm" x-data="{ showBan: false }">
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <span class="inline-flex items-center rounded-full bg-green-100 px-3 py-0.5 text-xs font-bold text-green-700">
+                                            Active
+                                        </span>
+                                        @if($user->role !== 'admin')
+                                            <button type="button"
+                                                    @click="showBan = !showBan"
+                                                    class="inline-flex items-center rounded-md bg-white px-3 py-1.5 text-sm font-medium text-red-600 shadow-sm ring-1 ring-inset ring-red-300 hover:bg-red-50 transition-colors">
+                                                <span x-text="showBan ? 'Cancel' : 'Ban User'"></span>
+                                            </button>
+                                        @endif
+                                    </div>
+                                    @if($user->role !== 'admin')
+                                        <div x-show="showBan" x-transition class="mt-3 rounded-lg border border-red-200 bg-red-50 p-4">
+                                            <form method="POST" action="{{ route('admin.users.ban', $user) }}" class="space-y-3">
+                                                @csrf
+                                                <div>
+                                                    <label for="ban_reason" class="block text-sm font-medium text-red-700 mb-1">Ban Reason</label>
+                                                    <textarea id="ban_reason"
+                                                              name="ban_reason"
+                                                              rows="2"
+                                                              required
+                                                              placeholder="Alasan ban user..."
+                                                              class="w-full rounded-md border-red-300 text-sm shadow-sm focus:border-red-500 focus:ring-red-500"></textarea>
+                                                </div>
+                                                <button type="submit"
+                                                        class="inline-flex items-center rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-red-700 transition-colors">
+                                                    Confirm Ban
+                                                </button>
+                                            </form>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Wallet & Stats Row --}}
+            <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+
+                {{-- Left: Wallet Card --}}
+                <div class="overflow-hidden rounded-lg bg-white shadow">
+                    <div class="px-6 py-5">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Wallet</h3>
+
+                        {{-- Balance Display --}}
+                        <div class="mb-4">
+                            <p class="text-sm text-gray-500 mb-1">Total Saldo</p>
+                            <p class="text-3xl font-bold {{ $quota && $quota->total_balance > 0 ? 'text-green-600' : 'text-red-600' }}">
+                                {{ $quota ? $quota->formatted_balance : 'Rp 0' }}
+                            </p>
+                        </div>
+
+                        {{-- Free & Paid Balance Breakdown --}}
+                        <div class="grid grid-cols-2 gap-3 mb-4">
+                            <div class="rounded-lg bg-emerald-50 border border-emerald-200 p-3">
+                                <p class="text-xs font-medium text-emerald-600 uppercase tracking-wider">Free Tier</p>
+                                <p class="mt-1 text-lg font-bold text-emerald-700">
+                                    {{ $quota ? $quota->formatted_free_balance : 'Rp 0' }}
+                                </p>
+                            </div>
+                            <div class="rounded-lg bg-indigo-50 border border-indigo-200 p-3">
+                                <p class="text-xs font-medium text-indigo-600 uppercase tracking-wider">Top Up</p>
+                                <p class="mt-1 text-lg font-bold text-indigo-700">
+                                    {{ $quota ? $quota->formatted_paid_balance : 'Rp 0' }}
+                                </p>
+                            </div>
+                        </div>
+
+                        {{-- Free Credit & User Type --}}
+                        <div class="flex flex-wrap items-center gap-3 mb-6">
+                            @if($quota && $quota->free_credit_claimed)
+                                <span class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
+                                    Free credit claimed
+                                </span>
+                            @else
+                                <span class="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-700">
+                                    Not claimed
+                                </span>
+                            @endif
+
+                            @if($quota && $quota->paid_balance > 0)
+                                <span class="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-700">
+                                    Has Paid Balance
+                                </span>
+                            @endif
+                        </div>
+
+                        {{-- Adjust Balance Form --}}
+                        <div class="border-t border-gray-200 pt-4">
+                            <h4 class="text-sm font-semibold text-gray-700 mb-3">Adjust Saldo</h4>
+                            <form method="POST" action="{{ route('admin.users.adjust-balance', $user) }}" class="space-y-3" x-data="{ balanceType: 'paid' }">
+                                @csrf
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1.5">Tipe Saldo</label>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <label class="relative flex cursor-pointer items-center justify-center rounded-lg border-2 px-3 py-2.5 text-sm font-medium transition-all"
+                                               :class="balanceType === 'free' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-gray-200 bg-white text-gray-500 hover:bg-gray-50'">
+                                            <input type="radio" name="balance_type" value="free" x-model="balanceType" class="sr-only">
+                                            <span>Free Tier</span>
+                                        </label>
+                                        <label class="relative flex cursor-pointer items-center justify-center rounded-lg border-2 px-3 py-2.5 text-sm font-medium transition-all"
+                                               :class="balanceType === 'paid' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 bg-white text-gray-500 hover:bg-gray-50'">
+                                            <input type="radio" name="balance_type" value="paid" x-model="balanceType" class="sr-only">
+                                            <span>Top Up</span>
+                                        </label>
+                                    </div>
+                                    @error('balance_type')
+                                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1.5">Jumlah</label>
+                                    <input type="number"
+                                           name="amount"
+                                           step="1000"
+                                           required
+                                           placeholder="Positif = tambah, negatif = kurangi"
+                                           class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    @error('amount')
+                                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1.5">Alasan</label>
+                                    <textarea name="reason"
+                                              rows="2"
+                                              required
+                                              placeholder="Alasan adjustment..."
+                                              class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
+                                    @error('reason')
+                                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                <button type="submit"
+                                        class="w-full inline-flex items-center justify-center rounded-md px-4 py-2.5 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors"
+                                        :class="balanceType === 'free' ? 'bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500' : 'bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500'">
+                                    <span x-text="balanceType === 'free' ? 'Adjust Saldo Free Tier' : 'Adjust Saldo Top Up'"></span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Right: Stats Cards (2x2 grid) --}}
+                <div class="grid grid-cols-2 gap-4">
+                    {{-- Total Spending --}}
+                    <div class="overflow-hidden rounded-lg bg-white shadow">
+                        <div class="p-5">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 mb-3">
+                                <svg class="h-6 w-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Total Spending</p>
+                            <p class="mt-1 text-xl font-bold text-gray-900">{{ adminShowFormatRupiah($totalSpending) }}</p>
+                        </div>
+                    </div>
+
+                    {{-- Total Requests --}}
+                    <div class="overflow-hidden rounded-lg bg-white shadow">
+                        <div class="p-5">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 mb-3">
+                                <svg class="h-6 w-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                </svg>
+                            </div>
+                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Total Requests (30d)</p>
+                            <p class="mt-1 text-xl font-bold text-gray-900">{{ number_format($stats['total_requests'] ?? 0) }}</p>
+                        </div>
+                    </div>
+
+                    {{-- Avg Response Time --}}
+                    <div class="overflow-hidden rounded-lg bg-white shadow">
+                        <div class="p-5">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 mb-3">
+                                <svg class="h-6 w-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Avg Response Time</p>
+                            <p class="mt-1 text-xl font-bold text-gray-900">{{ number_format($stats['avg_response_time'] ?? 0) }} ms</p>
+                        </div>
+                    </div>
+
+                    {{-- Favorite Model --}}
+                    <div class="overflow-hidden rounded-lg bg-white shadow">
+                        <div class="p-5">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 mb-3">
+                                <svg class="h-6 w-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                                </svg>
+                            </div>
+                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Favorite Model</p>
+                            <p class="mt-1 text-lg font-bold text-gray-900 truncate" title="{{ $stats['favorite_model'] ?? '-' }}">
+                                {{ $stats['favorite_model'] ?? '-' }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            {{-- Spending by Model --}}
+            <div class="overflow-hidden rounded-lg bg-white shadow">
+                <div class="px-6 py-5">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Biaya per Model (30 Hari)</h3>
+
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Model</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Requests</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Total Tokens</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Cost IDR</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                @forelse($stats['model_usage'] ?? [] as $model => $data)
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900">{{ $model }}</td>
+                                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-600">{{ number_format($data['requests']) }}</td>
+                                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-600">{{ number_format($data['total_tokens']) }}</td>
+                                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-medium text-gray-900">{{ adminShowFormatRupiah($data['cost_idr']) }}</td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="px-4 py-8 text-center text-sm text-gray-400">
+                                            Belum ada data
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            {{-- API Keys --}}
+            <div class="overflow-hidden rounded-lg bg-white shadow">
+                <div class="px-6 py-5">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                        API Keys
+                        <span class="ml-2 inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
+                            {{ $user->apiKeys->count() }}
+                        </span>
+                    </h3>
+
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Name</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Key</th>
+                                    <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Last Used</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                @forelse($user->apiKeys as $apiKey)
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900">
+                                            {{ $apiKey->name }}
+                                        </td>
+                                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
+                                            <code class="rounded bg-gray-100 px-2 py-0.5 font-mono text-xs">{{ $apiKey->masked_key }}</code>
+                                        </td>
+                                        <td class="whitespace-nowrap px-4 py-3 text-center">
+                                            @if($apiKey->is_active)
+                                                <span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
+                                                    Active
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-500">
+                                                    Inactive
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
+                                            {{ $apiKey->last_used_at ? $apiKey->last_used_at->format('d M Y H:i') : '-' }}
+                                        </td>
+                                        <td class="whitespace-nowrap px-4 py-3 text-right">
+                                            <form method="POST"
+                                                  action="{{ route('admin.users.revoke-key', [$user, $apiKey]) }}"
+                                                  onsubmit="return confirm('Are you sure you want to revoke this API key?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit"
+                                                        class="inline-flex items-center rounded-md bg-white px-2.5 py-1.5 text-xs font-medium text-red-600 shadow-sm ring-1 ring-inset ring-red-300 hover:bg-red-50 transition-colors">
+                                                    Revoke
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="px-4 py-8 text-center text-sm text-gray-400">
+                                            Belum ada API key
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Wallet Transactions --}}
+            <div class="overflow-hidden rounded-lg bg-white shadow">
+                <div class="px-6 py-5">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Riwayat Transaksi</h3>
+
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Type</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Amount</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Balance After</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Description</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                @forelse($transactions as $transaction)
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
+                                            {{ $transaction->created_at->format('d M Y H:i') }}
+                                        </td>
+                                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-900">
+                                            {{ $transaction->type_label }}
+                                        </td>
+                                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-medium {{ $transaction->amount >= 0 ? 'text-green-600' : 'text-red-600' }}">
+                                            {{ $transaction->formatted_amount }}
+                                        </td>
+                                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-600">
+                                            {{ adminShowFormatRupiah($transaction->balance_after) }}
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-gray-500 max-w-xs truncate">
+                                            {{ $transaction->description ?? '-' }}
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="px-4 py-8 text-center text-sm text-gray-400">
+                                            Belum ada transaksi
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+
+                    @if($transactions->hasPages())
+                        <div class="mt-4 border-t border-gray-200 pt-4">
+                            {{ $transactions->links() }}
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Recent API Usage --}}
+            <div class="overflow-hidden rounded-lg bg-white shadow">
+                <div class="px-6 py-5">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Recent API Usage (Last 20)</h3>
+
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Time</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Model</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Input Tokens</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Output Tokens</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Total Tokens</th>
+                                    <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Response Time</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                @forelse($recentUsages as $usage)
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
+                                            {{ $usage->created_at->format('d/m H:i') }}
+                                        </td>
+                                        <td class="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900">
+                                            {{ $usage->model }}
+                                        </td>
+                                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-600">
+                                            {{ number_format($usage->input_tokens) }}
+                                        </td>
+                                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-600">
+                                            {{ number_format($usage->output_tokens) }}
+                                        </td>
+                                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-medium text-gray-900">
+                                            {{ number_format($usage->total_tokens) }}
+                                        </td>
+                                        <td class="whitespace-nowrap px-4 py-3 text-center">
+                                            @if($usage->status_code >= 200 && $usage->status_code < 300)
+                                                <span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                                                    {{ $usage->status_code }}
+                                                </span>
+                                            @elseif($usage->status_code >= 400)
+                                                <span class="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">
+                                                    {{ $usage->status_code }}
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">
+                                                    {{ $usage->status_code }}
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-600">
+                                            {{ number_format($usage->response_time_ms) }} ms
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="7" class="px-4 py-8 text-center text-sm text-gray-400">
+                                            Belum ada data
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</x-app-layout>

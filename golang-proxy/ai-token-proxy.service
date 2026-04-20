@@ -1,0 +1,26 @@
+# Systemd service file for AI Token Proxy
+# Place in /etc/systemd/system/ai-token-proxy.service
+# Then: systemctl enable ai-token-proxy && systemctl start ai-token-proxy
+
+[Unit]
+Description=AI Token Proxy (Golang)
+After=network.target mysql.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/ai-token-dashboard/golang-proxy
+ExecStart=/var/www/ai-token-dashboard/golang-proxy/ai-token-proxy
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+# Environment (or use .env file in WorkingDirectory)
+# Environment=PORT=8080
+# Environment=DB_HOST=127.0.0.1
+# Environment=DB_DATABASE=ai_token_dashboard
+
+[Install]
+WantedBy=multi-user.target
