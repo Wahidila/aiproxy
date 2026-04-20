@@ -79,7 +79,7 @@
                                 <input type="number" name="amount" id="amount" x-model="amount"
                                     min="{{ $minTopup }}" step="1000"
                                     placeholder="Nominal top up (min Rp {{ number_format($minTopup, 0, ',', '.') }})"
-                                    class="w-full rounded-lg border-oat shadow-sm focus:border-fin-orange focus:ring-fin-orange"
+                                    class="w-full rounded-btn border-oat focus:border-fin-orange focus:ring-fin-orange"
                                     required>
                                 @error('amount')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -110,7 +110,7 @@
                                 <label class="block text-sm font-medium text-off-black mb-2">Scan QRIS untuk Pembayaran</label>
                                 <div class="flex justify-center">
                                     @if($qrisImage)
-                                        <img src="{{ Storage::url($qrisImage) }}" alt="QRIS" class="max-w-xs rounded-lg border border-oat shadow-sm">
+                                        <img src="{{ Storage::url($qrisImage) }}" alt="QRIS" class="max-w-xs rounded-card border border-oat">
                                     @else
                                         <div class="w-64 h-64 bg-canvas rounded-lg border-2 border-dashed border-oat flex items-center justify-center">
                                             <p class="text-warm-sand text-sm text-center">QRIS belum tersedia.<br>Hubungi admin.</p>
@@ -132,7 +132,7 @@
 
                             {{-- Submit --}}
                             <div>
-                                <button type="submit" class="w-full px-6 py-3 bg-off-black text-white font-semibold rounded-btn hover:bg-off-black/90 transition shadow-sm">
+                                <button type="submit" class="w-full px-6 py-3 bg-off-black text-white font-semibold rounded-btn hover:bg-off-black/90 btn-intercom transition">
                                     Kirim Permintaan Top Up
                                 </button>
                             </div>

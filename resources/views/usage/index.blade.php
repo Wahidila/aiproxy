@@ -167,17 +167,17 @@
                         <div>
                             <label for="date_from" class="block text-xs font-medium text-off-black mb-1">Dari Tanggal</label>
                             <input type="date" name="date_from" id="date_from" value="{{ request('date_from') }}"
-                                class="block rounded-btn border-oat text-sm shadow-sm focus:border-fin-orange focus:ring-fin-orange">
+                                class="block rounded-btn border-oat text-sm focus:border-fin-orange focus:ring-fin-orange">
                         </div>
                         <div>
                             <label for="date_to" class="block text-xs font-medium text-off-black mb-1">Sampai Tanggal</label>
                             <input type="date" name="date_to" id="date_to" value="{{ request('date_to') }}"
-                                class="block rounded-btn border-oat text-sm shadow-sm focus:border-fin-orange focus:ring-fin-orange">
+                                class="block rounded-btn border-oat text-sm focus:border-fin-orange focus:ring-fin-orange">
                         </div>
                         <div>
                             <label for="model" class="block text-xs font-medium text-off-black mb-1">Model</label>
                             <select name="model" id="model"
-                                class="block rounded-btn border-oat text-sm shadow-sm focus:border-fin-orange focus:ring-fin-orange">
+                                class="block rounded-btn border-oat text-sm focus:border-fin-orange focus:ring-fin-orange">
                                 <option value="">Semua Model</option>
                                 @foreach($models as $m)
                                     <option value="{{ $m }}" {{ request('model') === $m ? 'selected' : '' }}>{{ $m }}</option>
@@ -187,7 +187,7 @@
                         <div>
                             <label for="api_key_id" class="block text-xs font-medium text-off-black mb-1">API Key</label>
                             <select name="api_key_id" id="api_key_id"
-                                class="block rounded-btn border-oat text-sm shadow-sm focus:border-fin-orange focus:ring-fin-orange">
+                                class="block rounded-btn border-oat text-sm focus:border-fin-orange focus:ring-fin-orange">
                                 <option value="">Semua Key</option>
                                 @foreach($apiKeys as $key)
                                     <option value="{{ $key->id }}" {{ request('api_key_id') == $key->id ? 'selected' : '' }}>{{ $key->name }}</option>
@@ -196,18 +196,18 @@
                         </div>
                         <div class="flex items-center gap-2">
                             <button type="submit"
-                                class="inline-flex items-center rounded-btn bg-off-black px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-off-black/90 transition-colors">
+                                class="inline-flex items-center rounded-btn bg-off-black px-4 py-2 text-sm font-medium text-white hover:bg-off-black/90 btn-intercom transition-colors">
                                 <svg class="mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
                                 </svg>
                                 Filter
                             </button>
                             <a href="{{ route('usage.index') }}"
-                                class="inline-flex items-center rounded-btn border border-oat bg-surface px-4 py-2 text-sm font-medium text-off-black shadow-sm hover:bg-canvas transition-colors">
+                                class="inline-flex items-center rounded-btn border border-oat bg-surface px-4 py-2 text-sm font-medium text-off-black hover:bg-canvas btn-intercom transition-colors">
                                 Reset
                             </a>
                             <a href="{{ route('usage.export', request()->query()) }}"
-                                class="inline-flex items-center rounded-btn border border-oat bg-surface px-4 py-2 text-sm font-medium text-off-black shadow-sm hover:bg-canvas transition-colors">
+                                class="inline-flex items-center rounded-btn border border-oat bg-surface px-4 py-2 text-sm font-medium text-off-black hover:bg-canvas btn-intercom transition-colors">
                                 <svg class="mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                 </svg>

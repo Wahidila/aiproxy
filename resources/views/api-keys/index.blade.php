@@ -340,7 +340,7 @@
                                 <label for="name" class="block text-sm font-medium text-off-black mb-1">Nama</label>
                                 <input type="text" name="name" id="name" required
                                     placeholder="Contoh: Cursor IDE, Kilo Code, dll"
-                                    class="block w-full rounded-btn border-oat shadow-sm focus:border-fin-orange focus:ring-fin-orange sm:text-sm"
+                                    class="block w-full rounded-btn border-oat focus:border-fin-orange focus:ring-fin-orange sm:text-sm"
                                     value="{{ old('name') }}">
                                 @error('name')
                                     <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -377,7 +377,7 @@
                         </div>
                         <div>
                             <button type="submit"
-                                class="inline-flex items-center rounded-btn bg-off-black px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-off-black/90 transition-colors">
+                                class="inline-flex items-center rounded-btn bg-off-black px-4 py-2 text-sm font-medium text-white hover:bg-off-black/90 btn-intercom transition-colors">
                                 <svg class="mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                                 </svg>

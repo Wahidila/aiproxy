@@ -117,7 +117,7 @@
                     </div>
 
                     {{-- Status Summary --}}
-                    <div class="mt-3 rounded-md {{ $golangStatus['online'] ? 'bg-blue-50 border border-blue-100' : ($laravelFallback ? 'bg-yellow-50 border border-yellow-100' : 'bg-red-50 border border-red-100') }} p-3">
+                    <div class="mt-3 rounded-card {{ $golangStatus['online'] ? 'bg-blue-50 border border-blue-100' : ($laravelFallback ? 'bg-yellow-50 border border-yellow-100' : 'bg-red-50 border border-red-100') }} p-3">
                         <p class="text-xs font-medium {{ $golangStatus['online'] ? 'text-blue-700' : ($laravelFallback ? 'text-yellow-700' : 'text-red-700') }}">
                             <i data-lucide="info" class="w-3.5 h-3.5 inline"></i>
                             @if($golangStatus['online'] && !$laravelFallback)
