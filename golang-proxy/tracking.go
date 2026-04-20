@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 )
 
 // TrackingEvent represents a usage event to be recorded asynchronously
@@ -37,13 +38,24 @@ func NewTracker(db *Database, bufferSize int) *Tracker {
 	return t
 }
 
-// Track queues a tracking event (non-blocking)
+// Track queues a tracking event. If the buffer is full, it will block
+// for up to 5 seconds before falling back to synchronous recording.
+// This ensures no billing data is ever silently lost.
 func (t *Tracker) Track(event TrackingEvent) {
 	select {
 	case t.eventCh <- event:
 		// queued successfully
 	default:
-		log.Printf("WARNING: tracking buffer full, dropping event for user %d", event.UserID)
+		// Buffer is full - try with a timeout before falling back to sync
+		log.Printf("WARNING: tracking buffer full for user %d, attempting blocking send...", event.UserID)
+		select {
+		case t.eventCh <- event:
+			log.Printf("INFO: event queued after brief wait for user %d", event.UserID)
+		case <-time.After(5 * time.Second):
+			// Last resort: record synchronously to prevent data loss
+			log.Printf("ERROR: tracking buffer still full after 5s for user %d, recording synchronously", event.UserID)
+			t.processEvent(event)
+		}
 	}
 }
 

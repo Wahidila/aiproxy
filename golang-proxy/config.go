@@ -44,7 +44,7 @@ func LoadConfig() *Config {
 		EnowxAIBaseURL: getEnv("ENOWXAI_BASE_URL", "http://43.133.141.45:1434/v1"),
 		EnowxAIAPIKey:  getEnv("ENOWXAI_API_KEY", ""),
 
-		TrackingBufferSize:  getEnvInt("TRACKING_BUFFER_SIZE", 1000),
+		TrackingBufferSize:  getEnvInt("TRACKING_BUFFER_SIZE", 10000),
 		PricingCacheTTLSecs: getEnvInt("PRICING_CACHE_TTL_SECONDS", 60),
 	}
 }
