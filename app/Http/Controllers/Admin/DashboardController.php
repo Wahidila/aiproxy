@@ -45,7 +45,11 @@ class DashboardController extends Controller
         }
 
         // Proxy status
-        $golangStatus = $this->checkGolangProxy();
+        try {
+            $golangStatus = $this->checkGolangProxy();
+        } catch (\Throwable $e) {
+            $golangStatus = ['online' => false, 'error' => 'Check failed'];
+        }
         $laravelFallback = Setting::get('laravel_fallback_enabled', '0') === '1';
 
         return view('admin.dashboard', compact(
@@ -85,7 +89,7 @@ class DashboardController extends Controller
     private function checkGolangProxy(): array
     {
         try {
-            $response = Http::timeout(3)->get('http://127.0.0.1:8080/v1/health');
+            $response = Http::connectTimeout(2)->timeout(3)->get('http://127.0.0.1:8080/v1/health');
             if ($response->successful()) {
                 $data = $response->json();
                 return [
@@ -95,7 +99,7 @@ class DashboardController extends Controller
                 ];
             }
             return ['online' => false, 'error' => 'Unhealthy response: ' . $response->status()];
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return ['online' => false, 'error' => 'Connection refused'];
         }
     }
