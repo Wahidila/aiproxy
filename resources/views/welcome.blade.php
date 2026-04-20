@@ -3,10 +3,11 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ config('app.name', 'AI Murah') }} - Akses AI Premium, Harga Terjangkau</title>
-    <meta name="description" content="Akses model AI terbaik dunia - Claude Opus 4.6, GPT-5, Gemini Pro - langsung dari Cursor, VS Code, atau tool favorit Anda. Mulai gratis Rp 100.000 credit.">
+    <title>AIMurah - Akses AI Premium, Harga Terjangkau</title>
+    <meta name="description" content="Akses model AI terbaik dunia - Assistant Opus 4.6, GPT-5, Gemini Pro - langsung dari Cursor, VS Code, atau tool favorit Anda. Mulai gratis Rp 100.000 credit.">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:300,400,500,600,700,800&display=swap" rel="stylesheet" />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <style>
         :root {
             --color-canvas: #faf9f6;
@@ -119,14 +120,21 @@
             .nav-links .nav-link { display: none; }
             .hero-buttons { flex-direction: column; }
         }
+        /* Lucide icon inline */
+        .lucide-inline { display: inline-block; vertical-align: middle; width: 1em; height: 1em; }
+        .icon-box { width: 48px; height: 48px; margin: 0 auto 20px; background: #fff0e6; border-radius: 4px; display: flex; align-items: center; justify-content: center; }
+        .icon-box i { width: 24px; height: 24px; color: var(--color-accent); }
+        .tool-badge { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; padding: 12px 16px; font-size: 14px; font-weight: 500; text-align: center; color: var(--color-text); display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .tool-badge i { width: 16px; height: 16px; color: var(--color-muted); }
     </style>
 </head>
-<body>
+<body onload="lucide.createIcons()">
     <!-- Navigation -->
     <nav class="nav">
         <div class="container nav-inner">
-            <a href="/" class="nav-brand">
-                <span class="accent-dot"></span> aimurah
+            <a href="/" class="nav-brand" style="display: flex; align-items: center; gap: 8px;">
+                <i data-lucide="zap" style="width: 22px; height: 22px; color: var(--color-accent);"></i>
+                AIMurah
             </a>
             <div class="nav-links">
                 @auth
@@ -150,10 +158,12 @@
                 Gunakan Claude Opus 4.6, GPT-5, Gemini Pro, dan 26+ model AI lainnya langsung dari Cursor, VS Code, atau tool favorit Anda.
             </p>
             <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;" class="hero-buttons">
-                <a href="{{ route('register') }}" class="btn btn-accent" style="padding: 14px 32px; font-size: 16px;">
+                <a href="{{ route('register') }}" class="btn btn-accent" style="padding: 14px 32px; font-size: 16px; gap: 8px;">
+                    <i data-lucide="sparkles" style="width: 20px; height: 20px;"></i>
                     Mulai Gratis &mdash; Rp 100K Credit
                 </a>
-                <a href="#pricing" class="btn btn-outline">
+                <a href="#pricing" class="btn btn-outline" style="gap: 8px;">
+                    <i data-lucide="tag" style="width: 18px; height: 18px;"></i>
                     Lihat Harga
                 </a>
             </div>
@@ -170,9 +180,27 @@
             </div>
             <div class="grid-3">
                 <div class="card" style="text-align: center;">
-                    <div style="width: 48px; height: 48px; margin: 0 auto 20px; background: #fff0e6; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
-                        <span style="font-size: 20px; font-weight: 700; color: var(--color-accent);">1</span>
+                    <div class="icon-box">
+                        <i data-lucide="key-round"></i>
                     </div>
+                    <h3 class="heading-feature" style="margin: 0 0 12px;">Daftar & Generate Key</h3>
+                    <p class="body-md">Buat akun gratis, generate API key dari dashboard. Langsung dapat Rp 100.000 free credit.</p>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <div class="icon-box">
+                        <i data-lucide="plug"></i>
+                    </div>
+                    <h3 class="heading-feature" style="margin: 0 0 12px;">Pasang di Tool Anda</h3>
+                    <p class="body-md">Set Base URL dan API Key di Cursor, Kilo Code, VS Code, atau tool OpenAI-compatible lainnya.</p>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <div class="icon-box">
+                        <i data-lucide="rocket"></i>
+                    </div>
+                    <h3 class="heading-feature" style="margin: 0 0 12px;">Mulai Coding</h3>
+                    <p class="body-md">Gunakan Assistant Opus 4.6, GPT-5, Gemini, dan 26+ model AI untuk coding, writing, dan analisis.</p>
+                </div>
+            </div>
                     <h3 class="heading-feature" style="margin: 0 0 12px;">Daftar & Generate Key</h3>
                     <p class="body-md">Buat akun gratis, generate API key dari dashboard. Langsung dapat Rp 100.000 free credit.</p>
                 </div>
@@ -249,23 +277,24 @@
                     <p style="font-size: 15px; color: var(--color-muted); margin: 8px 0 32px;">Langsung dapat Rp 100K credit</p>
                     <ul class="check-list">
                         <li>
-                            <svg class="check-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                            <i data-lucide="circle-check" class="check-icon"></i>
                             <span><strong>Rp 100.000</strong> free credit</span>
                         </li>
                         <li>
-                            <svg class="check-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                            <i data-lucide="circle-check" class="check-icon"></i>
                             <span>4 model AI (Sonnet, DeepSeek, MiniMax, GLM)</span>
                         </li>
                         <li>
-                            <svg class="check-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                            <i data-lucide="circle-check" class="check-icon"></i>
                             <span>OpenAI-compatible API</span>
                         </li>
                         <li>
-                            <svg class="check-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                            <i data-lucide="circle-check" class="check-icon"></i>
                             <span>Dashboard & statistik penggunaan</span>
                         </li>
                     </ul>
-                    <a href="{{ route('register') }}" class="btn btn-outline" style="width: 100%; margin-top: 32px;">
+                    <a href="{{ route('register') }}" class="btn btn-outline" style="width: 100%; margin-top: 32px; gap: 8px;">
+                        <i data-lucide="user-plus" style="width: 18px; height: 18px;"></i>
                         Daftar Gratis
                     </a>
                 </div>
@@ -278,23 +307,24 @@
                     <p style="font-size: 15px; color: var(--color-muted); margin: 8px 0 32px;">Bayar sesuai pemakaian, saldo tidak expired</p>
                     <ul class="check-list">
                         <li>
-                            <svg class="check-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                            <i data-lucide="circle-check" class="check-icon"></i>
                             <span><strong>Semua 26+ model</strong> termasuk Opus 4.6</span>
                         </li>
                         <li>
-                            <svg class="check-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                            <i data-lucide="circle-check" class="check-icon"></i>
                             <span>Saldo <strong>tidak expired</strong>, pakai kapan saja</span>
                         </li>
                         <li>
-                            <svg class="check-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                            <i data-lucide="circle-check" class="check-icon"></i>
                             <span>Bayar via QRIS (semua e-wallet & bank)</span>
                         </li>
                         <li>
-                            <svg class="check-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                            <i data-lucide="circle-check" class="check-icon"></i>
                             <span>Harga per model transparan di dashboard</span>
                         </li>
                     </ul>
-                    <a href="{{ route('register') }}" class="btn btn-accent" style="width: 100%; margin-top: 32px;">
+                    <a href="{{ route('register') }}" class="btn btn-accent" style="width: 100%; margin-top: 32px; gap: 8px;">
+                        <i data-lucide="arrow-right" style="width: 18px; height: 18px;"></i>
                         Mulai Sekarang
                     </a>
                 </div>
@@ -312,15 +342,30 @@
             </div>
             <div class="grid-4" style="max-width: 700px; margin: 0 auto 48px;">
                 @php
-                $tools = ['Cursor', 'Kilo Code', 'VS Code', 'Cline', 'Continue', 'Windsurf', 'OpenCode', 'Any Client'];
+                $tools = [
+                    ['name' => 'Cursor', 'icon' => 'mouse-pointer-click'],
+                    ['name' => 'Kilo Code', 'icon' => 'bot'],
+                    ['name' => 'VS Code', 'icon' => 'code'],
+                    ['name' => 'Cline', 'icon' => 'terminal'],
+                    ['name' => 'Continue', 'icon' => 'play'],
+                    ['name' => 'Windsurf', 'icon' => 'wind'],
+                    ['name' => 'OpenCode', 'icon' => 'braces'],
+                    ['name' => 'Any Client', 'icon' => 'globe'],
+                ];
                 @endphp
                 @foreach($tools as $tool)
-                <div class="tool-badge">{{ $tool }}</div>
+                <div class="tool-badge">
+                    <i data-lucide="{{ $tool['icon'] }}"></i>
+                    {{ $tool['name'] }}
+                </div>
                 @endforeach
             </div>
             <div style="max-width: 600px; margin: 0 auto;">
                 <div class="code-block">
-                    <p style="margin: 0 0 8px;"><span class="code-comment"># Setup di Cursor / Kilo Code / VS Code</span></p>
+                    <p style="margin: 0 0 12px; display: flex; align-items: center; gap: 8px;">
+                        <i data-lucide="terminal" style="width: 16px; height: 16px; color: #6b7280;"></i>
+                        <span class="code-comment">Setup di Cursor / Kilo Code / VS Code</span>
+                    </p>
                     <p style="margin: 0 0 4px;"><span class="code-key">Base URL:</span> <span class="code-value">{{ url('/api/v1') }}</span></p>
                     <p style="margin: 0 0 4px;"><span class="code-key">API Key:</span>  <span class="code-value">sk-your-api-key-here</span></p>
                     <p style="margin: 0;"><span class="code-key">Model:</span>   <span class="code-value">claude-sonnet-4.5</span></p>
@@ -334,8 +379,9 @@
         <div class="container">
             <h2 class="heading-sub" style="color: #fff; margin: 0 0 16px;">Siap mulai?</h2>
             <p style="font-size: 18px; color: #9c9fa5; margin: 0 0 32px;">Daftar gratis, dapat Rp 100K credit, langsung pakai di tool favorit Anda.</p>
-            <a href="{{ route('register') }}" class="btn btn-accent" style="padding: 16px 40px; font-size: 17px;">
+            <a href="{{ route('register') }}" class="btn btn-accent" style="padding: 16px 40px; font-size: 17px; gap: 10px;">
                 Daftar Gratis Sekarang
+                <i data-lucide="arrow-right" style="width: 20px; height: 20px;"></i>
             </a>
         </div>
     </section>
@@ -345,8 +391,9 @@
         <div class="container">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 32px;">
                 <div>
-                    <p style="font-size: 18px; font-weight: 700; color: #fff; margin: 0 0 8px;">
-                        <span class="accent-dot"></span> aimurah
+                    <p style="font-size: 18px; font-weight: 700; color: #fff; margin: 0 0 8px; display: flex; align-items: center; gap: 8px;">
+                        <i data-lucide="zap" style="width: 20px; height: 20px; color: var(--color-accent);"></i>
+                        AIMurah
                     </p>
                     <p style="font-size: 14px; margin: 0;">Akses AI Premium, Harga Terjangkau</p>
                 </div>
@@ -357,7 +404,7 @@
                 </div>
             </div>
             <div style="margin-top: 48px; padding-top: 24px; border-top: 1px solid #2a2a2a; text-align: center; font-size: 13px;">
-                &copy; {{ date('Y') }} aimurah.my.id. All rights reserved.
+                &copy; {{ date('Y') }} AIMurah. All rights reserved.
             </div>
         </div>
     </footer>

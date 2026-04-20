@@ -5,8 +5,9 @@
             <div class="flex">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}" class="font-bold text-lg text-indigo-600">
-                        AI Token
+                    <a href="{{ route('dashboard') }}" class="flex items-center gap-2 font-bold text-lg text-gray-900">
+                        <i data-lucide="zap" class="w-5 h-5" style="color: #ff5600;"></i>
+                        AIMurah
                     </a>
                 </div>
 

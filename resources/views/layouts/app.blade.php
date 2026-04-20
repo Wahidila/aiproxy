@@ -14,8 +14,11 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         <style>[x-cloak] { display: none !important; }</style>
+
+        <!-- Lucide Icons -->
+        <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     </head>
-    <body class="font-sans antialiased">
+    <body class="font-sans antialiased" onload="lucide.createIcons()">
         <div class="min-h-screen bg-gray-100">
             @include('layouts.navigation')
 
