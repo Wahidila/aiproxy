@@ -3,15 +3,18 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Mail\InvitationMail;
 use App\Models\User;
 use App\Models\UserInvitation;
+use App\Services\BrevoMailService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
 
 class InvitationController extends Controller
 {
+    public function __construct(
+        private BrevoMailService $mailer
+    ) {}
+
     /**
      * Send a new invitation.
      */
@@ -47,16 +50,16 @@ class InvitationController extends Controller
         // Load relationship for email template
         $invitation->load('invitedBy');
 
-        // Send email (with try-catch to avoid 500 if mail fails)
-        try {
-            Mail::to($email)->send(new InvitationMail($invitation));
-        } catch (\Exception $e) {
+        // Send email via Brevo API
+        $result = $this->sendInvitationEmail($invitation);
+
+        if ($result['success']) {
             return redirect()->route('admin.users.index')
-                ->with('warning', "Undangan dibuat tapi email gagal dikirim: {$e->getMessage()}");
+                ->with('success', "Undangan berhasil dikirim ke {$email}.");
         }
 
         return redirect()->route('admin.users.index')
-            ->with('success', "Undangan berhasil dikirim ke {$email}.");
+            ->with('warning', "Undangan dibuat tapi email gagal dikirim: {$result['message']}");
     }
 
     /**
@@ -75,15 +78,36 @@ class InvitationController extends Controller
         // Load relationship for email template
         $invitation->load('invitedBy');
 
-        // Resend email (with try-catch to avoid 500 if mail fails)
-        try {
-            Mail::to($invitation->email)->send(new InvitationMail($invitation));
-        } catch (\Exception $e) {
+        // Send email via Brevo API
+        $result = $this->sendInvitationEmail($invitation);
+
+        if ($result['success']) {
             return redirect()->route('admin.users.index')
-                ->with('warning', "Token diperbarui tapi email gagal dikirim: {$e->getMessage()}");
+                ->with('success', "Undangan berhasil dikirim ulang ke {$invitation->email}.");
         }
 
         return redirect()->route('admin.users.index')
-            ->with('success', "Undangan berhasil dikirim ulang ke {$invitation->email}.");
+            ->with('warning', "Token diperbarui tapi email gagal dikirim: {$result['message']}");
+    }
+
+    /**
+     * Send invitation email via Brevo API.
+     */
+    private function sendInvitationEmail(UserInvitation $invitation): array
+    {
+        $subject = 'Anda diundang untuk bergabung di ' . config('app.name');
+
+        return $this->mailer->sendView(
+            toEmail: $invitation->email,
+            toName: $invitation->name,
+            subject: $subject,
+            view: 'emails.invitation',
+            data: [
+                'invitation' => $invitation,
+                'acceptUrl' => $invitation->getAcceptUrl(),
+                'appName' => config('app.name'),
+                'expiresAt' => $invitation->expires_at->format('d M Y, H:i'),
+            ],
+        );
     }
 }

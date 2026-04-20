@@ -31,4 +31,10 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'brevo' => [
+        'api_key' => env('BREVO_API_KEY'),
+        'sender_email' => env('BREVO_SENDER_EMAIL', 'no-reply@aimurah.my.id'),
+        'sender_name' => env('BREVO_SENDER_NAME', 'AIMurah'),
+    ],
+
 ];
