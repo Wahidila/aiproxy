@@ -109,6 +109,8 @@ class TokenTrackingService
         $modelUsage = $usages->groupBy('model')->map(function ($group) {
             return [
                 'requests' => $group->count(),
+                'input_tokens' => $group->sum('input_tokens'),
+                'output_tokens' => $group->sum('output_tokens'),
                 'total_tokens' => $group->sum('total_tokens'),
                 'cost_idr' => round($group->sum('cost_idr'), 2),
             ];

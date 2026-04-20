@@ -311,6 +311,8 @@
                                 <tr>
                                     <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Model</th>
                                     <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Requests</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Input Tokens</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Output Tokens</th>
                                     <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Total Tokens</th>
                                     <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Cost IDR</th>
                                 </tr>
@@ -320,12 +322,14 @@
                                     <tr class="hover:bg-gray-50">
                                         <td class="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900">{{ $model }}</td>
                                         <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-600">{{ number_format($data['requests']) }}</td>
+                                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-600">{{ number_format($data['input_tokens']) }}</td>
+                                        <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-600">{{ number_format($data['output_tokens']) }}</td>
                                         <td class="whitespace-nowrap px-4 py-3 text-right text-sm text-gray-600">{{ number_format($data['total_tokens']) }}</td>
                                         <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-medium text-gray-900">{{ adminShowFormatRupiah($data['cost_idr']) }}</td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="px-4 py-8 text-center text-sm text-gray-400">
+                                        <td colspan="6" class="px-4 py-8 text-center text-sm text-gray-400">
                                             Belum ada data
                                         </td>
                                     </tr>
