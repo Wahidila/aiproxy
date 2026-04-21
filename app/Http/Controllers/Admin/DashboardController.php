@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Donation;
 use App\Models\Setting;
 use App\Models\TokenUsage;
+use App\Models\TrialRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -30,6 +31,13 @@ class DashboardController extends Controller
             ->get();
 
         $recentUsers = User::where('role', 'user')
+            ->latest()
+            ->take(5)
+            ->get();
+
+        // Trial requests
+        $pendingTrialRequests = TrialRequest::pending()->count();
+        $recentTrialRequests = TrialRequest::pending()
             ->latest()
             ->take(5)
             ->get();
@@ -60,6 +68,8 @@ class DashboardController extends Controller
             'activeUsersToday',
             'recentDonations',
             'recentUsers',
+            'pendingTrialRequests',
+            'recentTrialRequests',
             'dailyStats',
             'golangStatus',
             'laravelFallback'

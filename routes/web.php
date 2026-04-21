@@ -4,12 +4,14 @@ use App\Http\Controllers\ApiKeyController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DonationController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TrialRequestController;
 use App\Http\Controllers\UsageController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\DonationController as AdminDonationController;
 use App\Http\Controllers\Admin\ModelPricingController as AdminModelPricingController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Admin\InvitationController as AdminInvitationController;
+use App\Http\Controllers\Admin\TrialRequestController as AdminTrialRequestController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use Illuminate\Support\Facades\Route;
 
@@ -22,6 +24,11 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
+
+// Public trial request (no auth required)
+Route::post('/trial-request', [TrialRequestController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('trial-request.store');
 
 // Authenticated user routes
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -84,6 +91,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Settings
     Route::get('/settings', [AdminSettingsController::class, 'index'])->name('settings.index');
     Route::post('/settings', [AdminSettingsController::class, 'update'])->name('settings.update');
+
+    // Trial Requests
+    Route::get('/trial-requests', [AdminTrialRequestController::class, 'index'])->name('trial-requests.index');
+    Route::post('/trial-requests/{trialRequest}/invite', [AdminTrialRequestController::class, 'invite'])->name('trial-requests.invite');
+    Route::post('/trial-requests/{trialRequest}/reject', [AdminTrialRequestController::class, 'reject'])->name('trial-requests.reject');
 });
 
 require __DIR__.'/auth.php';

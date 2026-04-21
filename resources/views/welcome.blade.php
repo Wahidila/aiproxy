@@ -5,9 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>AIMurah - Akses AI Premium, Harga Terjangkau</title>
     <meta name="description" content="Akses model AI terbaik dunia - Assistant Opus 4.6, GPT-5, Gemini Pro - langsung dari Cursor, VS Code, atau tool favorit Anda. Mulai gratis Rp 100.000 credit.">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:300,400,500,600,700,800&display=swap" rel="stylesheet" />
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         :root {
             --color-canvas: #faf9f6;
@@ -137,9 +139,44 @@
         .icon-box i { width: 24px; height: 24px; color: var(--color-accent); }
         .tool-badge { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; padding: 12px 16px; font-size: 14px; font-weight: 500; text-align: center; color: var(--color-text); display: flex; align-items: center; justify-content: center; gap: 8px; }
         .tool-badge i { width: 16px; height: 16px; color: var(--color-muted); }
+        /* Trial Popup Modal */
+        .modal-backdrop { position: fixed; inset: 0; background: rgba(17,17,17,0.5); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 16px; }
+        .modal-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; width: 100%; max-width: 440px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); position: relative; }
+        .modal-header { padding: 24px 28px 0; }
+        .modal-body { padding: 20px 28px 28px; }
+        .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; cursor: pointer; color: var(--color-muted); padding: 4px; border-radius: 4px; transition: all 0.15s; }
+        .modal-close:hover { background: #f0f0ee; color: var(--color-text); }
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 14px; font-weight: 500; color: var(--color-text); margin-bottom: 6px; }
+        .form-input { width: 100%; padding: 10px 14px; border: 1px solid var(--color-border); border-radius: 4px; font-size: 15px; font-family: inherit; color: var(--color-text); background: var(--color-surface); transition: border-color 0.2s; box-sizing: border-box; }
+        .form-input:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(255,86,0,0.1); }
+        .form-input::placeholder { color: #b5b3ae; }
+        .form-error { font-size: 13px; color: #dc2626; margin-top: 4px; }
+        .btn-submit { width: 100%; padding: 12px 24px; background: var(--color-accent); color: #fff; border: none; border-radius: 4px; font-size: 16px; font-weight: 500; font-family: inherit; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-submit:hover { background: var(--color-accent-hover); transform: scale(1.02); }
+        .btn-submit:active { transform: scale(0.98); }
+        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .success-state { text-align: center; padding: 16px 0; }
+        .success-icon { width: 56px; height: 56px; background: #dcfce7; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+        .success-icon svg { width: 28px; height: 28px; color: #16a34a; }
+        /* WhatsApp Bubble */
+        .wa-bubble { position: fixed; bottom: 24px; right: 24px; z-index: 150; width: 56px; height: 56px; background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(37,211,102,0.4); cursor: pointer; transition: all 0.3s ease; text-decoration: none; }
+        .wa-bubble:hover { transform: scale(1.1); box-shadow: 0 6px 20px rgba(37,211,102,0.5); }
+        .wa-bubble:active { transform: scale(0.95); }
+        .wa-bubble svg { width: 28px; height: 28px; fill: #fff; }
+        .wa-tooltip { position: absolute; right: 68px; bottom: 50%; transform: translateY(50%); background: var(--color-surface); color: var(--color-text); font-size: 13px; font-weight: 500; padding: 8px 14px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.12); white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s; border: 1px solid var(--color-border); }
+        .wa-bubble:hover .wa-tooltip { opacity: 1; }
+        @media (max-width: 640px) {
+            .wa-bubble { width: 48px; height: 48px; bottom: 16px; right: 16px; }
+            .wa-bubble svg { width: 24px; height: 24px; }
+            .wa-tooltip { display: none; }
+        }
+        /* Spinner */
+        .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 0.6s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
-<body onload="lucide.createIcons()">
+<body onload="lucide.createIcons()" x-data="trialApp()">
     <!-- Navigation -->
     <nav class="nav">
         <div class="container nav-inner">
@@ -152,7 +189,7 @@
                     <a href="{{ route('dashboard') }}" class="nav-link">Dashboard</a>
                 @else
                     <a href="{{ route('login') }}" class="nav-link">Login</a>
-                    <a href="{{ route('register') }}" class="btn btn-primary" style="padding: 8px 16px; font-size: 14px;">Daftar Gratis</a>
+                    <button @click="openModal()" class="btn btn-primary" style="padding: 8px 16px; font-size: 14px;">Daftar Gratis</button>
                 @endauth
             </div>
         </div>
@@ -169,10 +206,10 @@
                 Gunakan Claude Opus 4.6, GPT-5, Gemini Pro, dan 26+ model AI lainnya langsung dari Cursor, VS Code, atau tool favorit Anda.
             </p>
             <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;" class="hero-buttons">
-                <a href="{{ route('register') }}" class="btn btn-accent" style="padding: 14px 32px; font-size: 16px; gap: 8px;">
+                <button @click="openModal()" class="btn btn-accent" style="padding: 14px 32px; font-size: 16px; gap: 8px;">
                     <i data-lucide="sparkles" style="width: 20px; height: 20px;"></i>
                     Mulai Gratis &mdash; Rp 100K Credit
-                </a>
+                </button>
                 <a href="#pricing" class="btn btn-outline" style="gap: 8px;">
                     <i data-lucide="tag" style="width: 18px; height: 18px;"></i>
                     Lihat Harga
@@ -333,10 +370,10 @@
                             <span>Dashboard & statistik penggunaan</span>
                         </li>
                     </ul>
-                    <a href="{{ route('register') }}" class="btn btn-outline" style="width: 100%; margin-top: 32px; gap: 8px;">
+                    <button @click="openModal()" class="btn btn-outline" style="width: 100%; margin-top: 32px; gap: 8px;">
                         <i data-lucide="user-plus" style="width: 18px; height: 18px;"></i>
                         Daftar Gratis
-                    </a>
+                    </button>
                 </div>
 
                 <!-- Paid Tier -->
@@ -363,10 +400,10 @@
                             <span>Harga per model transparan di dashboard</span>
                         </li>
                     </ul>
-                    <a href="{{ route('register') }}" class="btn btn-accent" style="width: 100%; margin-top: 32px; gap: 8px;">
+                    <button @click="openModal()" class="btn btn-accent" style="width: 100%; margin-top: 32px; gap: 8px;">
                         <i data-lucide="arrow-right" style="width: 18px; height: 18px;"></i>
                         Mulai Sekarang
-                    </a>
+                    </button>
                 </div>
             </div>
         </div>
@@ -419,12 +456,86 @@
         <div class="container">
             <h2 class="heading-sub" style="color: #fff; margin: 0 0 16px;">Siap mulai?</h2>
             <p style="font-size: 18px; color: #9c9fa5; margin: 0 0 32px;">Daftar gratis, dapat Rp 100K credit, langsung pakai di tool favorit Anda.</p>
-            <a href="{{ route('register') }}" class="btn btn-accent" style="padding: 16px 40px; font-size: 17px; gap: 10px;">
+            <button @click="openModal()" class="btn btn-accent" style="padding: 16px 40px; font-size: 17px; gap: 10px;">
                 Daftar Gratis Sekarang
                 <i data-lucide="arrow-right" style="width: 20px; height: 20px;"></i>
-            </a>
+            </button>
         </div>
     </section>
+
+    <!-- Trial Registration Popup -->
+    <template x-if="showModal">
+        <div class="modal-backdrop" @click.self="closeModal()" @keydown.escape.window="closeModal()">
+            <div class="modal-card" @click.stop>
+                <button class="modal-close" @click="closeModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+
+                <!-- Form State -->
+                <div x-show="!success">
+                    <div class="modal-header">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ff5600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                            <span style="font-size: 16px; font-weight: 600; color: var(--color-text);">AIMurah</span>
+                        </div>
+                        <h3 style="font-size: 22px; font-weight: 600; color: var(--color-text); letter-spacing: -0.5px; margin: 0 0 6px;">Daftar Trial Gratis</h3>
+                        <p style="font-size: 14px; color: var(--color-muted); margin: 0; line-height: 1.5;">Masukkan nama dan email Anda. Kami akan mengirimkan undangan akses beserta Rp 100.000 free credit.</p>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label class="form-label" for="trial_name">Nama Lengkap</label>
+                            <input type="text" id="trial_name" class="form-input" placeholder="Masukkan nama Anda" x-model="form.name" @keydown.enter="submit()">
+                            <template x-if="errors.name">
+                                <p class="form-error" x-text="errors.name"></p>
+                            </template>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="trial_email">Email</label>
+                            <input type="email" id="trial_email" class="form-input" placeholder="email@example.com" x-model="form.email" @keydown.enter="submit()">
+                            <template x-if="errors.email">
+                                <p class="form-error" x-text="errors.email"></p>
+                            </template>
+                        </div>
+                        <template x-if="generalError">
+                            <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 4px; padding: 10px 14px; margin-bottom: 16px;">
+                                <p style="font-size: 13px; color: #dc2626; margin: 0;" x-text="generalError"></p>
+                            </div>
+                        </template>
+                        <button class="btn-submit" @click="submit()" :disabled="loading">
+                            <template x-if="loading">
+                                <span class="spinner"></span>
+                            </template>
+                            <template x-if="!loading">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+                            </template>
+                            <span x-text="loading ? 'Mengirim...' : 'Daftar Trial Gratis'"></span>
+                        </button>
+                        <p style="font-size: 12px; color: var(--color-muted); text-align: center; margin: 12px 0 0;">Tidak perlu kartu kredit. Data Anda aman.</p>
+                    </div>
+                </div>
+
+                <!-- Success State -->
+                <div x-show="success" class="modal-body">
+                    <div class="success-state">
+                        <div class="success-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        </div>
+                        <h3 style="font-size: 20px; font-weight: 600; color: var(--color-text); margin: 0 0 8px; letter-spacing: -0.3px;">Permintaan Diterima!</h3>
+                        <p style="font-size: 15px; color: var(--color-muted); margin: 0 0 20px; line-height: 1.5;">Terima kasih! Kami akan mengirimkan undangan ke email Anda segera. Cek inbox (dan folder spam) Anda.</p>
+                        <button class="btn-submit" @click="closeModal()" style="background: var(--color-dark);">
+                            Tutup
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- WhatsApp Floating Bubble -->
+    <a href="https://wa.me/6285111201722" target="_blank" rel="noopener noreferrer" class="wa-bubble" aria-label="Chat via WhatsApp">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        <span class="wa-tooltip">Chat via WhatsApp</span>
+    </a>
 
     <!-- Footer -->
     <footer class="footer">
@@ -439,7 +550,7 @@
                 </div>
                 <div style="display: flex; gap: 24px; font-size: 14px;">
                     <a href="{{ route('login') }}">Login</a>
-                    <a href="{{ route('register') }}">Register</a>
+                    <a href="#" @click.prevent="openModal()">Register</a>
                     <a href="#pricing">Pricing</a>
                 </div>
             </div>
@@ -448,5 +559,93 @@
             </div>
         </div>
     </footer>
+
+    <script>
+        function trialApp() {
+            return {
+                showModal: false,
+                loading: false,
+                success: false,
+                form: { name: '', email: '' },
+                errors: {},
+                generalError: '',
+
+                openModal() {
+                    this.showModal = true;
+                    this.success = false;
+                    this.errors = {};
+                    this.generalError = '';
+                    document.body.style.overflow = 'hidden';
+                    this.$nextTick(() => {
+                        const nameInput = document.getElementById('trial_name');
+                        if (nameInput) nameInput.focus();
+                    });
+                },
+
+                closeModal() {
+                    this.showModal = false;
+                    document.body.style.overflow = '';
+                    if (this.success) {
+                        this.form = { name: '', email: '' };
+                        this.success = false;
+                    }
+                },
+
+                async submit() {
+                    this.errors = {};
+                    this.generalError = '';
+
+                    // Client-side validation
+                    if (!this.form.name.trim()) {
+                        this.errors.name = 'Nama wajib diisi.';
+                    }
+                    if (!this.form.email.trim()) {
+                        this.errors.email = 'Email wajib diisi.';
+                    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.form.email)) {
+                        this.errors.email = 'Format email tidak valid.';
+                    }
+
+                    if (Object.keys(this.errors).length > 0) return;
+
+                    this.loading = true;
+
+                    try {
+                        const response = await fetch('{{ route("trial-request.store") }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            },
+                            body: JSON.stringify({
+                                name: this.form.name.trim(),
+                                email: this.form.email.trim().toLowerCase(),
+                            }),
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok && data.success) {
+                            this.success = true;
+                        } else if (response.status === 422) {
+                            // Validation errors from Laravel
+                            if (data.errors) {
+                                if (data.errors.name) this.errors.name = data.errors.name[0];
+                                if (data.errors.email) this.errors.email = data.errors.email[0];
+                            } else if (data.message) {
+                                this.generalError = data.message;
+                            }
+                        } else {
+                            this.generalError = data.message || 'Terjadi kesalahan. Silakan coba lagi.';
+                        }
+                    } catch (err) {
+                        this.generalError = 'Gagal menghubungi server. Periksa koneksi internet Anda.';
+                    } finally {
+                        this.loading = false;
+                    }
+                }
+            };
+        }
+    </script>
 </body>
 </html>

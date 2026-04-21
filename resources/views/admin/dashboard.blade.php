@@ -135,7 +135,7 @@
             </div>
 
             {{-- Stat Cards --}}
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
                 {{-- Total Users --}}
                 <div class="bg-surface border border-oat rounded-card">
                     <div class="p-5">
@@ -237,10 +237,36 @@
                         </div>
                     </div>
                 </div>
+
+                {{-- Pending Trial Requests --}}
+                <div class="bg-surface border border-oat rounded-card">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="flex h-10 w-10 items-center justify-center rounded-lg {{ $pendingTrialRequests > 0 ? 'bg-purple-50' : 'bg-fin-orange-light' }}">
+                                    <svg class="h-6 w-6 {{ $pendingTrialRequests > 0 ? 'text-purple-600' : 'text-fin-orange' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-muted">Trial Requests</p>
+                                <div class="flex items-center gap-2">
+                                    <p class="text-2xl font-bold text-off-black">{{ $pendingTrialRequests }}</p>
+                                    @if($pendingTrialRequests > 0)
+                                        <span class="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
+                                            Pending
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {{-- Quick Links --}}
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
                 <a href="{{ route('admin.users.index') }}"
                    class="flex items-center gap-3 rounded-card border border-oat bg-surface p-4 hover:border-fin-orange hover:shadow-sm transition-all">
                     <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-fin-orange-light">
@@ -299,6 +325,25 @@
                         <p class="text-xs text-muted">Configure site & wallet settings</p>
                     </div>
                 </a>
+
+                <a href="{{ route('admin.trial-requests.index') }}"
+                   class="flex items-center gap-3 rounded-card border border-oat bg-surface p-4 hover:border-fin-orange hover:shadow-sm transition-all">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-lg {{ $pendingTrialRequests > 0 ? 'bg-purple-100' : 'bg-fin-orange-light' }}">
+                        <svg class="h-5 w-5 {{ $pendingTrialRequests > 0 ? 'text-purple-600' : 'text-fin-orange' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-off-black">Trial Requests</p>
+                        <p class="text-xs text-muted">
+                            @if($pendingTrialRequests > 0)
+                                <span class="text-purple-600 font-medium">{{ $pendingTrialRequests }} pending</span>
+                            @else
+                                Manage trial sign-ups
+                            @endif
+                        </p>
+                    </div>
+                </a>
             </div>
 
             {{-- Daily Stats Chart --}}
@@ -344,6 +389,54 @@
                     @endif
                 </div>
             </div>
+
+            {{-- Pending Trial Requests --}}
+            @if($recentTrialRequests->count() > 0)
+            <div class="bg-surface border border-oat rounded-card">
+                <div class="px-6 py-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-off-black tracking-sub flex items-center gap-2">
+                            <span class="flex h-6 w-6 items-center justify-center rounded-full bg-purple-100">
+                                <svg class="h-3.5 w-3.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                                </svg>
+                            </span>
+                            Pending Trial Requests
+                        </h3>
+                        <a href="{{ route('admin.trial-requests.index', ['status' => 'pending']) }}" class="text-sm font-medium text-fin-orange hover:text-fin-orange/80">
+                            View All
+                        </a>
+                    </div>
+
+                    <div class="space-y-3">
+                        @foreach($recentTrialRequests as $trialReq)
+                            <div class="flex items-center justify-between rounded-lg border border-oat p-3 hover:bg-canvas">
+                                <div class="flex items-center gap-3">
+                                    <div class="flex h-9 w-9 items-center justify-center rounded-full bg-purple-100 text-sm font-semibold text-purple-600">
+                                        {{ strtoupper(substr($trialReq->name, 0, 1)) }}
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="text-sm font-medium text-off-black truncate">{{ $trialReq->name }}</p>
+                                        <p class="text-xs text-muted truncate">{{ $trialReq->email }} &middot; {{ $trialReq->created_at->diffForHumans() }}</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 ml-3">
+                                    <form method="POST" action="{{ route('admin.trial-requests.invite', $trialReq) }}">
+                                        @csrf
+                                        <button type="submit" class="inline-flex items-center rounded-btn bg-green-600 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-green-700 transition-colors">
+                                            Invite
+                                        </button>
+                                    </form>
+                                    <a href="{{ route('admin.trial-requests.index') }}" class="inline-flex items-center rounded-btn bg-canvas px-2.5 py-1.5 text-xs font-medium text-off-black hover:bg-oat transition-colors">
+                                        View
+                                    </a>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+            @endif
 
             {{-- Two Side-by-Side Sections --}}
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">

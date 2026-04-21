@@ -29,6 +29,15 @@
                     <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.*')" class="!text-fin-orange">
                         Admin
                     </x-nav-link>
+                    @php $navPendingTrials = \App\Models\TrialRequest::pending()->count(); @endphp
+                    @if($navPendingTrials > 0)
+                    <x-nav-link :href="route('admin.trial-requests.index', ['status' => 'pending'])" :active="request()->routeIs('admin.trial-requests.*')" class="!text-purple-600">
+                        <span class="flex items-center gap-1.5">
+                            Trial
+                            <span class="inline-flex items-center justify-center h-5 min-w-[20px] rounded-full bg-purple-100 text-xs font-semibold text-purple-700 px-1.5">{{ $navPendingTrials }}</span>
+                        </span>
+                    </x-nav-link>
+                    @endif
                     @endif
                 </div>
             </div>
@@ -93,6 +102,12 @@
             <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.*')">
                 Admin Panel
             </x-responsive-nav-link>
+            @php $navPendingTrialsMobile = \App\Models\TrialRequest::pending()->count(); @endphp
+            @if($navPendingTrialsMobile > 0)
+            <x-responsive-nav-link :href="route('admin.trial-requests.index', ['status' => 'pending'])" :active="request()->routeIs('admin.trial-requests.*')">
+                Trial Requests ({{ $navPendingTrialsMobile }})
+            </x-responsive-nav-link>
+            @endif
             @endif
         </div>
 
