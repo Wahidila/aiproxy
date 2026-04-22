@@ -1,8 +1,15 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-off-black leading-tight tracking-heading">
-            {{ __('Subscription') }}
-        </h2>
+        <div>
+            <h2 class="text-xl font-semibold leading-tight text-off-black tracking-heading">
+                {{ __('Subscription') }}
+            </h2>
+            <nav class="mt-1 text-sm text-muted">
+                <a href="{{ route('dashboard') }}" class="hover:text-fin-orange">Dashboard</a>
+                <span class="mx-1">/</span>
+                <span class="text-off-black font-medium">Subscription</span>
+            </nav>
+        </div>
     </x-slot>
 
     @php
@@ -23,7 +30,7 @@
 
             {{-- Flash Messages --}}
             @if(session('success'))
-                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div class="bg-green-50 border border-green-200 rounded-card p-4">
                     <div class="flex items-center">
                         <i data-lucide="check-circle" class="w-5 h-5 text-green-500 mr-3 flex-shrink-0"></i>
                         <p class="text-green-800 text-sm font-medium">{{ session('success') }}</p>
@@ -32,7 +39,7 @@
             @endif
 
             @if(session('error'))
-                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div class="bg-red-50 border border-red-200 rounded-card p-4">
                     <div class="flex items-center">
                         <i data-lucide="alert-circle" class="w-5 h-5 text-red-500 mr-3 flex-shrink-0"></i>
                         <p class="text-red-800 text-sm font-medium">{{ session('error') }}</p>
@@ -66,7 +73,7 @@
                             <div class="mb-4">
                                 <h4 class="text-lg font-bold text-off-black">{{ $plan->name }}</h4>
                                 <div class="mt-2">
-                                    <span class="text-3xl font-bold text-off-black">{{ subFormatRp($plan->price) }}</span>
+                                    <span class="text-3xl font-bold text-off-black">{{ subFormatRp($plan->price_idr) }}</span>
                                     <span class="text-sm text-muted">/bulan</span>
                                 </div>
                             </div>
@@ -166,7 +173,7 @@
 
                 {{-- Budget Card --}}
                 @php
-                    $budget = $subscription->plan->budget_limit_usd ?? 0;
+                    $budget = $subscription->plan->budget_usd_per_cycle ?? 0;
                     $spent = $cycleCost ?? 0;
                     $remaining = max(0, $budget - $spent);
                     $percentage = $budget > 0 ? min(100, round(($spent / $budget) * 100)) : 0;
@@ -178,14 +185,14 @@
                             Budget Siklus Ini
                         </h3>
                         <span class="text-xs text-muted">
-                            Mulai: {{ $cycleStart ? \Carbon\Carbon::parse($cycleStart)->format('d M Y') : '-' }}
+                            Siklus: {{ $cycleStart ? \Carbon\Carbon::parse($cycleStart)->format('d M Y H:i') : '-' }} WIB
                         </span>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                         <div class="bg-canvas rounded-btn p-3 text-center">
                             <p class="text-xs font-medium text-muted uppercase">Budget</p>
-                            <p class="mt-1 text-xl font-bold text-off-black">${{ number_format($budget, 4) }}</p>
+                            <p class="mt-1 text-xl font-bold text-off-black">${{ number_format($budget, 2) }}</p>
                         </div>
                         <div class="bg-canvas rounded-btn p-3 text-center">
                             <p class="text-xs font-medium text-muted uppercase">Terpakai</p>
@@ -193,7 +200,7 @@
                         </div>
                         <div class="bg-canvas rounded-btn p-3 text-center">
                             <p class="text-xs font-medium text-muted uppercase">Sisa</p>
-                            <p class="mt-1 text-xl font-bold text-green-600">${{ number_format($remaining, 4) }}</p>
+                            <p class="mt-1 text-xl font-bold text-green-600">${{ number_format($remaining, 2) }}</p>
                         </div>
                     </div>
 
@@ -313,7 +320,6 @@
                                                     {{-- Toggle --}}
                                                     <form method="POST" action="{{ route('subscriptions.api-keys.toggle', $apiKey) }}">
                                                         @csrf
-                                                        @method('PATCH')
                                                         <button type="submit"
                                                             class="inline-flex items-center rounded-btn px-2.5 py-1.5 text-xs font-medium transition-colors
                                                                 {{ $apiKey->is_active
@@ -391,13 +397,13 @@
                                             <td class="whitespace-nowrap px-4 py-3 text-sm font-medium text-off-black text-right">
                                                 ${{ number_format($usage->cost_usd ?? 0, 6) }}
                                             </td>
-                                            <td class="whitespace-nowrap px-4 py-3 text-center">
-                                                @if(($usage->status ?? '') === 'success')
-                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Success</span>
-                                                @elseif(($usage->status ?? '') === 'error')
-                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Error</span>
+                                                    <td class="whitespace-nowrap px-4 py-3 text-center">
+                                                @if(($usage->status_code ?? 0) === 200)
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">{{ $usage->status_code }}</span>
+                                                @elseif(($usage->status_code ?? 0) >= 400)
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">{{ $usage->status_code }}</span>
                                                 @else
-                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-canvas text-muted">{{ ucfirst($usage->status ?? '-') }}</span>
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-canvas text-muted">{{ $usage->status_code ?? '-' }}</span>
                                                 @endif
                                             </td>
                                         </tr>

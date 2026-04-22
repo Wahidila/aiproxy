@@ -10,7 +10,7 @@ class SubscriptionPlanController extends Controller
 {
     public function index()
     {
-        $plans = SubscriptionPlan::orderBy('sort_order')->get();
+        $plans = SubscriptionPlan::withCount('subscriptions')->orderBy('sort_order')->get();
         return view('admin.subscriptions.plans.index', compact('plans'));
     }
 

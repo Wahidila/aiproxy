@@ -97,7 +97,7 @@
                                         @endif
                                     </td>
                                     <td class="whitespace-nowrap px-4 py-3 text-center text-sm text-muted">
-                                        {{ $plan->subscribers_count ?? 0 }}
+                                        {{ $plan->subscriptions_count ?? 0 }}
                                     </td>
                                     <td class="whitespace-nowrap px-4 py-3 text-center">
                                         <div class="flex items-center justify-center space-x-2">
