@@ -439,6 +439,50 @@ func CalculateCost(db *Database, model string, inputTokens, outputTokens int) fl
 	return float64(int(total*100)) / 100
 }
 
+// EstimateInputTokens estimates the number of input tokens from the request body.
+// This is used as a fallback when the upstream API returns prompt_tokens=0 in streaming responses.
+// Uses ~4 characters per token ratio which is standard for most LLMs.
+func EstimateInputTokens(body []byte) int {
+	var reqBody struct {
+		Messages []struct {
+			Content interface{} `json:"content"`
+		} `json:"messages"`
+		System string `json:"system"`
+	}
+	if json.Unmarshal(body, &reqBody) != nil {
+		return 0
+	}
+
+	totalChars := 0
+
+	// Count system prompt characters
+	totalChars += len(reqBody.System)
+
+	// Count all message content characters
+	for _, msg := range reqBody.Messages {
+		switch c := msg.Content.(type) {
+		case string:
+			totalChars += len(c)
+		case []interface{}:
+			// Handle array content (e.g., multimodal messages)
+			for _, part := range c {
+				if m, ok := part.(map[string]interface{}); ok {
+					if text, ok := m["text"].(string); ok {
+						totalChars += len(text)
+					}
+				}
+			}
+		}
+	}
+
+	// Estimate: ~4 characters per token (standard for most LLMs)
+	// This is a rough estimate but better than 0
+	if totalChars == 0 {
+		return 0
+	}
+	return totalChars / 4
+}
+
 // FormatRupiah formats a float as IDR string
 func FormatRupiah(amount float64) string {
 	return fmt.Sprintf("Rp %.0f", amount)

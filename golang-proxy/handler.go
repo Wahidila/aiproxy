@@ -85,19 +85,28 @@ func (h *Handlers) handleProxy(w http.ResponseWriter, r *http.Request, path stri
 			if result.Model != "" {
 				model = result.Model
 			}
-			cost := CalculateCost(h.db, model, result.InputTokens, result.OutputTokens)
+
+			// Fallback: if upstream returned prompt_tokens=0 in streaming,
+			// estimate input tokens from the request body
+			inputTokens := result.InputTokens
+			if inputTokens == 0 && result.OutputTokens > 0 {
+				inputTokens = EstimateInputTokens(body)
+				log.Printf("USAGE_ESTIMATE: upstream returned 0 input tokens, estimated %d from request body", inputTokens)
+			}
+
+			cost := CalculateCost(h.db, model, inputTokens, result.OutputTokens)
 
 			log.Printf("TRACK [stream] user=%d model=%s input=%d output=%d cost=%.2f",
-				user.ID, model, result.InputTokens, result.OutputTokens, cost)
+				user.ID, model, inputTokens, result.OutputTokens, cost)
 
 			h.tracker.Track(TrackingEvent{
 				UserID:       user.ID,
 				ApiKeyID:     apiKey.ID,
 				Tier:         apiKey.Tier,
 				Model:        model,
-				InputTokens:  result.InputTokens,
+				InputTokens:  inputTokens,
 				OutputTokens: result.OutputTokens,
-				TotalTokens:  result.TotalTokens,
+				TotalTokens:  inputTokens + result.OutputTokens,
 				RequestPath:  path,
 				StatusCode:   result.StatusCode,
 				ResponseTime: result.ResponseTimeMs,

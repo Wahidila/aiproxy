@@ -53,12 +53,20 @@ class ProxyController extends Controller
             $model = $body['model'] ?? 'unknown';
 
             // Pass a callback that tracks usage after stream completes
-            $onComplete = function (array $usage) use ($user, $apiKey, $model, $path, $trackingService) {
+            $onComplete = function (array $usage) use ($user, $apiKey, $model, $path, $trackingService, $body) {
+                $inputTokens = $usage['input_tokens'];
+
+                // Fallback: if upstream returned prompt_tokens=0 in streaming,
+                // estimate input tokens from the request body
+                if ($inputTokens === 0 && $usage['output_tokens'] > 0) {
+                    $inputTokens = $this->estimateInputTokens($body);
+                }
+
                 $trackingService->recordUsage(
                     $user,
                     $apiKey,
                     $model,
-                    $usage['input_tokens'],
+                    $inputTokens,
                     $usage['output_tokens'],
                     $path,
                     $usage['status_code'],
@@ -87,5 +95,40 @@ class ProxyController extends Controller
         return response()->json($result['data'], $result['status']);
     }
 
+    /**
+     * Estimate input tokens from request body when upstream returns 0.
+     * Uses ~4 characters per token ratio (standard for most LLMs).
+     */
+    private function estimateInputTokens(array $body): int
+    {
+        $totalChars = 0;
 
+        // Count system prompt
+        if (isset($body['system']) && is_string($body['system'])) {
+            $totalChars += strlen($body['system']);
+        }
+
+        // Count all message content
+        if (isset($body['messages']) && is_array($body['messages'])) {
+            foreach ($body['messages'] as $message) {
+                $content = $message['content'] ?? '';
+                if (is_string($content)) {
+                    $totalChars += strlen($content);
+                } elseif (is_array($content)) {
+                    // Handle multimodal content arrays
+                    foreach ($content as $part) {
+                        if (isset($part['text']) && is_string($part['text'])) {
+                            $totalChars += strlen($part['text']);
+                        }
+                    }
+                }
+            }
+        }
+
+        if ($totalChars === 0) {
+            return 0;
+        }
+
+        return intdiv($totalChars, 4);
+    }
 }
