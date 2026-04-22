@@ -42,6 +42,9 @@ func (h *Handlers) HandleModels(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Sanitize models response to remove any EnowxAI branding
+	body = SanitizeResponseBody(body)
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	w.Write(body)
@@ -129,6 +132,9 @@ func (h *Handlers) handleProxy(w http.ResponseWriter, r *http.Request, path stri
 
 		log.Printf("TRACK [non-stream] user=%d model=%s input=%d output=%d cost=%.2f",
 			user.ID, model, result.InputTokens, result.OutputTokens, cost)
+
+		// Sanitize response to remove any EnowxAI identity leaks
+		respBody = SanitizeResponseBody(respBody)
 
 		// Send response to client
 		w.Header().Set("Content-Type", "application/json")
