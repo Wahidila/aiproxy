@@ -13,6 +13,8 @@ use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Admin\InvitationController as AdminInvitationController;
 use App\Http\Controllers\Admin\TrialRequestController as AdminTrialRequestController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Admin\BroadcastNotificationController as AdminBroadcastNotificationController;
+use App\Http\Controllers\NotificationDismissalController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -53,6 +55,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Notification dismissal
+    Route::post('/notifications/{broadcastNotification}/dismiss', [NotificationDismissalController::class, 'dismiss'])->name('notifications.dismiss');
 });
 
 // Admin routes
@@ -96,6 +101,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/trial-requests', [AdminTrialRequestController::class, 'index'])->name('trial-requests.index');
     Route::post('/trial-requests/{trialRequest}/invite', [AdminTrialRequestController::class, 'invite'])->name('trial-requests.invite');
     Route::post('/trial-requests/{trialRequest}/reject', [AdminTrialRequestController::class, 'reject'])->name('trial-requests.reject');
+
+    // Broadcast Notifications
+    Route::get('/broadcast-notifications', [AdminBroadcastNotificationController::class, 'index'])->name('broadcast-notifications.index');
+    Route::post('/broadcast-notifications', [AdminBroadcastNotificationController::class, 'store'])->name('broadcast-notifications.store');
+    Route::patch('/broadcast-notifications/{broadcastNotification}', [AdminBroadcastNotificationController::class, 'update'])->name('broadcast-notifications.update');
+    Route::post('/broadcast-notifications/{broadcastNotification}/toggle', [AdminBroadcastNotificationController::class, 'toggleActive'])->name('broadcast-notifications.toggle');
+    Route::delete('/broadcast-notifications/{broadcastNotification}', [AdminBroadcastNotificationController::class, 'destroy'])->name('broadcast-notifications.destroy');
 });
 
 require __DIR__.'/auth.php';

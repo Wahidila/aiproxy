@@ -266,7 +266,7 @@
             </div>
 
             {{-- Quick Links --}}
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <a href="{{ route('admin.users.index') }}"
                    class="flex items-center gap-3 rounded-card border border-oat bg-surface p-4 hover:border-fin-orange hover:shadow-sm transition-all">
                     <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-fin-orange-light">
@@ -342,6 +342,17 @@
                                 Manage trial sign-ups
                             @endif
                         </p>
+                    </div>
+                </a>
+
+                <a href="{{ route('admin.broadcast-notifications.index') }}"
+                   class="flex items-center gap-3 rounded-card border border-oat bg-surface p-4 hover:border-fin-orange hover:shadow-sm transition-all">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-fin-orange-light">
+                        <i data-lucide="megaphone" class="w-5 h-5 text-fin-orange"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-off-black">Broadcast</p>
+                        <p class="text-xs text-muted">Send notifications to all users</p>
                     </div>
                 </a>
             </div>

@@ -22,6 +22,9 @@
         <div class="min-h-screen bg-canvas">
             @include('layouts.navigation')
 
+            <!-- Broadcast Notifications -->
+            @include('partials.broadcast-notifications')
+
             <!-- Page Heading -->
             @if (isset($header))
                 <header class="bg-surface border-b border-oat">

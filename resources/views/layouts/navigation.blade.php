@@ -26,8 +26,14 @@
                         Top Up
                     </x-nav-link>
                     @if(Auth::user()->isAdmin())
-                    <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.*')" class="!text-fin-orange">
+                    <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.*') && !request()->routeIs('admin.broadcast-notifications.*')" class="!text-fin-orange">
                         Admin
+                    </x-nav-link>
+                    <x-nav-link :href="route('admin.broadcast-notifications.index')" :active="request()->routeIs('admin.broadcast-notifications.*')" class="!text-fin-orange">
+                        <span class="flex items-center gap-1.5">
+                            <i data-lucide="megaphone" class="w-3.5 h-3.5"></i>
+                            Broadcast
+                        </span>
                     </x-nav-link>
                     @php $navPendingTrials = \App\Models\TrialRequest::pending()->count(); @endphp
                     @if($navPendingTrials > 0)
@@ -99,8 +105,11 @@
                 Top Up
             </x-responsive-nav-link>
             @if(Auth::user()->isAdmin())
-            <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.*')">
+            <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.*') && !request()->routeIs('admin.broadcast-notifications.*')">
                 Admin Panel
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('admin.broadcast-notifications.index')" :active="request()->routeIs('admin.broadcast-notifications.*')">
+                Broadcast Notifications
             </x-responsive-nav-link>
             @php $navPendingTrialsMobile = \App\Models\TrialRequest::pending()->count(); @endphp
             @if($navPendingTrialsMobile > 0)
