@@ -228,6 +228,12 @@ func ForwardStreaming(cfg *Config, w http.ResponseWriter, body []byte, path stri
 		// Parse data lines for usage info
 		if strings.HasPrefix(line, "data: ") && line != "data: [DONE]" {
 			jsonStr := strings.TrimPrefix(line, "data: ")
+
+			// Log any SSE line that contains "usage" for debugging
+			if strings.Contains(jsonStr, "usage") {
+				log.Printf("SSE_DEBUG [usage_chunk] event=%s data=%s", lastEventType, jsonStr)
+			}
+
 			in, out, m := extractUsageFromSSELine(jsonStr, lastEventType)
 			if m != "" {
 				model = m
