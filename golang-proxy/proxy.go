@@ -475,12 +475,14 @@ func EstimateInputTokens(body []byte) int {
 		}
 	}
 
-	// Estimate: ~4 characters per token (standard for most LLMs)
-	// This is a rough estimate but better than 0
+	// Estimate: ~3 characters per token for mixed-language content.
+	// Slightly overestimates for pure English but more accurate for
+	// multilingual (Indonesian/mixed) content which is the common case.
+	// Better to slightly overestimate than underestimate for billing.
 	if totalChars == 0 {
 		return 0
 	}
-	return totalChars / 4
+	return totalChars / 3
 }
 
 // FormatRupiah formats a float as IDR string

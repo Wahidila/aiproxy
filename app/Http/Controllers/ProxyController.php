@@ -129,6 +129,7 @@ class ProxyController extends Controller
             return 0;
         }
 
-        return intdiv($totalChars, 4);
+        // ~3 chars per token for mixed-language content (more accurate for Indonesian/multilingual)
+        return intdiv($totalChars, 3);
     }
 }
