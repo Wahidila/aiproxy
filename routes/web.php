@@ -13,6 +13,9 @@ use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Admin\InvitationController as AdminInvitationController;
 use App\Http\Controllers\Admin\TrialRequestController as AdminTrialRequestController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Admin\SubscriptionPlanController as AdminSubscriptionPlanController;
+use App\Http\Controllers\Admin\SubscriptionManageController as AdminSubscriptionManageController;
+use App\Http\Controllers\SubscriptionController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -29,6 +32,12 @@ Route::get('/', function () {
 Route::post('/trial-request', [TrialRequestController::class, 'store'])
     ->middleware('throttle:5,1')
     ->name('trial-request.store');
+
+// Public subscription landing page
+Route::get('/subscription', function () {
+    $plans = \App\Models\SubscriptionPlan::where('is_active', true)->orderBy('sort_order')->get();
+    return view('landing.subscription', compact('plans'));
+})->name('subscription.landing');
 
 // Authenticated user routes
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -53,6 +62,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Subscriptions (user-facing)
+    Route::get('/subscriptions', [SubscriptionController::class, 'index'])->name('subscriptions.index');
+    Route::post('/subscriptions/subscribe', [SubscriptionController::class, 'subscribe'])->name('subscriptions.subscribe');
+    Route::post('/subscriptions/api-keys', [SubscriptionController::class, 'createApiKey'])->name('subscriptions.api-keys.create');
+    Route::post('/subscriptions/api-keys/{apiKey}/toggle', [SubscriptionController::class, 'toggleApiKey'])->name('subscriptions.api-keys.toggle');
+    Route::delete('/subscriptions/api-keys/{apiKey}', [SubscriptionController::class, 'deleteApiKey'])->name('subscriptions.api-keys.delete');
 });
 
 // Admin routes
@@ -96,6 +112,22 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/trial-requests', [AdminTrialRequestController::class, 'index'])->name('trial-requests.index');
     Route::post('/trial-requests/{trialRequest}/invite', [AdminTrialRequestController::class, 'invite'])->name('trial-requests.invite');
     Route::post('/trial-requests/{trialRequest}/reject', [AdminTrialRequestController::class, 'reject'])->name('trial-requests.reject');
+
+    // Subscription Plans Management
+    Route::get('/subscription-plans', [AdminSubscriptionPlanController::class, 'index'])->name('subscription-plans.index');
+    Route::get('/subscription-plans/create', [AdminSubscriptionPlanController::class, 'create'])->name('subscription-plans.create');
+    Route::post('/subscription-plans', [AdminSubscriptionPlanController::class, 'store'])->name('subscription-plans.store');
+    Route::get('/subscription-plans/{subscriptionPlan}/edit', [AdminSubscriptionPlanController::class, 'edit'])->name('subscription-plans.edit');
+    Route::put('/subscription-plans/{subscriptionPlan}', [AdminSubscriptionPlanController::class, 'update'])->name('subscription-plans.update');
+    Route::delete('/subscription-plans/{subscriptionPlan}', [AdminSubscriptionPlanController::class, 'destroy'])->name('subscription-plans.destroy');
+
+    // Subscription Management
+    Route::get('/subscriptions', [AdminSubscriptionManageController::class, 'index'])->name('subscriptions.index');
+    Route::get('/subscriptions/{subscription}', [AdminSubscriptionManageController::class, 'show'])->name('subscriptions.show');
+    Route::post('/subscriptions/{subscription}/approve', [AdminSubscriptionManageController::class, 'approve'])->name('subscriptions.approve');
+    Route::post('/subscriptions/{subscription}/reject', [AdminSubscriptionManageController::class, 'reject'])->name('subscriptions.reject');
+    Route::post('/subscriptions/{subscription}/extend', [AdminSubscriptionManageController::class, 'extend'])->name('subscriptions.extend');
+    Route::post('/subscriptions/{subscription}/cancel', [AdminSubscriptionManageController::class, 'cancel'])->name('subscriptions.cancel');
 });
 
 require __DIR__.'/auth.php';

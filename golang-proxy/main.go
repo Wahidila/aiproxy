@@ -40,6 +40,7 @@ func main() {
 
 	// Setup handlers
 	handlers := NewHandlers(cfg, db, tracker)
+	subHandlers := NewSubscriptionHandlers(cfg, db)
 
 	// Setup routes
 	mux := http.NewServeMux()
@@ -47,7 +48,7 @@ func main() {
 	// Health check (no auth)
 	mux.HandleFunc("/v1/health", handlers.HandleHealth)
 
-	// Authenticated routes
+	// --- V1: Existing authenticated routes (wallet/token-based) ---
 	authRoutes := http.NewServeMux()
 	authRoutes.HandleFunc("/v1/chat/completions", handlers.HandleChatCompletions)
 	authRoutes.HandleFunc("/v1/messages", handlers.HandleMessages)
@@ -62,6 +63,24 @@ func main() {
 	mux.Handle("/v1/messages", authed)
 	mux.Handle("/v1/responses", authed)
 	mux.Handle("/v1/models", authed)
+
+	// --- V2: Subscription API routes ---
+	subRoutes := http.NewServeMux()
+	subRoutes.HandleFunc("/api/v2/chat/completions", subHandlers.HandleSubChatCompletions)
+	subRoutes.HandleFunc("/api/v2/messages", subHandlers.HandleSubMessages)
+	subRoutes.HandleFunc("/api/v2/models", subHandlers.HandleSubModels)
+	subRoutes.HandleFunc("/api/v2/health", subHandlers.HandleSubHealth)
+
+	// Apply subscription middleware chain: Auth -> RateLimit -> Budget -> Handler
+	subAuthed := SubscriptionAuthMiddleware(db,
+		SubscriptionRateLimitMiddleware(
+			SubscriptionBudgetMiddleware(db, subRoutes),
+		),
+	)
+	mux.Handle("/api/v2/chat/completions", subAuthed)
+	mux.Handle("/api/v2/messages", subAuthed)
+	mux.Handle("/api/v2/models", subAuthed)
+	mux.Handle("/api/v2/health", subAuthed)
 
 	// Apply CORS to all routes
 	handler := CorsMiddleware(cfg.CorsOrigins, mux)
@@ -79,11 +98,16 @@ func main() {
 	go func() {
 		log.Printf("Server listening on :%s", cfg.Port)
 		log.Printf("Endpoints:")
-		log.Printf("  GET  /v1/health           (no auth)")
-		log.Printf("  GET  /v1/models           (auth required)")
-		log.Printf("  POST /v1/chat/completions (auth required)")
-		log.Printf("  POST /v1/messages         (auth required)")
-		log.Printf("  POST /v1/responses        (auth required)")
+		log.Printf("  GET  /v1/health                (no auth)")
+		log.Printf("  GET  /v1/models                (auth required)")
+		log.Printf("  POST /v1/chat/completions      (auth required)")
+		log.Printf("  POST /v1/messages              (auth required)")
+		log.Printf("  POST /v1/responses             (auth required)")
+		log.Printf("  --- Subscription API (v2) ---")
+		log.Printf("  GET  /api/v2/health            (subscription key)")
+		log.Printf("  GET  /api/v2/models            (subscription key)")
+		log.Printf("  POST /api/v2/chat/completions  (subscription key)")
+		log.Printf("  POST /api/v2/messages          (subscription key)")
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Server error: %v", err)
 		}
