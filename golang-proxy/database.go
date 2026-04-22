@@ -54,7 +54,8 @@ type PricingCache struct {
 var pricingCache *PricingCache
 
 func NewDatabase(cfg *Config) (*Database, error) {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&loc=Local",
+	// loc=Asia%2FJakarta: Go interprets timestamps in WIB (UTC+7)
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&loc=Asia%%2FJakarta",
 		cfg.DBUsername, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBDatabase)
 
 	db, err := sql.Open("mysql", dsn)
@@ -68,6 +69,11 @@ func NewDatabase(cfg *Config) (*Database, error) {
 
 	if err := db.Ping(); err != nil {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
+	}
+
+	// Set MySQL session timezone to WIB (UTC+7) so NOW() returns Jakarta time
+	if _, err := db.Exec("SET time_zone = '+07:00'"); err != nil {
+		log.Printf("WARNING: failed to set MySQL timezone: %v", err)
 	}
 
 	pricingCache = &PricingCache{
