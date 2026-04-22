@@ -87,6 +87,9 @@ func (h *Handlers) handleProxy(w http.ResponseWriter, r *http.Request, path stri
 			}
 			cost := CalculateCost(h.db, model, result.InputTokens, result.OutputTokens)
 
+			log.Printf("TRACK [stream] user=%d model=%s input=%d output=%d cost=%.2f",
+				user.ID, model, result.InputTokens, result.OutputTokens, cost)
+
 			h.tracker.Track(TrackingEvent{
 				UserID:       user.ID,
 				ApiKeyID:     apiKey.ID,
@@ -114,6 +117,9 @@ func (h *Handlers) handleProxy(w http.ResponseWriter, r *http.Request, path stri
 			model = result.Model
 		}
 		cost := CalculateCost(h.db, model, result.InputTokens, result.OutputTokens)
+
+		log.Printf("TRACK [non-stream] user=%d model=%s input=%d output=%d cost=%.2f",
+			user.ID, model, result.InputTokens, result.OutputTokens, cost)
 
 		// Send response to client
 		w.Header().Set("Content-Type", "application/json")

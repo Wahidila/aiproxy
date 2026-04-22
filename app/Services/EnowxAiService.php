@@ -83,13 +83,18 @@ class EnowxAiService
             $responseTimeMs = (int) ((microtime(true) - $startTime) * 1000);
             $data = $response->json();
 
+            // Extract tokens — supports multiple response formats:
+            // 1. OpenAI: usage.prompt_tokens / usage.completion_tokens
+            // 2. Anthropic: usage.input_tokens / usage.output_tokens
+            [$inputTokens, $outputTokens] = $this->extractUsageFromResponse($data);
+
             return [
                 'success' => $response->successful(),
                 'status' => $response->status(),
                 'data' => $data,
                 'response_time_ms' => $responseTimeMs,
-                'input_tokens' => $data['usage']['prompt_tokens'] ?? $data['usage']['input_tokens'] ?? 0,
-                'output_tokens' => $data['usage']['completion_tokens'] ?? $data['usage']['output_tokens'] ?? 0,
+                'input_tokens' => $inputTokens,
+                'output_tokens' => $outputTokens,
             ];
         } catch (\Exception $e) {
             Log::error('EnowxAI forward error', [
@@ -110,19 +115,24 @@ class EnowxAiService
 
     /**
      * Forward streaming request with clean SSE passthrough.
-     * Only forwards valid OpenAI SSE data to the client.
-     * Tracks token usage via onComplete callback after stream ends.
+     * Accumulates partial SSE lines across curl callbacks to prevent chunk splitting.
+     * Supports both OpenAI and Anthropic SSE formats for token extraction.
      */
     private function forwardStreaming(array $body, string $path, ?callable $onComplete = null): StreamedResponse
     {
-        // Ensure stream_options includes usage for token counting
-        $body['stream_options'] = ['include_usage' => true];
+        // Only inject stream_options for OpenAI-compatible endpoints
+        // Anthropic /messages does not support stream_options
+        if ($path === '/chat/completions' || $path === '/responses') {
+            $body['stream_options'] = ['include_usage' => true];
+        }
 
         return new StreamedResponse(function () use ($body, $path, $onComplete) {
             $startTime = microtime(true);
             $inputTokens = 0;
             $outputTokens = 0;
             $httpCode = 200;
+            $lineBuffer = ''; // Accumulate partial lines across curl callbacks
+            $lastEventType = ''; // Track Anthropic SSE event types
 
             try {
                 $ch = curl_init("{$this->baseUrl}{$path}");
@@ -136,24 +146,48 @@ class EnowxAiService
                     ],
                     CURLOPT_RETURNTRANSFER => false,
                     CURLOPT_TIMEOUT => 300,
-                    CURLOPT_WRITEFUNCTION => function ($ch, $data) use (&$inputTokens, &$outputTokens) {
-                        // Parse SSE data to extract usage info before forwarding
-                        $lines = explode("\n", $data);
+                    CURLOPT_WRITEFUNCTION => function ($ch, $data) use (&$inputTokens, &$outputTokens, &$lineBuffer, &$lastEventType) {
+                        // Accumulate data with any leftover from previous callback
+                        $lineBuffer .= $data;
+
+                        // Process only complete lines (ending with \n)
+                        $lastNewline = strrpos($lineBuffer, "\n");
+                        if ($lastNewline === false) {
+                            // No complete line yet — forward raw data but don't parse
+                            echo $data;
+                            if (ob_get_level() > 0) ob_flush();
+                            flush();
+                            return strlen($data);
+                        }
+
+                        // Split into complete lines and remainder
+                        $completeData = substr($lineBuffer, 0, $lastNewline + 1);
+                        $lineBuffer = substr($lineBuffer, $lastNewline + 1);
+
+                        $lines = explode("\n", $completeData);
                         foreach ($lines as $line) {
+                            $line = rtrim($line, "\r");
+
+                            // Track SSE event type (Anthropic format)
+                            if (str_starts_with($line, 'event: ')) {
+                                $lastEventType = substr($line, 7);
+                                continue;
+                            }
+
                             if (str_starts_with($line, 'data: ') && $line !== 'data: [DONE]') {
-                                $json = json_decode(substr($line, 6), true);
-                                if ($json && isset($json['usage'])) {
-                                    $inputTokens = $json['usage']['prompt_tokens'] ?? $json['usage']['input_tokens'] ?? $inputTokens;
-                                    $outputTokens = $json['usage']['completion_tokens'] ?? $json['usage']['output_tokens'] ?? $outputTokens;
+                                $jsonStr = substr($line, 6);
+                                $json = json_decode($jsonStr, true);
+                                if ($json) {
+                                    [$in, $out] = $this->extractUsageFromSSEData($json, $lastEventType);
+                                    if ($in > 0) $inputTokens = $in;
+                                    if ($out > 0) $outputTokens = $out;
                                 }
                             }
                         }
 
-                        // Forward raw SSE data to client as-is (clean passthrough)
+                        // Forward raw data to client as-is (clean passthrough)
                         echo $data;
-                        if (ob_get_level() > 0) {
-                            ob_flush();
-                        }
+                        if (ob_get_level() > 0) ob_flush();
                         flush();
 
                         return strlen($data);
@@ -161,6 +195,19 @@ class EnowxAiService
                 ]);
 
                 curl_exec($ch);
+
+                // Process any remaining data in the buffer
+                if (!empty($lineBuffer)) {
+                    $line = rtrim($lineBuffer, "\r\n");
+                    if (str_starts_with($line, 'data: ') && $line !== 'data: [DONE]') {
+                        $json = json_decode(substr($line, 6), true);
+                        if ($json) {
+                            [$in, $out] = $this->extractUsageFromSSEData($json, $lastEventType);
+                            if ($in > 0) $inputTokens = $in;
+                            if ($out > 0) $outputTokens = $out;
+                        }
+                    }
+                }
 
                 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                 if (curl_errno($ch)) {
@@ -193,6 +240,66 @@ class EnowxAiService
             'Connection' => 'keep-alive',
             'X-Accel-Buffering' => 'no',
         ]);
+    }
+
+    /**
+     * Extract token usage from a complete API response.
+     * Supports OpenAI format (prompt_tokens/completion_tokens)
+     * and Anthropic format (input_tokens/output_tokens).
+     *
+     * @return array [inputTokens, outputTokens]
+     */
+    private function extractUsageFromResponse(?array $data): array
+    {
+        if (!$data || !isset($data['usage'])) {
+            return [0, 0];
+        }
+
+        $usage = $data['usage'];
+
+        // OpenAI format first, then Anthropic format
+        $inputTokens = $usage['prompt_tokens'] ?? $usage['input_tokens'] ?? 0;
+        $outputTokens = $usage['completion_tokens'] ?? $usage['output_tokens'] ?? 0;
+
+        return [$inputTokens, $outputTokens];
+    }
+
+    /**
+     * Extract token usage from a single SSE data JSON object.
+     * Handles both OpenAI and Anthropic streaming formats.
+     *
+     * @param array $json Decoded JSON from SSE data line
+     * @param string $eventType The SSE event type (for Anthropic: message_start, message_delta, etc.)
+     * @return array [inputTokens, outputTokens]
+     */
+    private function extractUsageFromSSEData(array $json, string $eventType): array
+    {
+        $inputTokens = 0;
+        $outputTokens = 0;
+
+        // Handle Anthropic SSE format based on event type
+        if ($eventType === 'message_start') {
+            // Anthropic: {"type":"message_start","message":{"usage":{"input_tokens":N}}}
+            $inputTokens = $json['message']['usage']['input_tokens'] ?? 0;
+            $outputTokens = $json['message']['usage']['output_tokens'] ?? 0;
+            return [$inputTokens, $outputTokens];
+        }
+
+        if ($eventType === 'message_delta') {
+            // Anthropic: {"type":"message_delta","usage":{"output_tokens":N}}
+            $inputTokens = $json['usage']['input_tokens'] ?? 0;
+            $outputTokens = $json['usage']['output_tokens'] ?? 0;
+            return [$inputTokens, $outputTokens];
+        }
+
+        // Handle OpenAI format (no event type or generic)
+        if (isset($json['usage'])) {
+            $usage = $json['usage'];
+            $inputTokens = $usage['prompt_tokens'] ?? $usage['input_tokens'] ?? 0;
+            $outputTokens = $usage['completion_tokens'] ?? $usage['output_tokens'] ?? 0;
+        }
+
+        return [$inputTokens, $outputTokens];
     }
 
     /**

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -122,33 +123,22 @@ func ForwardNonStreaming(cfg *Config, body []byte, path string) (*ProxyResult, [
 
 	elapsed := time.Since(start).Milliseconds()
 
-	// Parse usage from response
-	// Support both OpenAI format (prompt_tokens/completion_tokens)
-	// and Anthropic format (input_tokens/output_tokens)
-	var parsed struct {
-		Model string `json:"model"`
-		Usage struct {
-			PromptTokens     int `json:"prompt_tokens"`
-			CompletionTokens int `json:"completion_tokens"`
-			TotalTokens      int `json:"total_tokens"`
-			InputTokens      int `json:"input_tokens"`
-			OutputTokens     int `json:"output_tokens"`
-		} `json:"usage"`
-	}
-	json.Unmarshal(respBody, &parsed)
+	// Parse usage from response — supports multiple formats:
+	// 1. OpenAI: usage.prompt_tokens / usage.completion_tokens
+	// 2. Anthropic: usage.input_tokens / usage.output_tokens
+	// 3. Anthropic Messages: message.usage.input_tokens (nested under message)
+	inputTokens, outputTokens, totalTokens, respModel := extractUsageFromJSON(respBody)
 
-	// Fallback: prefer OpenAI format, then Anthropic format
-	inputTokens := parsed.Usage.PromptTokens
-	if inputTokens == 0 {
-		inputTokens = parsed.Usage.InputTokens
-	}
-	outputTokens := parsed.Usage.CompletionTokens
-	if outputTokens == 0 {
-		outputTokens = parsed.Usage.OutputTokens
-	}
-	totalTokens := parsed.Usage.TotalTokens
-	if totalTokens == 0 {
-		totalTokens = inputTokens + outputTokens
+	log.Printf("USAGE [non-stream] path=%s model=%s status=%d input=%d output=%d total=%d",
+		path, respModel, resp.StatusCode, inputTokens, outputTokens, totalTokens)
+
+	if inputTokens == 0 && outputTokens == 0 && resp.StatusCode == 200 {
+		// Log first 500 bytes of response for debugging when tokens are 0
+		preview := string(respBody)
+		if len(preview) > 500 {
+			preview = preview[:500]
+		}
+		log.Printf("USAGE WARNING: zero tokens for 200 response, body preview: %s", preview)
 	}
 
 	result := &ProxyResult{
@@ -157,27 +147,35 @@ func ForwardNonStreaming(cfg *Config, body []byte, path string) (*ProxyResult, [
 		OutputTokens:   outputTokens,
 		TotalTokens:    totalTokens,
 		ResponseTimeMs: int(elapsed),
-		Model:          parsed.Model,
+		Model:          respModel,
 	}
 
 	return result, respBody, nil
 }
 
-// ForwardStreaming forwards a streaming request with zero-copy SSE passthrough
+// ForwardStreaming forwards a streaming request with SSE passthrough.
+// Uses bufio.Scanner to ensure SSE lines are never split across reads.
+// Supports both OpenAI and Anthropic SSE formats for token extraction.
 func ForwardStreaming(cfg *Config, w http.ResponseWriter, body []byte, path string) *ProxyResult {
 	start := time.Now()
 
 	// Instrument system prompt to hide EnowxAI identity
 	body = instrumentSystemPrompt(body)
 
-	// Inject stream_options for usage tracking
-	var bodyMap map[string]interface{}
-	json.Unmarshal(body, &bodyMap)
-	bodyMap["stream_options"] = map[string]interface{}{"include_usage": true}
-	modifiedBody, _ := json.Marshal(bodyMap)
+	// Only inject stream_options for OpenAI-compatible endpoints
+	// Anthropic /messages does not support stream_options
+	if path == "/chat/completions" || path == "/responses" {
+		var bodyMap map[string]interface{}
+		if json.Unmarshal(body, &bodyMap) == nil {
+			bodyMap["stream_options"] = map[string]interface{}{"include_usage": true}
+			if modified, err := json.Marshal(bodyMap); err == nil {
+				body = modified
+			}
+		}
+	}
 
 	url := cfg.EnowxAIBaseURL + path
-	req, err := http.NewRequest("POST", url, bytes.NewReader(modifiedBody))
+	req, err := http.NewRequest("POST", url, bytes.NewReader(body))
 	if err != nil {
 		log.Printf("Streaming request error: %v", err)
 		writeError(w, 502, "proxy_error", "AI service temporarily unavailable", "proxy_error")
@@ -209,66 +207,52 @@ func ForwardStreaming(cfg *Config, w http.ResponseWriter, body []byte, path stri
 		return nil
 	}
 
-	// Stream and parse usage
+	// Stream and parse usage using bufio.Scanner for proper line handling.
+	// This prevents SSE data lines from being split across TCP reads.
 	inputTokens := 0
 	outputTokens := 0
 	model := ""
+	lastEventType := "" // Track Anthropic event types
 
-	buf := make([]byte, 32*1024) // 32KB buffer
-	for {
-		n, err := resp.Body.Read(buf)
-		if n > 0 {
-			chunk := string(buf[:n])
+	scanner := bufio.NewScanner(resp.Body)
+	scanner.Buffer(make([]byte, 256*1024), 256*1024) // 256KB max line
 
-			// Parse SSE lines for usage data
-			lines := strings.Split(chunk, "\n")
-			for _, line := range lines {
-				if strings.HasPrefix(line, "data: ") && line != "data: [DONE]" {
-					// Support both OpenAI format (prompt_tokens/completion_tokens)
-					// and Anthropic format (input_tokens/output_tokens)
-					var parsed struct {
-						Model string `json:"model"`
-						Usage *struct {
-							PromptTokens     int `json:"prompt_tokens"`
-							CompletionTokens int `json:"completion_tokens"`
-							InputTokens      int `json:"input_tokens"`
-							OutputTokens     int `json:"output_tokens"`
-						} `json:"usage"`
-					}
-					if json.Unmarshal([]byte(strings.TrimPrefix(line, "data: ")), &parsed) == nil {
-						if parsed.Model != "" {
-							model = parsed.Model
-						}
-						if parsed.Usage != nil {
-							// Fallback: prefer OpenAI format, then Anthropic format
-							in := parsed.Usage.PromptTokens
-							if in == 0 {
-								in = parsed.Usage.InputTokens
-							}
-							out := parsed.Usage.CompletionTokens
-							if out == 0 {
-								out = parsed.Usage.OutputTokens
-							}
-							inputTokens = in
-							outputTokens = out
-						}
-					}
-				}
-			}
+	for scanner.Scan() {
+		line := scanner.Text()
 
-			// Forward to client
-			w.Write(buf[:n])
-			flusher.Flush()
+		// Track SSE event type (used by Anthropic format)
+		if strings.HasPrefix(line, "event: ") {
+			lastEventType = strings.TrimPrefix(line, "event: ")
 		}
-		if err != nil {
-			if err != io.EOF {
-				log.Printf("Streaming read error: %v", err)
+
+		// Parse data lines for usage info
+		if strings.HasPrefix(line, "data: ") && line != "data: [DONE]" {
+			jsonStr := strings.TrimPrefix(line, "data: ")
+			in, out, m := extractUsageFromSSELine(jsonStr, lastEventType)
+			if m != "" {
+				model = m
 			}
-			break
+			if in > 0 {
+				inputTokens = in
+			}
+			if out > 0 {
+				outputTokens = out
+			}
 		}
+
+		// Forward line + newline to client
+		fmt.Fprintf(w, "%s\n", line)
+		flusher.Flush()
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Printf("Streaming scanner error: %v", err)
 	}
 
 	elapsed := time.Since(start).Milliseconds()
+
+	log.Printf("USAGE [stream] path=%s model=%s input=%d output=%d",
+		path, model, inputTokens, outputTokens)
 
 	return &ProxyResult{
 		StatusCode:     resp.StatusCode,
@@ -278,6 +262,129 @@ func ForwardStreaming(cfg *Config, w http.ResponseWriter, body []byte, path stri
 		ResponseTimeMs: int(elapsed),
 		Model:          model,
 	}
+}
+
+// extractUsageFromJSON extracts token usage from a complete JSON response body.
+// Supports OpenAI, Anthropic, and nested message formats.
+func extractUsageFromJSON(body []byte) (inputTokens, outputTokens, totalTokens int, model string) {
+	// Try parsing as a generic map to handle all formats
+	var raw map[string]json.RawMessage
+	if json.Unmarshal(body, &raw) != nil {
+		return
+	}
+
+	// Extract model
+	if m, ok := raw["model"]; ok {
+		json.Unmarshal(m, &model)
+	}
+
+	// Try top-level usage (OpenAI + Anthropic flat format)
+	if u, ok := raw["usage"]; ok {
+		var usage struct {
+			PromptTokens     int `json:"prompt_tokens"`
+			CompletionTokens int `json:"completion_tokens"`
+			TotalTokens      int `json:"total_tokens"`
+			InputTokens      int `json:"input_tokens"`
+			OutputTokens     int `json:"output_tokens"`
+		}
+		if json.Unmarshal(u, &usage) == nil {
+			inputTokens = usage.PromptTokens
+			if inputTokens == 0 {
+				inputTokens = usage.InputTokens
+			}
+			outputTokens = usage.CompletionTokens
+			if outputTokens == 0 {
+				outputTokens = usage.OutputTokens
+			}
+			totalTokens = usage.TotalTokens
+			if totalTokens == 0 {
+				totalTokens = inputTokens + outputTokens
+			}
+			return
+		}
+	}
+
+	// Try Anthropic Messages non-streaming format: top-level has usage directly
+	// Response: {"id":"msg_...","type":"message","role":"assistant","content":[...],"model":"...","usage":{"input_tokens":N,"output_tokens":N}}
+	// Already handled above since Anthropic non-streaming also uses top-level "usage"
+
+	return
+}
+
+// extractUsageFromSSELine extracts token usage from a single SSE data line.
+// Handles both OpenAI and Anthropic streaming formats.
+func extractUsageFromSSELine(jsonStr string, eventType string) (inputTokens, outputTokens int, model string) {
+	var raw map[string]json.RawMessage
+	if json.Unmarshal([]byte(jsonStr), &raw) != nil {
+		return
+	}
+
+	// Extract model from any format
+	if m, ok := raw["model"]; ok {
+		json.Unmarshal(m, &model)
+	}
+
+	// Handle Anthropic SSE format based on event type
+	switch eventType {
+	case "message_start":
+		// Anthropic: {"type":"message_start","message":{"usage":{"input_tokens":N}}}
+		if msgRaw, ok := raw["message"]; ok {
+			var msg struct {
+				Model string `json:"model"`
+				Usage *struct {
+					InputTokens  int `json:"input_tokens"`
+					OutputTokens int `json:"output_tokens"`
+				} `json:"usage"`
+			}
+			if json.Unmarshal(msgRaw, &msg) == nil {
+				if msg.Model != "" {
+					model = msg.Model
+				}
+				if msg.Usage != nil {
+					inputTokens = msg.Usage.InputTokens
+					outputTokens = msg.Usage.OutputTokens
+				}
+			}
+		}
+		return
+
+	case "message_delta":
+		// Anthropic: {"type":"message_delta","usage":{"output_tokens":N}}
+		if u, ok := raw["usage"]; ok {
+			var usage struct {
+				InputTokens  int `json:"input_tokens"`
+				OutputTokens int `json:"output_tokens"`
+			}
+			if json.Unmarshal(u, &usage) == nil {
+				inputTokens = usage.InputTokens
+				outputTokens = usage.OutputTokens
+			}
+		}
+		return
+	}
+
+	// Handle OpenAI format (no event type, or generic)
+	// {"usage":{"prompt_tokens":N,"completion_tokens":N}}
+	if u, ok := raw["usage"]; ok {
+		var usage struct {
+			PromptTokens     int `json:"prompt_tokens"`
+			CompletionTokens int `json:"completion_tokens"`
+			InputTokens      int `json:"input_tokens"`
+			OutputTokens     int `json:"output_tokens"`
+		}
+		if json.Unmarshal(u, &usage) == nil {
+			inputTokens = usage.PromptTokens
+			if inputTokens == 0 {
+				inputTokens = usage.InputTokens
+			}
+			outputTokens = usage.CompletionTokens
+			if outputTokens == 0 {
+				outputTokens = usage.OutputTokens
+			}
+		}
+	}
+
+	return
 }
 
 // ForwardModels fetches models list from EnowxAI
