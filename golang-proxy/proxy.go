@@ -123,21 +123,39 @@ func ForwardNonStreaming(cfg *Config, body []byte, path string) (*ProxyResult, [
 	elapsed := time.Since(start).Milliseconds()
 
 	// Parse usage from response
+	// Support both OpenAI format (prompt_tokens/completion_tokens)
+	// and Anthropic format (input_tokens/output_tokens)
 	var parsed struct {
 		Model string `json:"model"`
 		Usage struct {
 			PromptTokens     int `json:"prompt_tokens"`
 			CompletionTokens int `json:"completion_tokens"`
 			TotalTokens      int `json:"total_tokens"`
+			InputTokens      int `json:"input_tokens"`
+			OutputTokens     int `json:"output_tokens"`
 		} `json:"usage"`
 	}
 	json.Unmarshal(respBody, &parsed)
 
+	// Fallback: prefer OpenAI format, then Anthropic format
+	inputTokens := parsed.Usage.PromptTokens
+	if inputTokens == 0 {
+		inputTokens = parsed.Usage.InputTokens
+	}
+	outputTokens := parsed.Usage.CompletionTokens
+	if outputTokens == 0 {
+		outputTokens = parsed.Usage.OutputTokens
+	}
+	totalTokens := parsed.Usage.TotalTokens
+	if totalTokens == 0 {
+		totalTokens = inputTokens + outputTokens
+	}
+
 	result := &ProxyResult{
 		StatusCode:     resp.StatusCode,
-		InputTokens:    parsed.Usage.PromptTokens,
-		OutputTokens:   parsed.Usage.CompletionTokens,
-		TotalTokens:    parsed.Usage.TotalTokens,
+		InputTokens:    inputTokens,
+		OutputTokens:   outputTokens,
+		TotalTokens:    totalTokens,
 		ResponseTimeMs: int(elapsed),
 		Model:          parsed.Model,
 	}
@@ -206,11 +224,15 @@ func ForwardStreaming(cfg *Config, w http.ResponseWriter, body []byte, path stri
 			lines := strings.Split(chunk, "\n")
 			for _, line := range lines {
 				if strings.HasPrefix(line, "data: ") && line != "data: [DONE]" {
+					// Support both OpenAI format (prompt_tokens/completion_tokens)
+					// and Anthropic format (input_tokens/output_tokens)
 					var parsed struct {
 						Model string `json:"model"`
 						Usage *struct {
 							PromptTokens     int `json:"prompt_tokens"`
 							CompletionTokens int `json:"completion_tokens"`
+							InputTokens      int `json:"input_tokens"`
+							OutputTokens     int `json:"output_tokens"`
 						} `json:"usage"`
 					}
 					if json.Unmarshal([]byte(strings.TrimPrefix(line, "data: ")), &parsed) == nil {
@@ -218,8 +240,17 @@ func ForwardStreaming(cfg *Config, w http.ResponseWriter, body []byte, path stri
 							model = parsed.Model
 						}
 						if parsed.Usage != nil {
-							inputTokens = parsed.Usage.PromptTokens
-							outputTokens = parsed.Usage.CompletionTokens
+							// Fallback: prefer OpenAI format, then Anthropic format
+							in := parsed.Usage.PromptTokens
+							if in == 0 {
+								in = parsed.Usage.InputTokens
+							}
+							out := parsed.Usage.CompletionTokens
+							if out == 0 {
+								out = parsed.Usage.OutputTokens
+							}
+							inputTokens = in
+							outputTokens = out
 						}
 					}
 				}

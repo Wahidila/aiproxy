@@ -88,8 +88,8 @@ class EnowxAiService
                 'status' => $response->status(),
                 'data' => $data,
                 'response_time_ms' => $responseTimeMs,
-                'input_tokens' => $data['usage']['prompt_tokens'] ?? 0,
-                'output_tokens' => $data['usage']['completion_tokens'] ?? 0,
+                'input_tokens' => $data['usage']['prompt_tokens'] ?? $data['usage']['input_tokens'] ?? 0,
+                'output_tokens' => $data['usage']['completion_tokens'] ?? $data['usage']['output_tokens'] ?? 0,
             ];
         } catch (\Exception $e) {
             Log::error('EnowxAI forward error', [
@@ -143,8 +143,8 @@ class EnowxAiService
                             if (str_starts_with($line, 'data: ') && $line !== 'data: [DONE]') {
                                 $json = json_decode(substr($line, 6), true);
                                 if ($json && isset($json['usage'])) {
-                                    $inputTokens = $json['usage']['prompt_tokens'] ?? $inputTokens;
-                                    $outputTokens = $json['usage']['completion_tokens'] ?? $outputTokens;
+                                    $inputTokens = $json['usage']['prompt_tokens'] ?? $json['usage']['input_tokens'] ?? $inputTokens;
+                                    $outputTokens = $json['usage']['completion_tokens'] ?? $json['usage']['output_tokens'] ?? $outputTokens;
                                 }
                             }
                         }
