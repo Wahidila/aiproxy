@@ -39,7 +39,7 @@
                     <form action="{{ route('admin.broadcast-notifications.store') }}" method="POST" class="space-y-4">
                         @csrf
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {{-- Title --}}
                             <div>
                                 <label for="title" class="block text-sm font-medium text-off-black mb-1">Judul <span class="text-muted">(opsional)</span></label>
@@ -61,6 +61,20 @@
                                     <option value="danger" {{ old('type') === 'danger' ? 'selected' : '' }}>Danger — Penting/Urgent</option>
                                 </select>
                                 @error('type')
+                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            {{-- Display Type --}}
+                            <div>
+                                <label for="display_type" class="block text-sm font-medium text-off-black mb-1">Tampilan</label>
+                                <select name="display_type" id="display_type"
+                                    class="w-full rounded-lg border-oat focus:border-fin-orange focus:ring-fin-orange text-sm">
+                                    <option value="both" {{ old('display_type', 'both') === 'both' ? 'selected' : '' }}>Banner + Popup</option>
+                                    <option value="banner" {{ old('display_type') === 'banner' ? 'selected' : '' }}>Banner saja</option>
+                                    <option value="popup" {{ old('display_type') === 'popup' ? 'selected' : '' }}>Popup saja</option>
+                                </select>
+                                @error('display_type')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
                             </div>
@@ -153,6 +167,7 @@
                             <tr>
                                 <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted">Notifikasi</th>
                                 <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-muted">Tipe</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-muted">Tampilan</th>
                                 <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-muted">Status</th>
                                 <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-muted">Dismissed</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted">Dibuat</th>
@@ -188,10 +203,15 @@
                                                 class="w-full rounded-lg border-oat focus:border-fin-orange focus:ring-fin-orange text-xs py-1.5">
                                             <textarea name="message" rows="2" required
                                                 class="w-full rounded-lg border-oat focus:border-fin-orange focus:ring-fin-orange text-xs py-1.5">{{ $notification->message }}</textarea>
-                                            <div class="flex items-center gap-2">
+                                            <div class="flex items-center gap-2 flex-wrap">
                                                 <select name="type" class="rounded-lg border-oat focus:border-fin-orange focus:ring-fin-orange text-xs py-1.5">
                                                     @foreach(['info', 'warning', 'success', 'danger'] as $type)
                                                         <option value="{{ $type }}" {{ $notification->type === $type ? 'selected' : '' }}>{{ ucfirst($type) }}</option>
+                                                    @endforeach
+                                                </select>
+                                                <select name="display_type" class="rounded-lg border-oat focus:border-fin-orange focus:ring-fin-orange text-xs py-1.5">
+                                                    @foreach(['banner' => 'Banner', 'popup' => 'Popup', 'both' => 'Both'] as $dtVal => $dtLabel)
+                                                        <option value="{{ $dtVal }}" {{ $notification->display_type === $dtVal ? 'selected' : '' }}>{{ $dtLabel }}</option>
                                                     @endforeach
                                                 </select>
                                                 <input type="datetime-local" name="expires_at" value="{{ $notification->expires_at?->format('Y-m-d\TH:i') }}"
@@ -220,6 +240,25 @@
                                         @endphp
                                         <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $typeColors[$notification->type] ?? $typeColors['info'] }}">
                                             {{ ucfirst($notification->type) }}
+                                        </span>
+                                    </td>
+
+                                    {{-- Display Type Badge --}}
+                                    <td class="whitespace-nowrap px-4 py-3 text-center">
+                                        @php
+                                            $displayColors = [
+                                                'banner' => 'bg-blue-100 text-blue-700',
+                                                'popup' => 'bg-purple-100 text-purple-700',
+                                                'both' => 'bg-indigo-100 text-indigo-700',
+                                            ];
+                                            $displayLabels = [
+                                                'banner' => 'Banner',
+                                                'popup' => 'Popup',
+                                                'both' => 'Both',
+                                            ];
+                                        @endphp
+                                        <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $displayColors[$notification->display_type] ?? $displayColors['both'] }}">
+                                            {{ $displayLabels[$notification->display_type] ?? 'Both' }}
                                         </span>
                                     </td>
 
@@ -292,7 +331,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="px-4 py-8 text-center text-sm text-warm-sand">
+                                    <td colspan="7" class="px-4 py-8 text-center text-sm text-warm-sand">
                                         Belum ada notifikasi broadcast. Buat notifikasi pertama di atas.
                                     </td>
                                 </tr>

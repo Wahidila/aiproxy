@@ -24,6 +24,7 @@ class BroadcastNotificationController extends Controller
             'title' => 'nullable|string|max:255',
             'message' => 'required|string|max:2000',
             'type' => 'required|in:' . implode(',', BroadcastNotification::TYPES),
+            'display_type' => 'required|in:' . implode(',', BroadcastNotification::DISPLAY_TYPES),
             'expires_at' => 'nullable|date|after:now',
         ]);
 
@@ -31,6 +32,7 @@ class BroadcastNotificationController extends Controller
             'title' => $request->title,
             'message' => $request->message,
             'type' => $request->type,
+            'display_type' => $request->display_type,
             'created_by' => $request->user()->id,
             'expires_at' => $request->expires_at,
         ]);
@@ -45,6 +47,7 @@ class BroadcastNotificationController extends Controller
             'title' => 'nullable|string|max:255',
             'message' => 'required|string|max:2000',
             'type' => 'required|in:' . implode(',', BroadcastNotification::TYPES),
+            'display_type' => 'required|in:' . implode(',', BroadcastNotification::DISPLAY_TYPES),
             'expires_at' => 'nullable|date',
         ]);
 
@@ -52,6 +55,7 @@ class BroadcastNotificationController extends Controller
             'title' => $request->title,
             'message' => $request->message,
             'type' => $request->type,
+            'display_type' => $request->display_type,
             'expires_at' => $request->expires_at,
         ]);
 

@@ -15,6 +15,7 @@ class BroadcastNotification extends Model
         'title',
         'message',
         'type',
+        'display_type',
         'is_active',
         'created_by',
         'expires_at',
@@ -35,6 +36,16 @@ class BroadcastNotification extends Model
         self::TYPE_WARNING,
         self::TYPE_SUCCESS,
         self::TYPE_DANGER,
+    ];
+
+    public const DISPLAY_BANNER = 'banner';
+    public const DISPLAY_POPUP = 'popup';
+    public const DISPLAY_BOTH = 'both';
+
+    public const DISPLAY_TYPES = [
+        self::DISPLAY_BANNER,
+        self::DISPLAY_POPUP,
+        self::DISPLAY_BOTH,
     ];
 
     /**
@@ -75,6 +86,22 @@ class BroadcastNotification extends Model
                 $q->where('user_id', $user->id);
             })
             ->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Scope: notifications that should show as banners.
+     */
+    public function scopeBanners($query)
+    {
+        return $query->whereIn('display_type', [self::DISPLAY_BANNER, self::DISPLAY_BOTH]);
+    }
+
+    /**
+     * Scope: notifications that should show as popups.
+     */
+    public function scopePopups($query)
+    {
+        return $query->whereIn('display_type', [self::DISPLAY_POPUP, self::DISPLAY_BOTH]);
     }
 
     /**
