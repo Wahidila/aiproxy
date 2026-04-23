@@ -25,14 +25,30 @@
                     <x-nav-link :href="route('donations.index')" :active="request()->routeIs('donations.*')">
                         Top Up
                     </x-nav-link>
+                    <x-nav-link :href="route('support.index')" :active="request()->routeIs('support.*')">
+                        <span class="flex items-center gap-1.5">
+                            <i data-lucide="headphones" class="w-3.5 h-3.5"></i>
+                            Support
+                        </span>
+                    </x-nav-link>
                     @if(Auth::user()->isAdmin())
-                    <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.*') && !request()->routeIs('admin.broadcast-notifications.*')" class="!text-fin-orange">
+                    <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.*') && !request()->routeIs('admin.broadcast-notifications.*') && !request()->routeIs('admin.support.*')" class="!text-fin-orange">
                         Admin
                     </x-nav-link>
                     <x-nav-link :href="route('admin.broadcast-notifications.index')" :active="request()->routeIs('admin.broadcast-notifications.*')" class="!text-fin-orange">
                         <span class="flex items-center gap-1.5">
                             <i data-lucide="megaphone" class="w-3.5 h-3.5"></i>
                             Broadcast
+                        </span>
+                    </x-nav-link>
+                    @php $navOpenTickets = \App\Models\SupportTicket::where('status', 'open')->count(); @endphp
+                    <x-nav-link :href="route('admin.support.index')" :active="request()->routeIs('admin.support.*')" class="!text-fin-orange">
+                        <span class="flex items-center gap-1.5">
+                            <i data-lucide="headphones" class="w-3.5 h-3.5"></i>
+                            Support
+                            @if($navOpenTickets > 0)
+                                <span class="inline-flex items-center justify-center h-5 min-w-[20px] rounded-full bg-red-100 text-xs font-semibold text-red-700 px-1.5">{{ $navOpenTickets }}</span>
+                            @endif
                         </span>
                     </x-nav-link>
                     @php $navPendingTrials = \App\Models\TrialRequest::pending()->count(); @endphp
@@ -104,12 +120,19 @@
             <x-responsive-nav-link :href="route('donations.index')" :active="request()->routeIs('donations.*')">
                 Top Up
             </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('support.index')" :active="request()->routeIs('support.*')">
+                Support
+            </x-responsive-nav-link>
             @if(Auth::user()->isAdmin())
             <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.*') && !request()->routeIs('admin.broadcast-notifications.*')">
                 Admin Panel
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('admin.broadcast-notifications.index')" :active="request()->routeIs('admin.broadcast-notifications.*')">
                 Broadcast Notifications
+            </x-responsive-nav-link>
+            @php $navOpenTicketsMobile = \App\Models\SupportTicket::where('status', 'open')->count(); @endphp
+            <x-responsive-nav-link :href="route('admin.support.index')" :active="request()->routeIs('admin.support.*')">
+                Support Tickets{{ $navOpenTicketsMobile > 0 ? " ({$navOpenTicketsMobile})" : '' }}
             </x-responsive-nav-link>
             @php $navPendingTrialsMobile = \App\Models\TrialRequest::pending()->count(); @endphp
             @if($navPendingTrialsMobile > 0)

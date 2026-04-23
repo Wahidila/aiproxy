@@ -14,7 +14,9 @@ use App\Http\Controllers\Admin\InvitationController as AdminInvitationController
 use App\Http\Controllers\Admin\TrialRequestController as AdminTrialRequestController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\BroadcastNotificationController as AdminBroadcastNotificationController;
+use App\Http\Controllers\Admin\SupportTicketController as AdminSupportTicketController;
 use App\Http\Controllers\NotificationDismissalController;
+use App\Http\Controllers\SupportTicketController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -56,6 +58,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Support Tickets
+    Route::get('/support', [SupportTicketController::class, 'index'])->name('support.index');
+    Route::get('/support/create', [SupportTicketController::class, 'create'])->name('support.create');
+    Route::post('/support', [SupportTicketController::class, 'store'])->name('support.store');
+    Route::get('/support/{ticket}', [SupportTicketController::class, 'show'])->name('support.show');
+    Route::post('/support/{ticket}/reply', [SupportTicketController::class, 'reply'])->name('support.reply');
 
     // Notification dismissal
     Route::post('/notifications/{broadcastNotification}/dismiss', [NotificationDismissalController::class, 'dismiss'])->name('notifications.dismiss');
@@ -102,6 +111,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/trial-requests', [AdminTrialRequestController::class, 'index'])->name('trial-requests.index');
     Route::post('/trial-requests/{trialRequest}/invite', [AdminTrialRequestController::class, 'invite'])->name('trial-requests.invite');
     Route::post('/trial-requests/{trialRequest}/reject', [AdminTrialRequestController::class, 'reject'])->name('trial-requests.reject');
+
+    // Support Tickets (Admin)
+    Route::get('/support', [AdminSupportTicketController::class, 'index'])->name('support.index');
+    Route::get('/support/{ticket}', [AdminSupportTicketController::class, 'show'])->name('support.show');
+    Route::post('/support/{ticket}/reply', [AdminSupportTicketController::class, 'reply'])->name('support.reply');
+    Route::patch('/support/{ticket}/status', [AdminSupportTicketController::class, 'updateStatus'])->name('support.update-status');
 
     // Broadcast Notifications
     Route::get('/broadcast-notifications', [AdminBroadcastNotificationController::class, 'index'])->name('broadcast-notifications.index');

@@ -61,6 +61,11 @@ class User extends Authenticatable
         return $this->hasMany(WalletTransaction::class);
     }
 
+    public function supportTickets(): HasMany
+    {
+        return $this->hasMany(SupportTicket::class);
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
