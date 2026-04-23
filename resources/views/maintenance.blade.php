@@ -146,6 +146,54 @@
             margin-top: 8px;
         }
 
+        /* Login button for existing users */
+        .login-section {
+            margin-top: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .login-hint {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .btn-login {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 32px;
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            color: #ffffff;
+            background: linear-gradient(135deg, #ff5600 0%, #ff8c42 100%);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(255, 86, 0, 0.3);
+            letter-spacing: -0.2px;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(255, 86, 0, 0.45);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .btn-login svg {
+            width: 18px;
+            height: 18px;
+            animation: none;
+        }
+
         /* Progress bar */
         .progress-bar-wrapper {
             width: 200px;
@@ -201,12 +249,24 @@
             </div>
             <span class="redirect-text">detik</span>
         </div>
+
+        <div class="login-section">
+            <span class="login-hint">Sudah punya akun sebelumnya?</span>
+            <a href="https://aimurah.my.id/login" class="btn-login">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                    <polyline points="10 17 15 12 10 7"/>
+                    <line x1="15" y1="12" x2="3" y2="12"/>
+                </svg>
+                Masuk ke Akun
+            </a>
+        </div>
     </div>
 
     <script>
         (function() {
             const TOTAL_SECONDS = 7;
-            const REDIRECT_URL = 'https://www.anxthxropic.com';
+            const REDIRECT_URL = 'https://aimurah.my.id/login';
 
             let remaining = TOTAL_SECONDS;
             const countdownEl = document.getElementById('countdown');
