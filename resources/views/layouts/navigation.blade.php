@@ -25,10 +25,26 @@
                     <x-nav-link :href="route('donations.index')" :active="request()->routeIs('donations.*')">
                         Top Up
                     </x-nav-link>
+                    <x-nav-link :href="route('subscriptions.index')" :active="request()->routeIs('subscriptions.*')">
+                        <span class="flex items-center gap-1.5">
+                            <i data-lucide="crown" class="w-3.5 h-3.5"></i>
+                            Subscription
+                        </span>
+                    </x-nav-link>
                     @if(Auth::user()->isAdmin())
-                    <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.*')" class="!text-fin-orange">
+                    <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.*') && !request()->routeIs('admin.subscriptions.*') && !request()->routeIs('admin.subscription-plans.*')" class="!text-fin-orange">
                         Admin
                     </x-nav-link>
+                    @php $navPendingSubs = \App\Models\Subscription::where('status', 'pending')->count(); @endphp
+                    @if($navPendingSubs > 0)
+                    <x-nav-link :href="route('admin.subscriptions.index', ['status' => 'pending'])" :active="request()->routeIs('admin.subscriptions.*')" class="!text-fin-orange">
+                        <span class="flex items-center gap-1.5">
+                            <i data-lucide="crown" class="w-3.5 h-3.5"></i>
+                            Subs
+                            <span class="inline-flex items-center justify-center h-5 min-w-[20px] rounded-full bg-red-100 text-xs font-semibold text-red-700 px-1.5">{{ $navPendingSubs }}</span>
+                        </span>
+                    </x-nav-link>
+                    @endif
                     @php $navPendingTrials = \App\Models\TrialRequest::pending()->count(); @endphp
                     @if($navPendingTrials > 0)
                     <x-nav-link :href="route('admin.trial-requests.index', ['status' => 'pending'])" :active="request()->routeIs('admin.trial-requests.*')" class="!text-purple-600">
@@ -98,10 +114,19 @@
             <x-responsive-nav-link :href="route('donations.index')" :active="request()->routeIs('donations.*')">
                 Top Up
             </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('subscriptions.index')" :active="request()->routeIs('subscriptions.*')">
+                Subscription
+            </x-responsive-nav-link>
             @if(Auth::user()->isAdmin())
             <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.*')">
                 Admin Panel
             </x-responsive-nav-link>
+            @php $navPendingSubsMobile = \App\Models\Subscription::where('status', 'pending')->count(); @endphp
+            @if($navPendingSubsMobile > 0)
+            <x-responsive-nav-link :href="route('admin.subscriptions.index', ['status' => 'pending'])" :active="request()->routeIs('admin.subscriptions.*')">
+                Subscriptions ({{ $navPendingSubsMobile }})
+            </x-responsive-nav-link>
+            @endif
             @php $navPendingTrialsMobile = \App\Models\TrialRequest::pending()->count(); @endphp
             @if($navPendingTrialsMobile > 0)
             <x-responsive-nav-link :href="route('admin.trial-requests.index', ['status' => 'pending'])" :active="request()->routeIs('admin.trial-requests.*')">

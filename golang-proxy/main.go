@@ -68,6 +68,7 @@ func main() {
 	subRoutes := http.NewServeMux()
 	subRoutes.HandleFunc("/api/v2/chat/completions", subHandlers.HandleSubChatCompletions)
 	subRoutes.HandleFunc("/api/v2/messages", subHandlers.HandleSubMessages)
+	subRoutes.HandleFunc("/api/v2/responses", subHandlers.HandleSubResponses)
 	subRoutes.HandleFunc("/api/v2/models", subHandlers.HandleSubModels)
 	subRoutes.HandleFunc("/api/v2/health", subHandlers.HandleSubHealth)
 
@@ -79,6 +80,7 @@ func main() {
 	)
 	mux.Handle("/api/v2/chat/completions", subAuthed)
 	mux.Handle("/api/v2/messages", subAuthed)
+	mux.Handle("/api/v2/responses", subAuthed)
 	mux.Handle("/api/v2/models", subAuthed)
 	mux.Handle("/api/v2/health", subAuthed)
 
@@ -108,6 +110,7 @@ func main() {
 		log.Printf("  GET  /api/v2/models            (subscription key)")
 		log.Printf("  POST /api/v2/chat/completions  (subscription key)")
 		log.Printf("  POST /api/v2/messages          (subscription key)")
+		log.Printf("  POST /api/v2/responses         (subscription key)")
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Server error: %v", err)
 		}

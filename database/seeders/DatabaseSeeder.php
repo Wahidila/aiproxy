@@ -75,5 +75,8 @@ class DatabaseSeeder extends Seeder
                 ]
             );
         }
+
+        // Subscription Plans
+        $this->call(SubscriptionPlanSeeder::class);
     }
 }

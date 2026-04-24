@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Donation;
 use App\Models\Setting;
+use App\Models\Subscription;
 use App\Models\TokenUsage;
 use App\Models\TrialRequest;
 use App\Models\User;
@@ -42,6 +43,10 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
+        // Subscription stats
+        $pendingSubscriptions = Subscription::where('status', 'pending')->count();
+        $activeSubscriptions = Subscription::where('status', 'active')->count();
+
         // Daily stats for last 7 days
         $dailyStats = [];
         for ($i = 6; $i >= 0; $i--) {
@@ -70,6 +75,8 @@ class DashboardController extends Controller
             'recentUsers',
             'pendingTrialRequests',
             'recentTrialRequests',
+            'pendingSubscriptions',
+            'activeSubscriptions',
             'dailyStats',
             'golangStatus',
             'laravelFallback'

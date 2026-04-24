@@ -266,7 +266,7 @@
             </div>
 
             {{-- Quick Links --}}
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
                 <a href="{{ route('admin.users.index') }}"
                    class="flex items-center gap-3 rounded-card border border-oat bg-surface p-4 hover:border-fin-orange hover:shadow-sm transition-all">
                     <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-fin-orange-light">
@@ -340,6 +340,23 @@
                                 <span class="text-purple-600 font-medium">{{ $pendingTrialRequests }} pending</span>
                             @else
                                 Manage trial sign-ups
+                            @endif
+                        </p>
+                    </div>
+                </a>
+
+                <a href="{{ route('admin.subscriptions.index') }}"
+                   class="flex items-center gap-3 rounded-card border border-oat bg-surface p-4 hover:border-fin-orange hover:shadow-sm transition-all">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-lg {{ $pendingSubscriptions > 0 ? 'bg-red-100' : 'bg-fin-orange-light' }}">
+                        <i data-lucide="crown" class="h-5 w-5 {{ $pendingSubscriptions > 0 ? 'text-red-600' : 'text-fin-orange' }}"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-off-black">Subscriptions</p>
+                        <p class="text-xs text-muted">
+                            @if($pendingSubscriptions > 0)
+                                <span class="text-red-600 font-medium">{{ $pendingSubscriptions }} pending</span>
+                            @else
+                                {{ $activeSubscriptions }} active
                             @endif
                         </p>
                     </div>

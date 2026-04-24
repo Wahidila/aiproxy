@@ -61,6 +61,23 @@ class User extends Authenticatable
         return $this->hasMany(WalletTransaction::class);
     }
 
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    /**
+     * Get the user's currently active subscription.
+     */
+    public function activeSubscription(): ?Subscription
+    {
+        return $this->subscriptions()
+            ->where('status', 'active')
+            ->where('expires_at', '>', now())
+            ->latest()
+            ->first();
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === 'admin';

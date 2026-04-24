@@ -15,6 +15,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('tokens:reset-free')->dailyAt('00:05');
         $schedule->command('tokens:expire-donations')->everyFiveMinutes();
         $schedule->command('tokens:cleanup --days=90')->weekly();
+        $schedule->command('subscriptions:expire')->hourly();
     }
 
     /**

@@ -223,7 +223,7 @@
                     </div>
 
                     @php
-                        $budgetLimit = $subscription->plan->budget_limit ?? 0;
+                        $budgetLimit = (float) ($subscription->plan->budget_usd_per_cycle ?? 0);
                         $remaining = max(0, $budgetLimit - ($cycleCost ?? 0));
                         $percentage = $budgetLimit > 0 ? min(100, (($cycleCost ?? 0) / $budgetLimit) * 100) : 0;
                     @endphp
@@ -271,9 +271,9 @@
                     <div class="flex items-center gap-2 mb-4">
                         <i data-lucide="key" class="h-5 w-5 text-muted"></i>
                         <h3 class="text-lg font-semibold text-off-black tracking-sub">
-                            API Keys
+                            Subscription API Keys
                             <span class="ml-2 inline-flex items-center rounded-full bg-canvas px-2.5 py-0.5 text-xs font-medium text-muted">
-                                {{ $subscription->user->apiKeys->count() ?? 0 }}
+                                {{ $subscription->apiKeys->count() }}
                             </span>
                         </h3>
                     </div>
@@ -290,7 +290,7 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-oat">
-                                @forelse($subscription->user->apiKeys ?? [] as $apiKey)
+                                @forelse($subscription->apiKeys as $apiKey)
                                     <tr class="hover:bg-canvas">
                                         <td class="whitespace-nowrap px-4 py-3 text-sm font-medium text-off-black">
                                             {{ $apiKey->name }}

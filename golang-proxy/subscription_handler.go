@@ -26,6 +26,11 @@ func (h *SubscriptionHandlers) HandleSubMessages(w http.ResponseWriter, r *http.
 	h.handleSubProxy(w, r, "/messages")
 }
 
+// HandleSubResponses handles POST /api/v2/responses
+func (h *SubscriptionHandlers) HandleSubResponses(w http.ResponseWriter, r *http.Request) {
+	h.handleSubProxy(w, r, "/responses")
+}
+
 // HandleSubModels handles GET /api/v2/models
 func (h *SubscriptionHandlers) HandleSubModels(w http.ResponseWriter, r *http.Request) {
 	body, status, err := ForwardModels(h.cfg)
