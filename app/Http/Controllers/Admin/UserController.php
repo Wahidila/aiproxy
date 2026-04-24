@@ -3,18 +3,22 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AdminEmail;
 use App\Models\ApiKey;
 use App\Models\ModelPricing;
 use App\Models\User;
 use App\Models\UserInvitation;
 use App\Models\WalletTransaction;
+use App\Services\BrevoMailService;
 use App\Services\TokenTrackingService;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-    public function __construct(private TokenTrackingService $trackingService)
-    {
+    public function __construct(
+        private TokenTrackingService $trackingService,
+        private BrevoMailService $mailer,
+    ) {
     }
 
     public function index(Request $request)
@@ -63,7 +67,13 @@ class UserController extends Controller
             ->take(20)
             ->get();
 
-        return view('admin.users.show', compact('user', 'quota', 'stats', 'totalSpending', 'transactions', 'recentUsages'));
+        // Email history sent to this user
+        $adminEmails = AdminEmail::where('user_id', $user->id)
+            ->with('admin')
+            ->latest('created_at')
+            ->paginate(10, ['*'], 'email_page');
+
+        return view('admin.users.show', compact('user', 'quota', 'stats', 'totalSpending', 'transactions', 'recentUsages', 'adminEmails'));
     }
 
     public function adjustBalance(Request $request, User $user)
@@ -152,6 +162,52 @@ class UserController extends Controller
 
         return redirect()->route('admin.users.show', $user)
             ->with('success', "API key '{$apiKey->name}' berhasil di-revoke.");
+    }
+
+    /**
+     * Send a custom email to a user.
+     */
+    public function sendEmail(Request $request, User $user)
+    {
+        $request->validate([
+            'subject' => ['required', 'string', 'max:255'],
+            'body' => ['required', 'string', 'max:10000'],
+        ]);
+
+        // Render the email template
+        $htmlContent = view('emails.admin-contact', [
+            'userName' => $user->name,
+            'messageBody' => $request->body,
+            'subject' => $request->subject,
+            'appName' => config('app.name'),
+        ])->render();
+
+        // Send via Brevo
+        $result = $this->mailer->send(
+            toEmail: $user->email,
+            toName: $user->name,
+            subject: $request->subject,
+            htmlContent: $htmlContent,
+        );
+
+        // Log the email
+        AdminEmail::create([
+            'admin_id' => $request->user()->id,
+            'user_id' => $user->id,
+            'subject' => $request->subject,
+            'body' => $request->body,
+            'status' => $result['success'] ? 'sent' : 'failed',
+            'error_message' => $result['success'] ? null : $result['message'],
+            'sent_at' => $result['success'] ? now() : null,
+        ]);
+
+        if ($result['success']) {
+            return redirect()->route('admin.users.show', $user)
+                ->with('success', "Email berhasil dikirim ke {$user->email}.");
+        }
+
+        return redirect()->route('admin.users.show', $user)
+            ->with('error', "Gagal mengirim email: {$result['message']}");
     }
 
     public function export()

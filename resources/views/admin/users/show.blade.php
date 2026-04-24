@@ -532,6 +532,159 @@
                 </div>
             </div>
 
+            {{-- Contact User --}}
+            <div class="bg-surface border border-oat rounded-card" x-data="{ showForm: false }">
+                <div class="px-6 py-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-off-black tracking-sub flex items-center gap-2">
+                            <i data-lucide="mail" class="w-5 h-5 text-fin-orange"></i>
+                            Contact User
+                        </h3>
+                        <button type="button"
+                                @click="showForm = !showForm"
+                                class="inline-flex items-center rounded-btn px-3 py-1.5 text-sm font-medium transition-colors"
+                                :class="showForm ? 'bg-canvas text-muted hover:bg-oat' : 'bg-fin-orange text-white hover:bg-fin-orange-hover'">
+                            <i data-lucide="send" class="w-3.5 h-3.5 mr-1.5"></i>
+                            <span x-text="showForm ? 'Tutup' : 'Kirim Email'"></span>
+                        </button>
+                    </div>
+
+                    <p class="text-sm text-muted mb-4">
+                        Kirim email langsung ke <strong class="text-off-black">{{ $user->email }}</strong>. Pesan akan dikirim menggunakan template email {{ config('app.name') }}.
+                    </p>
+
+                    {{-- Send Email Form --}}
+                    <div x-show="showForm" x-transition x-cloak>
+                        <form method="POST" action="{{ route('admin.users.send-email', $user) }}" class="space-y-4 border-t border-oat pt-4">
+                            @csrf
+                            <div>
+                                <label for="email_subject" class="block text-sm font-medium text-off-black mb-1.5">Subject</label>
+                                <input type="text"
+                                       id="email_subject"
+                                       name="subject"
+                                       value="{{ old('subject') }}"
+                                       required
+                                       placeholder="Subject email..."
+                                       class="w-full rounded-btn border-oat text-sm focus:border-fin-orange focus:ring-fin-orange">
+                                @error('subject')
+                                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div>
+                                <label for="email_body" class="block text-sm font-medium text-off-black mb-1.5">Isi Pesan</label>
+                                <textarea id="email_body"
+                                          name="body"
+                                          rows="6"
+                                          required
+                                          placeholder="Tulis pesan untuk user..."
+                                          class="w-full rounded-btn border-oat text-sm focus:border-fin-orange focus:ring-fin-orange">{{ old('body') }}</textarea>
+                                <p class="mt-1 text-xs text-muted">Pesan akan ditampilkan dalam template email HTML. Gunakan baris baru untuk paragraf.</p>
+                                @error('body')
+                                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div class="flex items-center justify-end gap-3">
+                                <button type="button"
+                                        @click="showForm = false"
+                                        class="inline-flex items-center rounded-btn border border-oat bg-surface px-4 py-2 text-sm font-medium text-muted hover:bg-canvas transition-colors">
+                                    Batal
+                                </button>
+                                <button type="submit"
+                                        class="inline-flex items-center rounded-btn bg-off-black px-4 py-2.5 text-sm font-medium text-white hover:bg-off-black/90 focus:outline-none focus:ring-2 focus:ring-fin-orange focus:ring-offset-2 transition-colors"
+                                        onclick="return confirm('Kirim email ke {{ $user->email }}?')">
+                                    <i data-lucide="send" class="w-4 h-4 mr-1.5"></i>
+                                    Kirim Email
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Email History --}}
+            <div class="bg-surface border border-oat rounded-card">
+                <div class="px-6 py-5">
+                    <h3 class="text-lg font-semibold text-off-black tracking-sub mb-4 flex items-center gap-2">
+                        <i data-lucide="history" class="w-5 h-5 text-fin-orange"></i>
+                        Email History
+                        <span class="inline-flex items-center rounded-full bg-canvas px-2.5 py-0.5 text-xs font-medium text-muted">
+                            {{ $adminEmails->total() }}
+                        </span>
+                    </h3>
+
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-oat">
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted">Tanggal</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted">Subject</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted">Pengirim</th>
+                                    <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-muted">Status</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted">Preview</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-oat">
+                                @forelse($adminEmails as $email)
+                                    <tr class="hover:bg-canvas" x-data="{ expanded: false }">
+                                        <td class="whitespace-nowrap px-4 py-3 text-sm text-muted">
+                                            {{ $email->created_at->format('d M Y H:i') }}
+                                        </td>
+                                        <td class="px-4 py-3 text-sm font-medium text-off-black max-w-xs">
+                                            <button type="button" @click="expanded = !expanded" class="text-left hover:text-fin-orange transition-colors">
+                                                {{ $email->subject }}
+                                            </button>
+                                        </td>
+                                        <td class="whitespace-nowrap px-4 py-3 text-sm text-muted">
+                                            {{ $email->admin->name ?? '-' }}
+                                        </td>
+                                        <td class="whitespace-nowrap px-4 py-3 text-center">
+                                            @if($email->status === 'sent')
+                                                <span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
+                                                    Sent
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700" title="{{ $email->error_message }}">
+                                                    Failed
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-muted max-w-xs truncate">
+                                            {{ Str::limit($email->body, 60) }}
+                                        </td>
+                                    </tr>
+                                    {{-- Expandable row for full message --}}
+                                    <tr x-show="expanded" x-transition x-cloak>
+                                        <td colspan="5" class="px-4 py-4 bg-canvas">
+                                            <div class="rounded-lg border border-oat bg-surface p-4">
+                                                <p class="text-xs font-medium text-muted uppercase tracking-wider mb-2">Isi Pesan Lengkap</p>
+                                                <div class="text-sm text-off-black whitespace-pre-line leading-relaxed">{{ $email->body }}</div>
+                                                @if($email->status === 'failed' && $email->error_message)
+                                                    <div class="mt-3 rounded-btn border border-red-200 bg-red-50 p-3">
+                                                        <p class="text-xs font-medium text-red-700">Error: {{ $email->error_message }}</p>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="px-4 py-8 text-center text-sm text-warm-sand">
+                                            Belum ada email yang dikirim ke user ini
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+
+                    @if($adminEmails->hasPages())
+                        <div class="mt-4 border-t border-oat pt-4">
+                            {{ $adminEmails->withQueryString()->links() }}
+                        </div>
+                    @endif
+                </div>
+            </div>
+
         </div>
     </div>
 </x-app-layout>

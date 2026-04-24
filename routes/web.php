@@ -86,6 +86,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/users/{user}/ban', [AdminUserController::class, 'ban'])->name('users.ban');
     Route::post('/users/{user}/unban', [AdminUserController::class, 'unban'])->name('users.unban');
     Route::delete('/users/{user}/api-keys/{apiKey}', [AdminUserController::class, 'revokeApiKey'])->name('users.revoke-key');
+    Route::post('/users/{user}/send-email', [AdminUserController::class, 'sendEmail'])->name('users.send-email');
 
     // User invitations
     Route::post('/users/invite', [AdminInvitationController::class, 'store'])->name('users.invite');
