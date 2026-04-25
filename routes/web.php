@@ -38,6 +38,7 @@ Route::post('/trial-request', [TrialRequestController::class, 'store'])
 // Authenticated user routes
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::post('/dashboard/alert-settings', [DashboardController::class, 'saveAlertSettings'])->name('dashboard.alert-settings');
 
     // API Keys
     Route::get('/api-keys', [ApiKeyController::class, 'index'])->name('api-keys.index');

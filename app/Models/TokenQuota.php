@@ -24,6 +24,8 @@ class TokenQuota extends Model
         'paid_tokens_used',
         'paid_tokens_limit',
         'paid_expires_at',
+        'balance_alert_threshold',
+        'balance_alert_enabled',
     ];
 
     protected $casts = [
@@ -37,6 +39,8 @@ class TokenQuota extends Model
         'paid_tokens_limit' => 'integer',
         'free_tokens_reset_at' => 'datetime',
         'paid_expires_at' => 'datetime',
+        'balance_alert_threshold' => 'integer',
+        'balance_alert_enabled' => 'boolean',
     ];
 
     public function user(): BelongsTo
@@ -246,6 +250,20 @@ class TokenQuota extends Model
         $this->update(['free_credit_claimed' => true]);
 
         return true;
+    }
+
+    /**
+     * Check if any balance (free or paid) is below the alert threshold.
+     */
+    public function isBelowThreshold(): bool
+    {
+        if (!$this->balance_alert_enabled) {
+            return false;
+        }
+
+        $threshold = $this->balance_alert_threshold ?? 10000;
+
+        return (float) $this->free_balance < $threshold || (float) $this->paid_balance < $threshold;
     }
 
     public function getFormattedFreeBalanceAttribute(): string
