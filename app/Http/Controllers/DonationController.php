@@ -238,6 +238,7 @@ class DonationController extends Controller
 
                 $donation->update([
                     'status' => 'approved',
+                    'payment_proof' => json_encode($payload),
                     'gateway_payment_method' => $payload['payment_method'] ?? null,
                     'gateway_completed_at' => $payload['completed_at'] ?? $now,
                     'paid_at' => $now,
@@ -273,8 +274,13 @@ class DonationController extends Controller
 
     public function history(Request $request)
     {
-        $donations = $request->user()->donations()->latest()->paginate(15);
+        $user = $request->user();
+        $donations = $user->donations()->latest()->paginate(15);
 
-        return view('donations.history', compact('donations'));
+        $totalApproved = $user->donations()->where('status', 'approved')->sum('amount');
+        $totalCount = $user->donations()->count();
+        $pendingCount = $user->donations()->where('status', 'pending')->count();
+
+        return view('donations.history', compact('donations', 'totalApproved', 'totalCount', 'pendingCount'));
     }
 }

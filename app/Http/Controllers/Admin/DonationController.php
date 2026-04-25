@@ -82,6 +82,17 @@ class DonationController extends Controller
             abort(404);
         }
 
+        // Pakasir payments store JSON webhook data as proof
+        if ($donation->isPakasir()) {
+            $proofData = json_decode($donation->payment_proof, true);
+
+            return view('admin.donations.proof-pakasir', [
+                'donation' => $donation,
+                'proofData' => $proofData,
+            ]);
+        }
+
+        // Manual payments store file paths
         $path = storage_path('app/' . $donation->payment_proof);
         if (!file_exists($path)) {
             abort(404);
