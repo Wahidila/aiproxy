@@ -23,8 +23,9 @@
                                 <tr>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-muted uppercase">Tanggal</th>
                                     <th class="px-4 py-3 text-right text-xs font-medium text-muted uppercase">Jumlah</th>
+                                    <th class="px-4 py-3 text-center text-xs font-medium text-muted uppercase">Metode</th>
                                     <th class="px-4 py-3 text-center text-xs font-medium text-muted uppercase">Status</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-muted uppercase">Catatan Admin</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-muted uppercase">Catatan</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-surface divide-y divide-oat">
@@ -33,8 +34,19 @@
                                         <td class="px-4 py-3 text-sm text-muted">{{ $donation->created_at->format('d/m/Y H:i') }}</td>
                                         <td class="px-4 py-3 text-sm font-medium text-off-black text-right">{{ $donation->formatted_amount }}</td>
                                         <td class="px-4 py-3 text-sm text-center">
+                                            @if($donation->isPakasir())
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">Pakasir</span>
+                                            @else
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-canvas text-off-black">Manual</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-center">
                                             @if($donation->status === 'approved')
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Approved</span>
+                                                @if($donation->isPakasir())
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Otomatis</span>
+                                                @else
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Approved</span>
+                                                @endif
                                             @elseif($donation->status === 'pending')
                                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Pending</span>
                                             @elseif($donation->status === 'rejected')
@@ -47,7 +59,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="px-4 py-3 text-sm text-muted text-center">Belum ada riwayat top up.</td>
+                                        <td colspan="5" class="px-4 py-3 text-sm text-muted text-center">Belum ada riwayat top up.</td>
                                     </tr>
                                 @endforelse
                             </tbody>

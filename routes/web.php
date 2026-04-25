@@ -53,6 +53,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Donations
     Route::get('/donations', [DonationController::class, 'index'])->name('donations.index');
     Route::post('/donations', [DonationController::class, 'store'])->name('donations.store');
+    Route::post('/donations/pakasir', [DonationController::class, 'pakasirPayment'])->name('donations.pakasir');
+    Route::get('/donations/pakasir/callback', [DonationController::class, 'pakasirCallback'])->name('donations.pakasir.callback');
     Route::get('/donations/history', [DonationController::class, 'history'])->name('donations.history');
 
     // Profile
@@ -70,6 +72,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Notification dismissal
     Route::post('/notifications/{broadcastNotification}/dismiss', [NotificationDismissalController::class, 'dismiss'])->name('notifications.dismiss');
 });
+
+// Pakasir webhook (public, no auth)
+Route::post('/webhook/pakasir', [DonationController::class, 'pakasirWebhook'])->name('webhook.pakasir');
 
 // Admin routes
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {

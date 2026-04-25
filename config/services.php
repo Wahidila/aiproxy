@@ -37,4 +37,11 @@ return [
         'sender_name' => env('BREVO_SENDER_NAME', 'AIMurah'),
     ],
 
+    'pakasir' => [
+        'slug' => env('PAKASIR_SLUG', 'aimurah'),
+        'api_key' => env('PAKASIR_API_KEY'),
+        'base_url' => env('PAKASIR_BASE_URL', 'https://app.pakasir.com'),
+        'sandbox' => env('PAKASIR_SANDBOX', true),
+    ],
+
 ];
