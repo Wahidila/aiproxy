@@ -174,65 +174,88 @@
                                     </td>
                                     <td class="px-4 py-3 text-center">
                                         @if($donation->status === 'pending')
-                                            <div class="flex flex-col items-center gap-2">
-                                                <div class="flex items-center gap-2">
-                                                    <form method="POST" action="{{ route('admin.donations.approve', $donation) }}">
-                                                        @csrf
-                                                        <button type="submit"
-                                                                class="inline-flex items-center rounded-btn bg-green-600 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-green-700 transition-colors"
-                                                                onclick="return confirm('Approve this donation?')">
-                                                            <svg class="mr-1 h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                                            </svg>
-                                                            Approve
-                                                        </button>
-                                                    </form>
-
-                                                    <button type="button"
-                                                            @click="showReject = !showReject"
-                                                            class="inline-flex items-center rounded-btn bg-red-600 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-red-700 transition-colors">
-                                                        <svg class="mr-1 h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                            @if($donation->isPakasir())
+                                                {{-- Pakasir: no manual approval needed --}}
+                                                <div class="flex flex-col items-center gap-1">
+                                                    <span class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+                                                        <svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                                         </svg>
-                                                        Reject
-                                                    </button>
+                                                        Menunggu Pembayaran
+                                                    </span>
+                                                    <p class="text-xs text-muted">Otomatis disetujui setelah bayar</p>
                                                 </div>
-
-                                                {{-- Reject Form (Alpine.js toggle) --}}
-                                                <div x-show="showReject"
-                                                     x-transition:enter="transition ease-out duration-200"
-                                                     x-transition:enter-start="opacity-0 transform -translate-y-2"
-                                                     x-transition:enter-end="opacity-100 transform translate-y-0"
-                                                     x-transition:leave="transition ease-in duration-150"
-                                                     x-transition:leave-start="opacity-100 transform translate-y-0"
-                                                     x-transition:leave-end="opacity-0 transform -translate-y-2"
-                                                     class="w-full"
-                                                     x-cloak>
-                                                    <form method="POST" action="{{ route('admin.donations.reject', $donation) }}" class="mt-2">
-                                                        @csrf
-                                                        <textarea name="admin_notes"
-                                                                  rows="2"
-                                                                  required
-                                                                  placeholder="Reason for rejection (required)..."
-                                                                  class="w-full rounded-btn border-oat text-xs focus:border-red-500 focus:ring-red-500"></textarea>
-                                                        <div class="mt-1 flex items-center gap-2">
+                                            @else
+                                                {{-- Manual: admin approval needed --}}
+                                                <div class="flex flex-col items-center gap-2">
+                                                    <div class="flex items-center gap-2">
+                                                        <form method="POST" action="{{ route('admin.donations.approve', $donation) }}">
+                                                            @csrf
                                                             <button type="submit"
-                                                                    class="inline-flex items-center rounded-btn bg-red-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-red-700 transition-colors">
-                                                                Confirm Reject
+                                                                    class="inline-flex items-center rounded-btn bg-green-600 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-green-700 transition-colors"
+                                                                    onclick="return confirm('Approve this donation?')">
+                                                                <svg class="mr-1 h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                                                </svg>
+                                                                Approve
                                                             </button>
-                                                            <button type="button"
-                                                                    @click="showReject = false"
-                                                                    class="inline-flex items-center rounded-btn bg-canvas px-2.5 py-1 text-xs font-medium text-muted hover:bg-oat transition-colors">
-                                                                Cancel
-                                                            </button>
-                                                        </div>
-                                                    </form>
+                                                        </form>
+
+                                                        <button type="button"
+                                                                @click="showReject = !showReject"
+                                                                class="inline-flex items-center rounded-btn bg-red-600 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-red-700 transition-colors">
+                                                            <svg class="mr-1 h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                            </svg>
+                                                            Reject
+                                                        </button>
+                                                    </div>
+
+                                                    {{-- Reject Form (Alpine.js toggle) --}}
+                                                    <div x-show="showReject"
+                                                         x-transition:enter="transition ease-out duration-200"
+                                                         x-transition:enter-start="opacity-0 transform -translate-y-2"
+                                                         x-transition:enter-end="opacity-100 transform translate-y-0"
+                                                         x-transition:leave="transition ease-in duration-150"
+                                                         x-transition:leave-start="opacity-100 transform translate-y-0"
+                                                         x-transition:leave-end="opacity-0 transform -translate-y-2"
+                                                         class="w-full"
+                                                         x-cloak>
+                                                        <form method="POST" action="{{ route('admin.donations.reject', $donation) }}" class="mt-2">
+                                                            @csrf
+                                                            <textarea name="admin_notes"
+                                                                      rows="2"
+                                                                      required
+                                                                      placeholder="Reason for rejection (required)..."
+                                                                      class="w-full rounded-btn border-oat text-xs focus:border-red-500 focus:ring-red-500"></textarea>
+                                                            <div class="mt-1 flex items-center gap-2">
+                                                                <button type="submit"
+                                                                        class="inline-flex items-center rounded-btn bg-red-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-red-700 transition-colors">
+                                                                    Confirm Reject
+                                                                </button>
+                                                                <button type="button"
+                                                                        @click="showReject = false"
+                                                                        class="inline-flex items-center rounded-btn bg-canvas px-2.5 py-1 text-xs font-medium text-muted hover:bg-oat transition-colors">
+                                                                    Cancel
+                                                                </button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            @endif
                                         @else
                                             @if($donation->admin_notes)
                                                 <p class="text-xs text-muted max-w-xs truncate" title="{{ $donation->admin_notes }}">
-                                                    {{ $donation->admin_notes }}
+                                                    @if(str_contains($donation->admin_notes, 'Auto-approved via Pakasir'))
+                                                        <span class="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+                                                            <svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                                            </svg>
+                                                            {{ $donation->admin_notes }}
+                                                        </span>
+                                                    @else
+                                                        {{ $donation->admin_notes }}
+                                                    @endif
                                                 </p>
                                             @else
                                                 <span class="text-xs text-warm-sand">-</span>

@@ -148,8 +148,54 @@ class DonationController extends Controller
                     ->with('success', 'Pembayaran berhasil! Saldo telah ditambahkan.');
             }
 
-            return redirect()->route('donations.index')
-                ->with('success', 'Pembayaran berhasil diterima! Saldo sedang diproses.');
+            // Auto-approve: Pakasir verified, no admin approval needed
+            try {
+                DB::transaction(function () use ($donation, $result) {
+                    $donation = Donation::where('id', $donation->id)->lockForUpdate()->first();
+
+                    if ($donation->isApproved()) {
+                        return;
+                    }
+
+                    $now = now();
+
+                    $donation->update([
+                        'status' => 'approved',
+                        'payment_proof' => json_encode($result),
+                        'gateway_payment_method' => $result['payment_method'] ?? null,
+                        'gateway_completed_at' => $result['completed_at'] ?? $now,
+                        'paid_at' => $now,
+                        'approved_at' => $now,
+                        'admin_notes' => 'Auto-approved via Pakasir',
+                    ]);
+
+                    // Credit balance
+                    $quota = $donation->user->getOrCreateQuota();
+                    $quota->addBalance(
+                        $donation->amount,
+                        WalletTransaction::TYPE_TOPUP,
+                        'Top up via Pakasir Rp ' . number_format($donation->amount, 0, ',', '.'),
+                        $donation
+                    );
+
+                    Log::info('Pakasir callback: auto-approved and balance credited', [
+                        'donation_id' => $donation->id,
+                        'order_id' => $donation->gateway_order_id,
+                        'amount' => $donation->amount,
+                        'user_id' => $donation->user_id,
+                    ]);
+                });
+
+                return redirect()->route('donations.index')
+                    ->with('success', 'Pembayaran berhasil! Saldo telah ditambahkan.');
+            } catch (\Exception $e) {
+                Log::error('Pakasir callback: auto-approve error', [
+                    'donation_id' => $donation->id,
+                    'error' => $e->getMessage(),
+                ]);
+                return redirect()->route('donations.index')
+                    ->with('error', 'Pembayaran terverifikasi tapi gagal memproses saldo. Hubungi admin.');
+            }
         }
 
         return redirect()->route('donations.index')
@@ -243,6 +289,7 @@ class DonationController extends Controller
                     'gateway_completed_at' => $payload['completed_at'] ?? $now,
                     'paid_at' => $now,
                     'approved_at' => $now,
+                    'admin_notes' => 'Auto-approved via Pakasir webhook',
                 ]);
 
                 // Credit balance
