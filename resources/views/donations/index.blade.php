@@ -90,8 +90,19 @@
             @endif
 
             {{-- Tab Navigation --}}
-            <div x-data="{ activeTab: 'pakasir' }">
+            @if(!$gatewayPakasirEnabled && !$gatewayManualEnabled)
+                {{-- All gateways disabled --}}
+                <div class="bg-surface border border-oat rounded-card p-8 text-center">
+                    <svg class="mx-auto w-12 h-12 text-warm-sand mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                    </svg>
+                    <h3 class="text-lg font-semibold text-off-black mb-1">Top Up Tidak Tersedia</h3>
+                    <p class="text-sm text-muted">Semua metode pembayaran sedang dinonaktifkan. Silakan hubungi admin untuk informasi lebih lanjut.</p>
+                </div>
+            @else
+            <div x-data="{ activeTab: '{{ $gatewayPakasirEnabled ? 'pakasir' : 'manual' }}' }">
                 <div class="flex border-b border-oat mb-0">
+                    @if($gatewayPakasirEnabled)
                     <button
                         @click="activeTab = 'pakasir'"
                         :class="activeTab === 'pakasir'
@@ -101,6 +112,8 @@
                     >
                         Bayar via Pakasir (Otomatis)
                     </button>
+                    @endif
+                    @if($gatewayManualEnabled)
                     <button
                         @click="activeTab = 'manual'"
                         :class="activeTab === 'manual'
@@ -110,9 +123,11 @@
                     >
                         Upload Bukti Manual
                     </button>
+                    @endif
                 </div>
 
                 {{-- Tab 1: Pakasir (Otomatis) --}}
+                @if($gatewayPakasirEnabled)
                 <div x-show="activeTab === 'pakasir'" x-cloak>
                     <div class="bg-surface border border-oat border-t-0 rounded-b-lg" x-data="{ pakasirAmount: '' }">
                         <div class="p-6">
@@ -173,8 +188,10 @@
                         </div>
                     </div>
                 </div>
+                @endif
 
                 {{-- Tab 2: Manual Upload --}}
+                @if($gatewayManualEnabled)
                 <div x-show="activeTab === 'manual'" x-cloak>
                     <div class="bg-surface border border-oat border-t-0 rounded-b-lg" x-data="{ manualAmount: '' }">
                         <div class="p-6">
@@ -260,7 +277,9 @@
                         </div>
                     </div>
                 </div>
+                @endif
             </div>
+            @endif
 
             {{-- Link to History --}}
             <div class="text-center">

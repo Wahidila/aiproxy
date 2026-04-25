@@ -14,9 +14,11 @@ class SettingsController extends Controller
             'qris_image' => Setting::get('qris_image'),
             'usd_to_idr_rate' => Setting::get('usd_to_idr_rate', 16500),
             'free_credit_amount' => Setting::get('free_credit_amount', config('enowxai.free_credit_amount')),
-            'min_topup_amount' => Setting::get('min_topup_amount', config('enowxai.min_topup_amount')),
+            'min_topup_amount' => Setting::get('min_topup_amount', config('AI service.min_topup_amount')),
             'site_name' => Setting::get('site_name', config('app.name')),
             'site_description' => Setting::get('site_description', 'Akses AI Premium, Harga Terjangkau'),
+            'gateway_pakasir_enabled' => Setting::get('gateway_pakasir_enabled', '1'),
+            'gateway_manual_enabled' => Setting::get('gateway_manual_enabled', '1'),
         ];
 
         return view('admin.settings.index', compact('settings'));
@@ -43,6 +45,8 @@ class SettingsController extends Controller
         Setting::set('min_topup_amount', $request->min_topup_amount);
         Setting::set('site_name', $request->site_name);
         Setting::set('site_description', $request->site_description);
+        Setting::set('gateway_pakasir_enabled', $request->has('gateway_pakasir_enabled') ? '1' : '0');
+        Setting::set('gateway_manual_enabled', $request->has('gateway_manual_enabled') ? '1' : '0');
 
         return redirect()->route('admin.settings.index')
             ->with('success', 'Settings updated successfully.');

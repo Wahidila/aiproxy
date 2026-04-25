@@ -112,6 +112,62 @@
                     </div>
                 </div>
 
+                {{-- Payment Gateway Settings --}}
+                <div class="bg-surface border border-oat rounded-card">
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold text-off-black tracking-sub mb-2">Payment Gateway</h3>
+                        <p class="text-sm text-muted mb-5">Aktifkan atau nonaktifkan metode pembayaran yang tersedia untuk user.</p>
+                        <div class="space-y-4">
+                            {{-- Pakasir Toggle --}}
+                            <div class="flex items-center justify-between p-4 rounded-lg border border-oat bg-canvas">
+                                <div class="flex items-center gap-3">
+                                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-off-black">Pakasir (Otomatis)</p>
+                                        <p class="text-xs text-muted">Pembayaran QRIS otomatis via Pakasir. Saldo langsung masuk tanpa approval admin.</p>
+                                    </div>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="gateway_pakasir_enabled" value="1"
+                                        class="sr-only peer"
+                                        {{ old('gateway_pakasir_enabled', $settings['gateway_pakasir_enabled'] ?? '1') == '1' ? 'checked' : '' }}>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-fin-orange/30 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-fin-orange"></div>
+                                </label>
+                            </div>
+
+                            {{-- Manual Toggle --}}
+                            <div class="flex items-center justify-between p-4 rounded-lg border border-oat bg-canvas">
+                                <div class="flex items-center gap-3">
+                                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-off-black">Transfer Manual</p>
+                                        <p class="text-xs text-muted">User upload bukti transfer QRIS. Perlu approval admin untuk menambah saldo.</p>
+                                    </div>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="gateway_manual_enabled" value="1"
+                                        class="sr-only peer"
+                                        {{ old('gateway_manual_enabled', $settings['gateway_manual_enabled'] ?? '1') == '1' ? 'checked' : '' }}>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-fin-orange/30 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-fin-orange"></div>
+                                </label>
+                            </div>
+
+                            {{-- Warning if both disabled --}}
+                            <div class="rounded-lg border border-yellow-300 bg-yellow-50 p-3" x-data x-show="!document.querySelector('[name=gateway_pakasir_enabled]').checked && !document.querySelector('[name=gateway_manual_enabled]').checked" x-cloak>
+                                <p class="text-xs text-yellow-800 font-medium">⚠️ Semua metode pembayaran dinonaktifkan. User tidak akan bisa melakukan top up.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 {{-- Save Button --}}
                 <div class="flex justify-end">
                     <button type="submit" class="px-6 py-3 bg-off-black text-white font-semibold rounded-btn hover:bg-off-black/90 transition">

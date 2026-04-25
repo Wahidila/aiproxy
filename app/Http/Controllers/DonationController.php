@@ -19,6 +19,9 @@ class DonationController extends Controller
         $qrisImage = Setting::get('qris_image');
         $minTopup = config('AI service.min_topup_amount', 10000);
 
+        $gatewayPakasirEnabled = Setting::get('gateway_pakasir_enabled', '1') == '1';
+        $gatewayManualEnabled = Setting::get('gateway_manual_enabled', '1') == '1';
+
         $pendingManual = $user->donations()
             ->where('status', 'pending')
             ->whereNull('payment_gateway')
@@ -31,7 +34,7 @@ class DonationController extends Controller
             ->latest()
             ->first();
 
-        return view('donations.index', compact('quota', 'qrisImage', 'minTopup', 'pendingManual', 'pendingPakasir'));
+        return view('donations.index', compact('quota', 'qrisImage', 'minTopup', 'pendingManual', 'pendingPakasir', 'gatewayPakasirEnabled', 'gatewayManualEnabled'));
     }
 
     /**
@@ -39,6 +42,12 @@ class DonationController extends Controller
      */
     public function store(Request $request)
     {
+        // Check if manual gateway is enabled
+        if (Setting::get('gateway_manual_enabled', '1') != '1') {
+            return redirect()->route('donations.index')
+                ->with('error', 'Metode pembayaran manual sedang tidak tersedia.');
+        }
+
         $minTopup = config('AI service.min_topup_amount', 10000);
 
         $request->validate([
@@ -75,6 +84,12 @@ class DonationController extends Controller
      */
     public function pakasirPayment(Request $request)
     {
+        // Check if Pakasir gateway is enabled
+        if (Setting::get('gateway_pakasir_enabled', '1') != '1') {
+            return redirect()->route('donations.index')
+                ->with('error', 'Metode pembayaran Pakasir sedang tidak tersedia.');
+        }
+
         $minTopup = config('AI service.min_topup_amount', 10000);
 
         $request->validate([
