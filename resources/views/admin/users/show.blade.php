@@ -137,14 +137,14 @@
                                 <div class="mt-4 pt-4 border-t border-oat" x-data="{ showDelete: false }">
                                     <button type="button"
                                             @click="showDelete = !showDelete"
-                                            class="inline-flex items-center rounded-btn bg-white px-3 py-1.5 text-sm font-medium text-red-600 ring-1 ring-inset ring-red-300 hover:bg-red-50 transition-colors">
+                                            class="inline-flex items-center rounded-btn bg-white px-3 py-1.5 text-sm font-medium text-red-600 ring-1 ring-inset ring-oat hover:bg-canvas btn-intercom transition-colors">
                                         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                         </svg>
                                         <span x-text="showDelete ? 'Batal' : 'Hapus User'"></span>
                                     </button>
-                                    <div x-show="showDelete" x-transition x-cloak class="mt-3 rounded-lg border border-red-300 bg-red-50 p-4">
-                                        <p class="text-sm text-red-700 mb-3">
+                                    <div x-show="showDelete" x-transition x-cloak class="mt-3 rounded-card border border-oat bg-canvas p-4">
+                                        <p class="text-sm text-off-black mb-3">
                                             <strong>Peringatan:</strong> Menghapus user akan menghapus semua data termasuk API keys, riwayat transaksi, usage logs, dan donasi. Aksi ini tidak bisa dibatalkan.
                                         </p>
                                         <form method="POST" action="{{ route('admin.users.destroy', $user) }}">
@@ -152,7 +152,7 @@
                                             @method('DELETE')
                                             <button type="submit"
                                                     onclick="return confirm('KONFIRMASI FINAL: Hapus user {{ $user->name }} ({{ $user->email }}) beserta SEMUA datanya? Aksi ini TIDAK BISA dibatalkan!')"
-                                                    class="inline-flex items-center rounded-btn bg-red-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-800 transition-colors">
+                                                    class="inline-flex items-center rounded-btn bg-off-black px-3 py-1.5 text-sm font-medium text-white hover:bg-off-black/90 btn-intercom transition-colors">
                                                 <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                                 </svg>
