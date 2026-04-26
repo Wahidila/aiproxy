@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AdminEmail;
 use App\Models\ApiKey;
 use App\Models\ModelPricing;
+use App\Models\NotificationDismissal;
 use App\Models\User;
 use App\Models\UserInvitation;
 use App\Models\WalletTransaction;
@@ -208,6 +209,44 @@ class UserController extends Controller
 
         return redirect()->route('admin.users.show', $user)
             ->with('error', "Gagal mengirim email: {$result['message']}");
+    }
+
+    public function destroy(Request $request, User $user)
+    {
+        if ($user->isAdmin()) {
+            return redirect()->route('admin.users.show', $user)
+                ->with('error', 'Tidak bisa menghapus admin user.');
+        }
+
+        // Prevent deleting yourself
+        if ($user->id === $request->user()->id) {
+            return redirect()->route('admin.users.show', $user)
+                ->with('error', 'Tidak bisa menghapus akun sendiri.');
+        }
+
+        $userName = $user->name;
+        $userEmail = $user->email;
+
+        // Delete all related data
+        $user->apiKeys()->delete();
+        $user->tokenUsages()->delete();
+        $user->walletTransactions()->delete();
+        $user->donations()->delete();
+        $user->supportTickets()->each(function ($ticket) {
+            $ticket->replies()->delete();
+            $ticket->delete();
+        });
+        AdminEmail::where('user_id', $user->id)->delete();
+        NotificationDismissal::where('user_id', $user->id)->delete();
+
+        if ($user->tokenQuota) {
+            $user->tokenQuota->delete();
+        }
+
+        $user->delete();
+
+        return redirect()->route('admin.users.index')
+            ->with('success', "User {$userName} ({$userEmail}) berhasil dihapus beserta semua datanya.");
     }
 
     public function export()
