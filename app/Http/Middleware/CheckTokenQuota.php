@@ -30,10 +30,11 @@ class CheckTokenQuota
 
         $tier = $apiKey->tier ?? 'free';
         $quota = $user->getOrCreateQuota();
+        $balanceField = $tier === 'free' ? 'free_balance' : 'paid_balance';
+        $currentBalance = (float) $quota->$balanceField;
 
-        // Check balance for the API key's tier
-        if (!$quota->hasBalanceForTier($tier)) {
-            $balanceField = $tier === 'free' ? 'free_balance' : 'paid_balance';
+        // Block if balance is zero or negative
+        if ($currentBalance <= 0) {
             return response()->json([
                 'error' => [
                     'message' => $tier === 'free'
@@ -42,13 +43,34 @@ class CheckTokenQuota
                     'type' => 'insufficient_balance',
                     'code' => 'insufficient_balance',
                     'tier' => $tier,
-                    'balance' => (float) $quota->$balanceField,
+                    'balance' => $currentBalance,
                 ]
             ], 429);
         }
 
-        // Check model restriction for free tier API keys
+        // Estimate minimum cost for the requested model and check if balance is sufficient
         $requestedModel = $request->input('model');
+        if ($requestedModel) {
+            $pricing = ModelPricing::findForModel($requestedModel);
+            if ($pricing) {
+                // Estimate minimum cost: at least 100 input tokens + 1 output token
+                $minCost = $pricing->calculateCost(100, 1);
+                if ($currentBalance < $minCost) {
+                    return response()->json([
+                        'error' => [
+                            'message' => 'Saldo tidak mencukupi untuk model ini. Silakan top up saldo Anda.',
+                            'type' => 'insufficient_balance',
+                            'code' => 'insufficient_balance',
+                            'tier' => $tier,
+                            'balance' => $currentBalance,
+                            'min_cost_estimate' => $minCost,
+                        ]
+                    ], 429);
+                }
+            }
+        }
+
+        // Check model restriction for free tier API keys
         if ($requestedModel && $tier === 'free') {
             if (!ModelPricing::isFreeTierModel($requestedModel)) {
                 $freeModels = ModelPricing::getFreeTierModelIds();

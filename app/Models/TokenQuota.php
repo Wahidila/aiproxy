@@ -80,17 +80,17 @@ class TokenQuota extends Model
     }
 
     /**
-     * Deduct from free balance. Returns false if insufficient.
+     * Deduct from free balance. Always deducts (can go negative) to keep wallet in sync.
+     * Returns true if balance was sufficient, false if it went negative.
      */
     public function deductFreeBalance(float $amount, string $description, $reference = null): bool
     {
         return DB::transaction(function () use ($amount, $description, $reference) {
             $quota = static::where('id', $this->id)->lockForUpdate()->first();
 
-            if ($quota->free_balance < $amount) {
-                return false;
-            }
+            $wasSufficient = $quota->free_balance >= $amount;
 
+            // Always deduct — even if it goes negative — to keep wallet transactions in sync with usage
             $quota->free_balance -= $amount;
             $quota->save();
 
@@ -107,22 +107,22 @@ class TokenQuota extends Model
                 'created_at' => now(),
             ]);
 
-            return true;
+            return $wasSufficient;
         });
     }
 
     /**
-     * Deduct from paid balance. Returns false if insufficient.
+     * Deduct from paid balance. Always deducts (can go negative) to keep wallet in sync.
+     * Returns true if balance was sufficient, false if it went negative.
      */
     public function deductPaidBalance(float $amount, string $description, $reference = null): bool
     {
         return DB::transaction(function () use ($amount, $description, $reference) {
             $quota = static::where('id', $this->id)->lockForUpdate()->first();
 
-            if ($quota->paid_balance < $amount) {
-                return false;
-            }
+            $wasSufficient = $quota->paid_balance >= $amount;
 
+            // Always deduct — even if it goes negative — to keep wallet transactions in sync with usage
             $quota->paid_balance -= $amount;
             $quota->save();
 
@@ -139,7 +139,7 @@ class TokenQuota extends Model
                 'created_at' => now(),
             ]);
 
-            return true;
+            return $wasSufficient;
         });
     }
 
