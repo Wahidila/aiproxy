@@ -30,11 +30,20 @@ class CheckTokenQuota
 
         $tier = $apiKey->tier ?? 'free';
         $quota = $user->getOrCreateQuota();
-        $balanceField = $tier === 'free' ? 'free_balance' : 'paid_balance';
-        $currentBalance = (float) $quota->$balanceField;
+        $paidBalance = (float) $quota->paid_balance;
+        $freeBalance = (float) $quota->free_balance;
 
-        // Block if balance is zero or negative
-        if ($currentBalance <= 0) {
+        // Determine effective balance based on tier
+        // For paid tier: paid + free (fallback), for free tier: free only
+        if ($tier === 'free') {
+            $effectiveBalance = $freeBalance;
+        } else {
+            // Paid tier can fall back to free balance when paid is exhausted
+            $effectiveBalance = max($paidBalance, 0) + max($freeBalance, 0);
+        }
+
+        // Block if no effective balance available
+        if ($effectiveBalance <= 0) {
             return response()->json([
                 'error' => [
                     'message' => $tier === 'free'
@@ -43,7 +52,8 @@ class CheckTokenQuota
                     'type' => 'insufficient_balance',
                     'code' => 'insufficient_balance',
                     'tier' => $tier,
-                    'balance' => $currentBalance,
+                    'paid_balance' => $paidBalance,
+                    'free_balance' => $freeBalance,
                 ]
             ], 429);
         }
@@ -55,14 +65,15 @@ class CheckTokenQuota
             if ($pricing) {
                 // Estimate minimum cost: at least 100 input tokens + 1 output token
                 $minCost = $pricing->calculateCost(100, 1);
-                if ($currentBalance < $minCost) {
+                if ($effectiveBalance < $minCost) {
                     return response()->json([
                         'error' => [
                             'message' => 'Saldo tidak mencukupi untuk model ini. Silakan top up saldo Anda.',
                             'type' => 'insufficient_balance',
                             'code' => 'insufficient_balance',
                             'tier' => $tier,
-                            'balance' => $currentBalance,
+                            'paid_balance' => $paidBalance,
+                            'free_balance' => $freeBalance,
                             'min_cost_estimate' => $minCost,
                         ]
                     ], 429);

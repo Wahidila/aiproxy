@@ -145,12 +145,38 @@ class TokenQuota extends Model
 
     /**
      * Deduct balance based on API key tier.
+     * When paid balance is insufficient, automatically falls back to free (trial) balance.
+     * Returns the wallet type actually used: 'paid', 'free', or 'paid_to_free' (fallback).
      */
-    public function deductBalance(float $amount, string $description, $reference = null, string $tier = 'paid'): bool
+    public function deductBalance(float $amount, string $description, $reference = null, string $tier = 'paid'): string
     {
-        return $tier === 'free'
-            ? $this->deductFreeBalance($amount, $description, $reference)
-            : $this->deductPaidBalance($amount, $description, $reference);
+        if ($tier === 'free') {
+            $this->deductFreeBalance($amount, $description, $reference);
+            return 'free';
+        }
+
+        // Paid tier: check if paid balance is sufficient
+        $currentPaid = (float) $this->paid_balance;
+
+        if ($currentPaid >= $amount) {
+            // Paid balance covers the full cost
+            $this->deductPaidBalance($amount, $description, $reference);
+            return 'paid';
+        }
+
+        if ($currentPaid > 0) {
+            // Paid balance partially covers: drain paid, remainder from free
+            $fromPaid = $currentPaid;
+            $fromFree = $amount - $fromPaid;
+
+            $this->deductPaidBalance($fromPaid, $description . ' (paid portion)', $reference);
+            $this->deductFreeBalance($fromFree, $description . ' (free fallback)', $reference);
+            return 'paid_to_free';
+        }
+
+        // Paid balance is zero/negative: fall back entirely to free balance
+        $this->deductFreeBalance($amount, $description, $reference);
+        return 'paid_to_free';
     }
 
     /**
