@@ -25,6 +25,12 @@
                     <x-nav-link :href="route('donations.index')" :active="request()->routeIs('donations.*')">
                         Top Up
                     </x-nav-link>
+                    <x-nav-link :href="route('subscriptions.index')" :active="request()->routeIs('subscriptions.*')">
+                        <span class="flex items-center gap-1.5">
+                            <i data-lucide="crown" class="w-3.5 h-3.5"></i>
+                            Subscription
+                        </span>
+                    </x-nav-link>
                     <x-nav-link :href="route('support.index')" :active="request()->routeIs('support.*')">
                         <span class="flex items-center gap-1.5">
                             <i data-lucide="headphones" class="w-3.5 h-3.5"></i>
@@ -119,6 +125,9 @@
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('donations.index')" :active="request()->routeIs('donations.*')">
                 Top Up
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('subscriptions.index')" :active="request()->routeIs('subscriptions.*')">
+                Subscription
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('support.index')" :active="request()->routeIs('support.*')">
                 Support
