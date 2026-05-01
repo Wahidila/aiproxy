@@ -94,20 +94,68 @@ func readAndRestoreBody(r *http.Request) ([]byte, error) {
 	return body, nil
 }
 
-// ForwardNonStreaming forwards a non-streaming request to EnowxAI
+// ForwardNonStreaming forwards a non-streaming request with primary/fallback logic
 func ForwardNonStreaming(cfg *Config, body []byte, path string) (*ProxyResult, []byte, error) {
 	start := time.Now()
 
-	// Instrument system prompt to hide EnowxAI identity
+	// Instrument system prompt to hide infrastructure identity
 	body = instrumentSystemPrompt(body)
 
-	url := cfg.EnowxAIBaseURL + path
+	// Determine model from body
+	var reqBody struct {
+		Model string `json:"model"`
+	}
+	json.Unmarshal(body, &reqBody)
+	originalModel := reqBody.Model
+
+	// Route decision
+	if shouldUseFallbackOnly(originalModel) {
+		logUpstreamChoice(originalModel, "fallback", "fallback-only model")
+		return forwardNonStreamingSingle(cfg, body, path, GetFallbackUpstream(cfg), originalModel, start)
+	}
+
+	if shouldUsePrimaryOnly(originalModel) {
+		logUpstreamChoice(originalModel, "primary", "primary-only model")
+		return forwardNonStreamingSingle(cfg, body, path, GetPrimaryUpstream(cfg), originalModel, start)
+	}
+
+	// Try primary first
+	primaryModel := mapModelForPrimary(originalModel)
+	primaryBody := replaceModelInBody(body, originalModel, primaryModel)
+
+	logUpstreamChoice(originalModel, "primary", fmt.Sprintf("mapped to %s", primaryModel))
+	result, respBody, err := forwardNonStreamingSingle(cfg, primaryBody, path, GetPrimaryUpstream(cfg), originalModel, start)
+
+	// Check if we need to fallback
+	if err != nil || (result != nil && isUpstreamError(result.StatusCode)) {
+		errMsg := "nil"
+		statusCode := 0
+		if err != nil {
+			errMsg = err.Error()
+		}
+		if result != nil {
+			statusCode = result.StatusCode
+		}
+		log.Printf("UPSTREAM_FALLBACK: primary failed for model=%s (err=%s, status=%d), trying fallback",
+			originalModel, errMsg, statusCode)
+
+		// Reset timer for fallback
+		start = time.Now()
+		return forwardNonStreamingSingle(cfg, body, path, GetFallbackUpstream(cfg), originalModel, start)
+	}
+
+	return result, respBody, nil
+}
+
+// forwardNonStreamingSingle forwards to a single upstream
+func forwardNonStreamingSingle(cfg *Config, body []byte, path string, upstream *UpstreamConfig, originalModel string, start time.Time) (*ProxyResult, []byte, error) {
+	url := upstream.BaseURL + path
 	req, err := http.NewRequest("POST", url, bytes.NewReader(body))
 	if err != nil {
 		return nil, nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+cfg.EnowxAIAPIKey)
+	req.Header.Set("Authorization", "Bearer "+upstream.APIKey)
 
 	client := &http.Client{Timeout: 120 * time.Second}
 	resp, err := client.Do(req)
@@ -123,22 +171,33 @@ func ForwardNonStreaming(cfg *Config, body []byte, path string) (*ProxyResult, [
 
 	elapsed := time.Since(start).Milliseconds()
 
-	// Parse usage from response — supports multiple formats:
-	// 1. OpenAI: usage.prompt_tokens / usage.completion_tokens
-	// 2. Anthropic: usage.input_tokens / usage.output_tokens
-	// 3. Anthropic Messages: message.usage.input_tokens (nested under message)
 	inputTokens, outputTokens, totalTokens, respModel := extractUsageFromJSON(respBody)
 
-	log.Printf("USAGE [non-stream] path=%s model=%s status=%d input=%d output=%d total=%d",
-		path, respModel, resp.StatusCode, inputTokens, outputTokens, totalTokens)
+	// Map model name back to user-facing name
+	if respModel != "" {
+		respModel = mapModelFromPrimary(respModel)
+	}
+	if respModel == "" {
+		respModel = originalModel
+	}
+
+	log.Printf("USAGE [non-stream] upstream=%s path=%s model=%s status=%d input=%d output=%d total=%d",
+		upstream.Name, path, respModel, resp.StatusCode, inputTokens, outputTokens, totalTokens)
 
 	if inputTokens == 0 && outputTokens == 0 && resp.StatusCode == 200 {
-		// Log first 500 bytes of response for debugging when tokens are 0
 		preview := string(respBody)
 		if len(preview) > 500 {
 			preview = preview[:500]
 		}
 		log.Printf("USAGE WARNING: zero tokens for 200 response, body preview: %s", preview)
+	}
+
+	// Replace model name in response body to show user-facing name
+	if resp.StatusCode == 200 {
+		primaryModel := mapModelForPrimary(originalModel)
+		if primaryModel != originalModel {
+			respBody = replaceModelInBody(respBody, primaryModel, originalModel)
+		}
 	}
 
 	result := &ProxyResult{
@@ -153,17 +212,16 @@ func ForwardNonStreaming(cfg *Config, body []byte, path string) (*ProxyResult, [
 	return result, respBody, nil
 }
 
-// ForwardStreaming forwards a streaming request with SSE passthrough.
+// ForwardStreaming forwards a streaming request with primary/fallback logic.
 // Uses bufio.Scanner to ensure SSE lines are never split across reads.
 // Supports both OpenAI and Anthropic SSE formats for token extraction.
 func ForwardStreaming(cfg *Config, w http.ResponseWriter, body []byte, path string) *ProxyResult {
 	start := time.Now()
 
-	// Instrument system prompt to hide EnowxAI identity
+	// Instrument system prompt to hide infrastructure identity
 	body = instrumentSystemPrompt(body)
 
 	// Only inject stream_options for OpenAI-compatible endpoints
-	// Anthropic /messages does not support stream_options
 	if path == "/chat/completions" || path == "/responses" {
 		var bodyMap map[string]interface{}
 		if json.Unmarshal(body, &bodyMap) == nil {
@@ -174,25 +232,75 @@ func ForwardStreaming(cfg *Config, w http.ResponseWriter, body []byte, path stri
 		}
 	}
 
-	url := cfg.EnowxAIBaseURL + path
+	// Determine model from body
+	var reqBody struct {
+		Model string `json:"model"`
+	}
+	json.Unmarshal(body, &reqBody)
+	originalModel := reqBody.Model
+
+	// Route decision
+	var upstream *UpstreamConfig
+	var requestBody []byte
+
+	if shouldUseFallbackOnly(originalModel) {
+		upstream = GetFallbackUpstream(cfg)
+		requestBody = body
+		logUpstreamChoice(originalModel, "fallback", "fallback-only model")
+	} else if shouldUsePrimaryOnly(originalModel) {
+		upstream = GetPrimaryUpstream(cfg)
+		requestBody = body
+		logUpstreamChoice(originalModel, "primary", "primary-only model")
+	} else {
+		// Try primary first
+		primaryModel := mapModelForPrimary(originalModel)
+		primaryBody := replaceModelInBody(body, originalModel, primaryModel)
+		logUpstreamChoice(originalModel, "primary", fmt.Sprintf("mapped to %s", primaryModel))
+
+		result := forwardStreamingSingle(cfg, w, primaryBody, path, GetPrimaryUpstream(cfg), originalModel, start)
+		if result != nil {
+			return result
+		}
+
+		// Primary failed before writing any response — try fallback
+		log.Printf("UPSTREAM_FALLBACK: primary streaming failed for model=%s, trying fallback", originalModel)
+		upstream = GetFallbackUpstream(cfg)
+		requestBody = body
+		start = time.Now()
+	}
+
+	result := forwardStreamingSingle(cfg, w, requestBody, path, upstream, originalModel, start)
+	return result
+}
+
+// forwardStreamingSingle forwards a streaming request to a single upstream
+func forwardStreamingSingle(cfg *Config, w http.ResponseWriter, body []byte, path string, upstream *UpstreamConfig, originalModel string, start time.Time) *ProxyResult {
+	url := upstream.BaseURL + path
 	req, err := http.NewRequest("POST", url, bytes.NewReader(body))
 	if err != nil {
-		log.Printf("Streaming request error: %v", err)
+		log.Printf("Streaming request error (%s): %v", upstream.Name, err)
 		writeError(w, 502, "proxy_error", "AI service temporarily unavailable", "proxy_error")
 		return nil
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+cfg.EnowxAIAPIKey)
+	req.Header.Set("Authorization", "Bearer "+upstream.APIKey)
 	req.Header.Set("Accept", "text/event-stream")
 
 	client := &http.Client{Timeout: 300 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Printf("Streaming connection error: %v", err)
-		writeError(w, 502, "proxy_error", "AI service temporarily unavailable", "proxy_error")
+		log.Printf("Streaming connection error (%s): %v", upstream.Name, err)
+		// Return nil to signal fallback should be tried (if not already writing)
 		return nil
 	}
 	defer resp.Body.Close()
+
+	// If upstream returned an error status, return nil to trigger fallback
+	if isUpstreamError(resp.StatusCode) {
+		respBody, _ := io.ReadAll(resp.Body)
+		log.Printf("UPSTREAM_ERROR [stream] %s returned %d: %s", upstream.Name, resp.StatusCode, string(respBody)[:min(200, len(respBody))])
+		return nil
+	}
 
 	// Set SSE headers
 	w.Header().Set("Content-Type", "text/event-stream")
@@ -207,31 +315,27 @@ func ForwardStreaming(cfg *Config, w http.ResponseWriter, body []byte, path stri
 		return nil
 	}
 
-	// Stream and parse usage using bufio.Scanner for proper line handling.
-	// This prevents SSE data lines from being split across TCP reads.
+	// Stream and parse usage
 	inputTokens := 0
 	outputTokens := 0
 	model := ""
-	lastEventType := "" // Track Anthropic event types
+	lastEventType := ""
 
 	scanner := bufio.NewScanner(resp.Body)
-	scanner.Buffer(make([]byte, 256*1024), 256*1024) // 256KB max line
+	scanner.Buffer(make([]byte, 256*1024), 256*1024)
 
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		// Track SSE event type (used by Anthropic format)
 		if strings.HasPrefix(line, "event: ") {
 			lastEventType = strings.TrimPrefix(line, "event: ")
 		}
 
-		// Parse data lines for usage info
 		if strings.HasPrefix(line, "data: ") && line != "data: [DONE]" {
 			jsonStr := strings.TrimPrefix(line, "data: ")
 
-			// Log any SSE line that contains "usage" for debugging
 			if strings.Contains(jsonStr, "usage") {
-				log.Printf("SSE_DEBUG [usage_chunk] event=%s data=%s", lastEventType, jsonStr)
+				log.Printf("SSE_DEBUG [usage_chunk] upstream=%s event=%s data=%s", upstream.Name, lastEventType, jsonStr)
 			}
 
 			in, out, m := extractUsageFromSSELine(jsonStr, lastEventType)
@@ -246,19 +350,35 @@ func ForwardStreaming(cfg *Config, w http.ResponseWriter, body []byte, path stri
 			}
 		}
 
-		// Sanitize and forward line + newline to client
-		fmt.Fprintf(w, "%s\n", SanitizeSSELine(line))
+		// Sanitize and forward line
+		sanitized := SanitizeSSELine(line)
+		// Replace upstream model name with user-facing name in SSE data
+		if originalModel != "" {
+			primaryModel := mapModelForPrimary(originalModel)
+			if primaryModel != originalModel {
+				sanitized = strings.Replace(sanitized, `"`+primaryModel+`"`, `"`+originalModel+`"`, -1)
+			}
+		}
+		fmt.Fprintf(w, "%s\n", sanitized)
 		flusher.Flush()
 	}
 
 	if err := scanner.Err(); err != nil {
-		log.Printf("Streaming scanner error: %v", err)
+		log.Printf("Streaming scanner error (%s): %v", upstream.Name, err)
 	}
 
 	elapsed := time.Since(start).Milliseconds()
 
-	log.Printf("USAGE [stream] path=%s model=%s input=%d output=%d",
-		path, model, inputTokens, outputTokens)
+	// Map model name back
+	if model != "" {
+		model = mapModelFromPrimary(model)
+	}
+	if model == "" {
+		model = originalModel
+	}
+
+	log.Printf("USAGE [stream] upstream=%s path=%s model=%s input=%d output=%d",
+		upstream.Name, path, model, inputTokens, outputTokens)
 
 	return &ProxyResult{
 		StatusCode:     resp.StatusCode,
@@ -393,29 +513,85 @@ func extractUsageFromSSELine(jsonStr string, eventType string) (inputTokens, out
 	return
 }
 
-// ForwardModels fetches models list from EnowxAI
+// ForwardModels fetches models list from both upstreams and merges them
 func ForwardModels(cfg *Config) ([]byte, int, error) {
-	url := cfg.EnowxAIBaseURL + "/models"
-	req, err := http.NewRequest("GET", url, nil)
+	// Fetch from primary
+	primaryModels := fetchModelsFrom(cfg.PrimaryBaseURL, cfg.PrimaryAPIKey)
+
+	// Fetch from fallback
+	fallbackModels := fetchModelsFrom(cfg.FallbackBaseURL, cfg.FallbackAPIKey)
+
+	// Merge: use primary as base, add any unique models from fallback
+	seen := make(map[string]bool)
+	var allModels []interface{}
+
+	for _, m := range primaryModels {
+		if mMap, ok := m.(map[string]interface{}); ok {
+			if id, ok := mMap["id"].(string); ok {
+				// Map model names back to user-facing names
+				userFacing := mapModelFromPrimary(id)
+				mMap["id"] = userFacing
+				seen[userFacing] = true
+				allModels = append(allModels, mMap)
+			}
+		}
+	}
+
+	for _, m := range fallbackModels {
+		if mMap, ok := m.(map[string]interface{}); ok {
+			if id, ok := mMap["id"].(string); ok {
+				if !seen[id] {
+					seen[id] = true
+					allModels = append(allModels, mMap)
+				}
+			}
+		}
+	}
+
+	result := map[string]interface{}{
+		"object": "list",
+		"data":   allModels,
+	}
+
+	body, err := json.Marshal(result)
 	if err != nil {
 		return nil, 500, err
 	}
-	req.Header.Set("Authorization", "Bearer "+cfg.EnowxAIAPIKey)
+
+	return body, 200, nil
+}
+
+// fetchModelsFrom fetches models from a single upstream, returns empty on error
+func fetchModelsFrom(baseURL, apiKey string) []interface{} {
+	url := baseURL + "/models"
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil
+	}
+	req.Header.Set("Authorization", "Bearer "+apiKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, 502, err
+		log.Printf("MODELS: failed to fetch from %s: %v", baseURL, err)
+		return nil
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, 500, err
+		return nil
 	}
 
-	return body, resp.StatusCode, nil
+	var result struct {
+		Data []interface{} `json:"data"`
+	}
+	if json.Unmarshal(body, &result) != nil {
+		return nil
+	}
+
+	return result.Data
 }
 
 // CalculateCost calculates IDR cost for a request
