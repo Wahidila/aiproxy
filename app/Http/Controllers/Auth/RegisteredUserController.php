@@ -42,6 +42,9 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        // Auto-assign FREE subscription plan
+        $user->subscribeTo('free');
+
         event(new Registered($user));
 
         Auth::login($user);

@@ -13,6 +13,7 @@ class ApiKey extends Model
 
     const TIER_FREE = 'free';
     const TIER_PAID = 'paid';
+    const TIER_SUBSCRIPTION = 'subscription';
 
     protected $fillable = [
         'user_id',
@@ -38,9 +39,27 @@ class ApiKey extends Model
         return $this->tier === self::TIER_PAID;
     }
 
+    public function isSubscription(): bool
+    {
+        return $this->tier === self::TIER_SUBSCRIPTION;
+    }
+
+    /**
+     * Check if this key uses wallet balance (free or paid tier).
+     */
+    public function isWalletBased(): bool
+    {
+        return in_array($this->tier, [self::TIER_FREE, self::TIER_PAID]);
+    }
+
     public function getTierLabelAttribute(): string
     {
-        return $this->isFree() ? 'Free Tier' : 'Paid';
+        return match ($this->tier) {
+            self::TIER_FREE => 'Free Tier',
+            self::TIER_PAID => 'Paid',
+            self::TIER_SUBSCRIPTION => 'Subscription',
+            default => ucfirst($this->tier),
+        };
     }
 
     protected $hidden = [

@@ -3,7 +3,9 @@
 use App\Http\Controllers\ApiKeyController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DonationController;
+use App\Http\Controllers\PricingController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TrialRequestController;
 use App\Http\Controllers\UsageController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
@@ -27,8 +29,11 @@ use Illuminate\Support\Facades\Route;
 
 // TEMPORARY MAINTENANCE MODE - revert to view('welcome') when done
 Route::get('/', function () {
-    return view('maintenance');
+    return view('welcome');
 })->name('home');
+
+// Public pricing page
+Route::get('/pricing', [PricingController::class, 'index'])->name('pricing');
 
 // Public trial request (no auth required)
 Route::post('/trial-request', [TrialRequestController::class, 'store'])
@@ -56,6 +61,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/donations/pakasir', [DonationController::class, 'pakasirPayment'])->name('donations.pakasir');
     Route::get('/donations/pakasir/callback', [DonationController::class, 'pakasirCallback'])->name('donations.pakasir.callback');
     Route::get('/donations/history', [DonationController::class, 'history'])->name('donations.history');
+
+    // Subscriptions
+    Route::get('/subscriptions', [SubscriptionController::class, 'index'])->name('subscriptions.index');
+    Route::post('/subscriptions/purchase', [SubscriptionController::class, 'purchase'])->name('subscriptions.purchase');
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -89,6 +98,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/users/export', [AdminUserController::class, 'export'])->name('users.export');
     Route::get('/users/{user}', [AdminUserController::class, 'show'])->name('users.show');
     Route::post('/users/{user}/adjust-balance', [AdminUserController::class, 'adjustBalance'])->name('users.adjust-balance');
+    Route::post('/users/{user}/assign-plan', [AdminUserController::class, 'assignPlan'])->name('users.assign-plan');
     Route::post('/users/{user}/ban', [AdminUserController::class, 'ban'])->name('users.ban');
     Route::post('/users/{user}/unban', [AdminUserController::class, 'unban'])->name('users.unban');
     Route::delete('/users/{user}/api-keys/{apiKey}', [AdminUserController::class, 'revokeApiKey'])->name('users.revoke-key');

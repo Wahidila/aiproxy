@@ -333,6 +333,100 @@
 
             </div>
 
+            {{-- Subscription Plan Card --}}
+            <div class="bg-surface border border-oat rounded-card">
+                <div class="px-6 py-5">
+                    <h3 class="text-lg font-semibold text-off-black tracking-sub mb-4 flex items-center gap-2">
+                        <i data-lucide="crown" class="w-5 h-5 text-fin-orange"></i>
+                        Subscription Plan
+                    </h3>
+
+                    {{-- Current Plan Info --}}
+                    <div class="mb-4 rounded-lg border border-oat bg-canvas p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-medium text-muted uppercase tracking-wider">Plan Aktif</p>
+                                <p class="mt-1 text-xl font-bold text-off-black">{{ $activePlan->name ?? 'FREE' }}</p>
+                            </div>
+                            <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-bold
+                                @if(($activePlan->slug ?? 'free') === 'premium') bg-fin-orange-light text-fin-orange
+                                @elseif(($activePlan->slug ?? 'free') === 'pro') bg-blue-100 text-blue-700
+                                @elseif(($activePlan->slug ?? 'free') === 'daily') bg-purple-100 text-purple-700
+                                @else bg-canvas text-muted
+                                @endif">
+                                {{ strtoupper($activePlan->slug ?? 'FREE') }}
+                            </span>
+                        </div>
+
+                        @if($activeSubscription)
+                            <div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                <div>
+                                    <p class="text-xs text-muted">Status</p>
+                                    <p class="text-sm font-medium {{ $activeSubscription->isActive() ? 'text-green-600' : 'text-red-600' }}">
+                                        {{ $activeSubscription->isActive() ? 'Active' : 'Expired' }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-muted">Mulai</p>
+                                    <p class="text-sm font-medium text-off-black">{{ $activeSubscription->starts_at->format('d M Y') }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-muted">Expires</p>
+                                    <p class="text-sm font-medium text-off-black">{{ $activeSubscription->expires_at ? $activeSubscription->expires_at->format('d M Y H:i') : 'Never' }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-muted">Request Hari Ini</p>
+                                    <p class="text-sm font-medium text-off-black">
+                                        {{ number_format($activeSubscription->daily_requests_used) }}
+                                        / {{ $activePlan->daily_request_limit ? number_format($activePlan->daily_request_limit) : '∞' }}
+                                    </p>
+                                </div>
+                            </div>
+                        @else
+                            <p class="mt-2 text-sm text-muted">User belum memiliki subscription record (default FREE).</p>
+                        @endif
+                    </div>
+
+                    {{-- Assign Plan Form --}}
+                    <div class="border-t border-oat pt-4">
+                        <h4 class="text-sm font-semibold text-off-black mb-3">Assign / Change Plan</h4>
+                        <form method="POST" action="{{ route('admin.users.assign-plan', $user) }}" class="space-y-3" x-data="{ selectedPlan: '{{ $activePlan->slug ?? 'free' }}' }">
+                            @csrf
+                            <div>
+                                <label class="block text-xs font-medium text-muted mb-1.5">Pilih Plan</label>
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                    @foreach($allPlans as $plan)
+                                        <label class="relative flex cursor-pointer items-center justify-center rounded-lg border-2 px-3 py-2.5 text-sm font-medium transition-all"
+                                               :class="selectedPlan === '{{ $plan->slug }}' ? 'border-fin-orange bg-fin-orange-light text-fin-orange' : 'border-oat bg-surface text-muted hover:bg-canvas'">
+                                            <input type="radio" name="plan_slug" value="{{ $plan->slug }}" x-model="selectedPlan" class="sr-only">
+                                            <div class="text-center">
+                                                <span class="block font-semibold">{{ $plan->name }}</span>
+                                                <span class="block text-xs mt-0.5">{{ $plan->formatted_price }}</span>
+                                            </div>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
+                            <div x-show="selectedPlan !== 'free' && selectedPlan !== 'daily'" x-transition>
+                                <label class="block text-xs font-medium text-muted mb-1.5">Durasi (hari)</label>
+                                <input type="number"
+                                       name="duration_days"
+                                       value="30"
+                                       min="1"
+                                       max="365"
+                                       class="w-full rounded-btn border-oat text-sm focus:border-fin-orange focus:ring-fin-orange">
+                                <p class="mt-1 text-xs text-muted">Default 30 hari untuk plan bulanan.</p>
+                            </div>
+                            <button type="submit"
+                                    class="w-full inline-flex items-center justify-center rounded-btn bg-off-black px-4 py-2.5 text-sm font-medium text-white hover:bg-off-black/90 focus:outline-none focus:ring-2 focus:ring-fin-orange focus:ring-offset-2 transition-colors"
+                                    onclick="return confirm('Assign plan ini ke user?')">
+                                Assign Plan
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
             {{-- Spending by Model --}}
             <div class="bg-surface border border-oat rounded-card">
                 <div class="px-6 py-5">

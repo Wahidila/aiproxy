@@ -61,6 +61,58 @@
                 </div>
             @endif
 
+            {{-- Subscription Plan Info --}}
+            <div class="bg-surface border border-oat rounded-card p-5">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div class="flex items-center gap-4">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-full {{ ($activePlan->slug ?? 'free') === 'premium' ? 'bg-fin-orange-light' : (($activePlan->slug ?? 'free') === 'pro' ? 'bg-blue-100' : 'bg-canvas') }}">
+                            <i data-lucide="crown" class="w-6 h-6 {{ ($activePlan->slug ?? 'free') === 'premium' ? 'text-fin-orange' : (($activePlan->slug ?? 'free') === 'pro' ? 'text-blue-600' : 'text-muted') }}"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-muted uppercase tracking-wider">Plan Aktif</p>
+                            <p class="text-xl font-bold text-off-black">{{ $activePlan->name ?? 'FREE' }}</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-4 text-sm">
+                        <div class="text-center px-3">
+                            <p class="text-xs text-muted">Request/Hari</p>
+                            <p class="font-semibold text-off-black">
+                                @if($activeSubscription)
+                                    {{ number_format($activeSubscription->daily_requests_used) }}/{{ $activePlan->daily_request_limit ? number_format($activePlan->daily_request_limit) : '∞' }}
+                                @else
+                                    0/{{ $activePlan->daily_request_limit ? number_format($activePlan->daily_request_limit) : '∞' }}
+                                @endif
+                            </p>
+                        </div>
+                        <div class="text-center px-3 border-l border-oat">
+                            <p class="text-xs text-muted">Per Menit</p>
+                            <p class="font-semibold text-off-black">{{ $activePlan->per_minute_limit ?? 6 }}</p>
+                        </div>
+                        <div class="text-center px-3 border-l border-oat">
+                            <p class="text-xs text-muted">Concurrent</p>
+                            <p class="font-semibold text-off-black">{{ $activePlan->concurrent_limit ?? 1 }}</p>
+                        </div>
+                        @if(($activePlan->slug ?? 'free') !== 'premium')
+                            <a href="{{ route('pricing') }}"
+                               class="inline-flex items-center rounded-btn px-4 py-2 text-sm font-medium text-white hover:scale-105 active:scale-95 transition-all"
+                               style="background-color: #ff5600; border-radius: 4px;">
+                                Upgrade
+                            </a>
+                        @endif
+                    </div>
+                </div>
+                @if($activeSubscription && $activeSubscription->expires_at)
+                    <div class="mt-3 pt-3 border-t border-oat">
+                        <p class="text-xs text-muted">
+                            Plan berlaku hingga <span class="font-medium text-off-black">{{ $activeSubscription->expires_at->format('d M Y H:i') }}</span>
+                            @if($activeSubscription->expires_at->diffInDays(now()) <= 3)
+                                <span class="ml-2 inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">Segera expired</span>
+                            @endif
+                        </p>
+                    </div>
+                @endif
+            </div>
+
             {{-- Wallet Balance Cards --}}
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {{-- Free Balance --}}

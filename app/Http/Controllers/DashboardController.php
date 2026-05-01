@@ -150,7 +150,11 @@ class DashboardController extends Controller
             'trend' => $trend,
         ];
 
-        return view('dashboard', compact('quota', 'stats', 'recentUsages', 'recentTransactions', 'showBalanceAlert', 'modelComparison', 'spendingForecast'));
+        // Subscription plan info
+        $activeSubscription = $user->activeSubscription();
+        $activePlan = $user->getActivePlan();
+
+        return view('dashboard', compact('quota', 'stats', 'recentUsages', 'recentTransactions', 'showBalanceAlert', 'modelComparison', 'spendingForecast', 'activeSubscription', 'activePlan'));
     }
 
     public function saveAlertSettings(Request $request)

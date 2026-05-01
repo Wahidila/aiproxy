@@ -112,6 +112,36 @@
                     </div>
                 </div>
 
+                {{-- Subscription Plan Feature Toggle --}}
+                <div class="bg-surface border border-oat rounded-card">
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold text-off-black tracking-sub mb-2">Fitur Subscription Plan</h3>
+                        <p class="text-sm text-muted mb-5">Aktifkan sistem berlangganan (subscription). Jika OFF, user tidak bisa melihat halaman pricing/subscription dan rate limiting berdasarkan plan tidak aktif.</p>
+                        <div class="space-y-4">
+                            {{-- Subscription Toggle --}}
+                            <div class="flex items-center justify-between p-4 rounded-lg border border-oat bg-canvas">
+                                <div class="flex items-center gap-3">
+                                    <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-off-black">Subscription Plan System</p>
+                                        <p class="text-xs text-muted">Rate limiting (daily/menit/concurrent), model access per plan, halaman pricing & purchase.</p>
+                                    </div>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="subscription_enabled" value="1"
+                                        class="sr-only peer"
+                                        {{ ($settings['subscription_enabled'] ?? '0') == '1' ? 'checked' : '' }}>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-fin-orange/30 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-fin-orange"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 {{-- Payment Gateway Settings --}}
                 <div class="bg-surface border border-oat rounded-card">
                     <div class="p-6">

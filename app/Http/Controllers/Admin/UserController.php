@@ -7,11 +7,13 @@ use App\Models\AdminEmail;
 use App\Models\ApiKey;
 use App\Models\ModelPricing;
 use App\Models\NotificationDismissal;
+use App\Models\SubscriptionPlan;
 use App\Models\User;
 use App\Models\UserInvitation;
 use App\Models\WalletTransaction;
 use App\Services\BrevoMailService;
 use App\Services\TokenTrackingService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
@@ -46,10 +48,13 @@ class UserController extends Controller
 
     public function show(User $user)
     {
-        $user->load(['apiKeys', 'tokenQuota']);
+        $user->load(['apiKeys', 'tokenQuota', 'subscriptions']);
 
         $quota = $user->getOrCreateQuota();
         $stats = $this->trackingService->getUserStats($user, 30);
+        $activeSubscription = $user->activeSubscription();
+        $activePlan = $user->getActivePlan();
+        $allPlans = SubscriptionPlan::orderBy('sort_order')->get();
 
         // Total lifetime spending
         $totalSpending = $user->walletTransactions()
@@ -74,7 +79,7 @@ class UserController extends Controller
             ->latest('created_at')
             ->paginate(10, ['*'], 'email_page');
 
-        return view('admin.users.show', compact('user', 'quota', 'stats', 'totalSpending', 'transactions', 'recentUsages', 'adminEmails'));
+        return view('admin.users.show', compact('user', 'quota', 'stats', 'totalSpending', 'transactions', 'recentUsages', 'adminEmails', 'activeSubscription', 'activePlan', 'allPlans'));
     }
 
     public function adjustBalance(Request $request, User $user)
@@ -209,6 +214,31 @@ class UserController extends Controller
 
         return redirect()->route('admin.users.show', $user)
             ->with('error', "Gagal mengirim email: {$result['message']}");
+    }
+
+    public function assignPlan(Request $request, User $user)
+    {
+        $request->validate([
+            'plan_slug' => 'required|string|exists:subscription_plans,slug',
+            'duration_days' => 'nullable|integer|min:1|max:365',
+        ]);
+
+        $plan = SubscriptionPlan::getBySlug($request->plan_slug);
+        $expiresAt = null;
+
+        if ($request->plan_slug !== 'free') {
+            if ($plan->type === 'daily') {
+                $expiresAt = now()->addDay();
+            } else {
+                $days = $request->duration_days ?? 30;
+                $expiresAt = now()->addDays($days);
+            }
+        }
+
+        $user->subscribeTo($request->plan_slug, $expiresAt);
+
+        return redirect()->route('admin.users.show', $user)
+            ->with('success', "Plan {$plan->name} berhasil di-assign ke {$user->name}" . ($expiresAt ? " (expires: {$expiresAt->format('d M Y H:i')})" : ' (no expiry)'));
     }
 
     public function destroy(Request $request, User $user)

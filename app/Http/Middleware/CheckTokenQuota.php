@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\ModelPricing;
+use App\Models\Setting;
 use App\Services\TokenTrackingService;
 use Closure;
 use Illuminate\Http\Request;
@@ -29,6 +30,75 @@ class CheckTokenQuota
         }
 
         $tier = $apiKey->tier ?? 'free';
+        $requestedModel = $request->input('model');
+
+        // ─── SUBSCRIPTION KEY: validate via subscription plan, NOT wallet ───
+        if ($tier === 'subscription') {
+            return $this->handleSubscriptionKey($request, $next, $user, $apiKey, $requestedModel);
+        }
+
+        // ─── FREE / PAID KEY: validate via wallet balance ───
+        return $this->handleWalletKey($request, $next, $user, $apiKey, $tier, $requestedModel);
+    }
+
+    /**
+     * Handle subscription-tier API keys.
+     * These keys ONLY work with models allowed by the user's active subscription plan.
+     * They do NOT use wallet balance — billing is via subscription plan.
+     */
+    private function handleSubscriptionKey(Request $request, Closure $next, $user, $apiKey, ?string $requestedModel): Response
+    {
+        // Subscription feature must be enabled
+        if (Setting::get('subscription_enabled', '0') != '1') {
+            return response()->json([
+                'error' => [
+                    'message' => 'Fitur subscription belum diaktifkan.',
+                    'type' => 'feature_disabled',
+                    'code' => 'subscription_disabled',
+                ]
+            ], 403);
+        }
+
+        // User must have an active subscription
+        $subscription = $user->activeSubscription();
+        if (!$subscription || !$subscription->isActive()) {
+            return response()->json([
+                'error' => [
+                    'message' => 'Subscription Anda tidak aktif atau sudah expired. Silakan beli plan baru.',
+                    'type' => 'subscription_expired',
+                    'code' => 'no_active_subscription',
+                ]
+            ], 403);
+        }
+
+        $plan = $subscription->plan;
+
+        // Check model access against subscription plan
+        if ($requestedModel && $plan) {
+            if (!$plan->hasModelAccess($requestedModel)) {
+                $availableModels = $plan->getAccessibleModelIds();
+                return response()->json([
+                    'error' => [
+                        'message' => "Model '{$requestedModel}' tidak tersedia untuk plan {$plan->name}. Upgrade plan untuk akses model ini.",
+                        'type' => 'model_restricted',
+                        'code' => 'plan_model_restricted',
+                        'plan' => $plan->slug,
+                        'available_models' => $availableModels,
+                    ]
+                ], 403);
+            }
+        }
+
+        // Subscription key passes — rate limits handled by CheckSubscriptionLimits middleware
+        return $next($request);
+    }
+
+    /**
+     * Handle free/paid (wallet-based) API keys.
+     * These keys use wallet balance and CANNOT access subscription-only models.
+     */
+    private function handleWalletKey(Request $request, Closure $next, $user, $apiKey, string $tier, ?string $requestedModel): Response
+    {
         $quota = $user->getOrCreateQuota();
         $paidBalance = (float) $quota->paid_balance;
         $freeBalance = (float) $quota->free_balance;
@@ -59,7 +129,6 @@ class CheckTokenQuota
         }
 
         // Estimate minimum cost for the requested model and check if balance is sufficient
-        $requestedModel = $request->input('model');
         if ($requestedModel) {
             $pricing = ModelPricing::findForModel($requestedModel);
             if ($pricing) {
@@ -79,20 +148,46 @@ class CheckTokenQuota
                     ], 429);
                 }
             }
-        }
 
-        // Check model restriction for free tier API keys
-        if ($requestedModel && $tier === 'free') {
-            if (!ModelPricing::isFreeTierModel($requestedModel)) {
-                $freeModels = ModelPricing::getFreeTierModelIds();
-                return response()->json([
-                    'error' => [
-                        'message' => "Model '{$requestedModel}' tidak tersedia untuk API key free tier. Gunakan API key paid atau top up saldo.",
-                        'type' => 'model_restricted',
-                        'code' => 'free_tier_model_restricted',
-                        'available_models' => $freeModels,
-                    ]
-                ], 403);
+            // ─── BLOCK free/paid keys from subscription-only models ───
+            // If subscription is enabled and the model is ONLY in subscription plans
+            // (not in free tier and not in paid tier pricing), block access.
+            if (Setting::get('subscription_enabled', '0') == '1') {
+                $plan = $user->getActivePlan();
+
+                // Check if this model is a subscription-plan-only model
+                // A model is subscription-only if:
+                // 1. It exists in plan_model_access table, AND
+                // 2. It does NOT exist in model_pricings as an active model
+                $isInPlanAccess = \App\Models\PlanModelAccess::where('model_id', $requestedModel)->exists();
+                $isInPricing = ModelPricing::where('model_id', $requestedModel)->where('is_active', true)->exists();
+
+                if ($isInPlanAccess && !$isInPricing) {
+                    return response()->json([
+                        'error' => [
+                            'message' => "Model '{$requestedModel}' hanya tersedia untuk subscription. Buat API key subscription untuk mengakses model ini.",
+                            'type' => 'model_restricted',
+                            'code' => 'subscription_only_model',
+                            'tier' => $tier,
+                            'hint' => 'Buat API key baru dengan tipe Subscription untuk mengakses model ini.',
+                        ]
+                    ], 403);
+                }
+
+                // Also block if model is in pricing but user's free/paid key tier doesn't match
+                if ($isInPricing && $pricing) {
+                    // Free tier key can only use free tier models
+                    if ($tier === 'free' && !$pricing->is_free_tier) {
+                        return response()->json([
+                            'error' => [
+                                'message' => "Model '{$requestedModel}' tidak tersedia untuk Free Tier. Gunakan API key Paid untuk model premium.",
+                                'type' => 'model_restricted',
+                                'code' => 'paid_model_only',
+                                'tier' => $tier,
+                            ]
+                        ], 403);
+                    }
+                }
             }
         }
 

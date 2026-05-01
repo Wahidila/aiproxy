@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -94,6 +95,57 @@ class User extends Authenticatable
             'is_banned' => false,
             'banned_at' => null,
             'ban_reason' => null,
+        ]);
+    }
+
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(UserSubscription::class);
+    }
+
+    public function activeSubscription(): ?UserSubscription
+    {
+        return $this->subscriptions()
+            ->where('status', 'active')
+            ->where(function ($q) {
+                $q->whereNull('expires_at')
+                  ->orWhere('expires_at', '>', now());
+            })
+            ->latest('starts_at')
+            ->first();
+    }
+
+    public function getActivePlan(): SubscriptionPlan
+    {
+        $sub = $this->activeSubscription();
+        if ($sub) {
+            return $sub->plan;
+        }
+        // Default: free plan
+        return SubscriptionPlan::getBySlug('free') ?? new SubscriptionPlan([
+            'slug' => 'free',
+            'name' => 'FREE',
+            'daily_request_limit' => 50,
+            'per_minute_limit' => 6,
+            'concurrent_limit' => 1,
+        ]);
+    }
+
+    /**
+     * Assign a subscription plan to user.
+     */
+    public function subscribeTo(string $planSlug, ?Carbon $expiresAt = null): UserSubscription
+    {
+        // Cancel existing active subscriptions
+        $this->subscriptions()->where('status', 'active')->update(['status' => 'cancelled']);
+
+        return $this->subscriptions()->create([
+            'plan_slug' => $planSlug,
+            'status' => 'active',
+            'starts_at' => now(),
+            'expires_at' => $expiresAt,
+            'daily_requests_used' => 0,
+            'daily_requests_reset_at' => now()->endOfDay(),
         ]);
     }
 

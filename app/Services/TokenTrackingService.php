@@ -42,12 +42,19 @@ class TokenTrackingService
             'created_at' => now(),
         ]);
 
-        // Deduct from wallet based on API key tier
-        if ($cost > 0) {
+        // Deduct from wallet based on API key tier (only for wallet-based keys)
+        if ($cost > 0 && $apiKey->isWalletBased()) {
             $quota = $user->getOrCreateQuota();
             $tier = $apiKey->tier ?? 'free';
             $description = "{$model}: {$inputTokens} in + {$outputTokens} out = Rp " . number_format($cost, 0, ',', '.');
             $quota->deductBalance($cost, $description, $usage, $tier);
+        }
+        // Subscription keys: no wallet deduction — usage is covered by the subscription plan
+
+        // Update subscription token usage counter
+        $subscription = $user->activeSubscription();
+        if ($subscription) {
+            $subscription->incrementTokenUsage($totalTokens);
         }
 
         // Update API key last used

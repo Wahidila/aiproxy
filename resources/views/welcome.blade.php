@@ -256,158 +256,232 @@
     <section class="section">
         <div class="container">
             <div style="text-align: center; margin-bottom: 48px;">
-                <p class="mono-label" style="margin-bottom: 12px;">MODEL & HARGA</p>
-                <h2 class="heading-section">Harga per Model, Transparan</h2>
-                <p class="body-lg" style="margin-top: 16px;">Harga per 1M token (setelah diskon). Satu API, akses semua provider.</p>
+                <p class="mono-label" style="margin-bottom: 12px;">MODEL TERSEDIA</p>
+                <h2 class="heading-section">26+ Model AI, Satu API</h2>
+                <p class="body-lg" style="margin-top: 16px;">Akses semua model dari provider terbaik dunia. Tinggal ganti nama model.</p>
             </div>
             @php
                 $dbModels = \App\Models\ModelPricing::where('is_active', true)->orderByDesc('is_free_tier')->orderBy('model_name')->get();
-                $rate = (float) \App\Models\Setting::get('usd_to_idr_rate', 16500);
                 $modelCount = $dbModels->count();
 
-                function lpFormatIdr($v) {
-                    if ($v >= 1000000) return 'Rp ' . number_format($v / 1000000, 1, ',', '.') . 'jt';
-                    if ($v >= 1000) return 'Rp ' . number_format($v / 1000, 0, ',', '.') . 'K';
-                    return 'Rp ' . number_format($v, 0, ',', '.');
-                }
-            @endphp
-            <div class="grid-4">
-                @foreach($dbModels as $m)
-                    @php
-                        $disc = $m->discount_percent / 100;
-                        $inUsdFinal = $m->input_price_usd * (1 - $disc);
-                        $outUsdFinal = $m->output_price_usd * (1 - $disc);
-                        $inIdr = $inUsdFinal * $rate;
-                        $outIdr = $outUsdFinal * $rate;
-                        $hasDiscount = $m->discount_percent > 0;
-                    @endphp
-                    <div class="model-card {{ $m->model_id === 'claude-opus-4.6' ? 'model-card-highlight' : '' }}">
-                        @if($m->model_id === 'claude-opus-4.6')
-                            <span class="badge-free-now">FREE NOW</span>
-                        @endif
-                        <div>
-                            <span class="model-tier {{ $m->is_free_tier ? 'model-tier-std' : 'model-tier-max' }}">
-                                {{ $m->is_free_tier ? 'FREE TIER' : 'PREMIUM' }}
-                            </span>
-                            @if($hasDiscount)
-                                <span class="model-discount">-{{ $m->discount_percent }}%</span>
-                            @endif
-                        </div>
-                        <h4 style="font-size: 15px; font-weight: 600; margin: 10px 0 2px; color: var(--color-text);">{{ $m->model_name }}</h4>
-                        <p style="font-size: 12px; color: var(--color-muted); margin: 0 0 12px; font-family: monospace;">{{ $m->model_id }}</p>
+                // Group by provider
+                $providerMap = [
+                    'claude' => ['name' => 'Anthropic', 'logo' => '/images/logos/anthropic.svg', 'color' => '#d4a574'],
+                    'gemini' => ['name' => 'Google', 'logo' => '/images/logos/gemini.svg', 'color' => '#4285f4'],
+                    'gpt' => ['name' => 'OpenAI', 'logo' => '/images/logos/openai.svg', 'color' => '#111111'],
+                    'glm' => ['name' => 'Zhipu AI', 'logo' => '/images/logos/zhipu.svg', 'color' => '#111111'],
+                    'kimi' => ['name' => 'Moonshot AI', 'logo' => '/images/logos/moonshot.svg', 'color' => '#111111'],
+                ];
 
-                        <div class="model-prices">
-                            <div class="model-price-row">
-                                <span class="model-price-label">
-                                    <i data-lucide="arrow-down-to-line" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle;"></i>
-                                    Input
-                                </span>
-                                <span>
-                                    @if($hasDiscount)
-                                        <span class="model-price-usd-strike">${{ number_format($m->input_price_usd, 2) }}</span>
-                                        <span class="model-price-usd">${{ number_format($inUsdFinal, 2) }}</span>
-                                    @else
-                                        <span class="model-price-usd">${{ number_format($m->input_price_usd, 2) }}</span>
-                                    @endif
-                                    <span class="model-price-idr">{{ lpFormatIdr($inIdr) }}</span>
-                                </span>
-                            </div>
-                            <div class="model-price-row">
-                                <span class="model-price-label">
-                                    <i data-lucide="arrow-up-from-line" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle;"></i>
-                                    Output
-                                </span>
-                                <span>
-                                    @if($hasDiscount)
-                                        <span class="model-price-usd-strike">${{ number_format($m->output_price_usd, 2) }}</span>
-                                        <span class="model-price-usd">${{ number_format($outUsdFinal, 2) }}</span>
-                                    @else
-                                        <span class="model-price-usd">${{ number_format($m->output_price_usd, 2) }}</span>
-                                    @endif
-                                    <span class="model-price-idr">{{ lpFormatIdr($outIdr) }}</span>
-                                </span>
-                            </div>
-                        </div>
+                function getProvider($modelId) {
+                    if (str_starts_with($modelId, 'claude')) return 'claude';
+                    if (str_starts_with($modelId, 'gemini')) return 'gemini';
+                    if (str_starts_with($modelId, 'gpt')) return 'gpt';
+                    if (str_starts_with($modelId, 'glm')) return 'glm';
+                    if (str_starts_with($modelId, 'kimi')) return 'kimi';
+                    return 'other';
+                }
+
+                $grouped = $dbModels->groupBy(fn($m) => getProvider($m->model_id));
+            @endphp
+
+            {{-- Provider logos row --}}
+            <div style="display: flex; justify-content: center; gap: 40px; margin-bottom: 48px; flex-wrap: wrap; align-items: center;">
+                @foreach($providerMap as $key => $provider)
+                    <div style="display: flex; align-items: center; gap: 10px; opacity: 0.7;">
+                        <img src="{{ $provider['logo'] }}" alt="{{ $provider['name'] }}" style="width: 24px; height: 24px;" loading="lazy">
+                        <span style="font-size: 14px; font-weight: 500; color: #7b7b78; letter-spacing: -0.2px;">{{ $provider['name'] }}</span>
                     </div>
                 @endforeach
             </div>
-            <p style="text-align: center; margin-top: 24px; color: var(--color-muted); font-size: 13px;">
-                <i data-lucide="info" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i>
-                Harga per 1M token. Kurs: 1 USD = Rp {{ number_format($rate, 0, ',', '.') }}. Harga dapat berubah sewaktu-waktu.
+
+            {{-- Model grid --}}
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; max-width: 900px; margin: 0 auto;">
+                @foreach($dbModels as $m)
+                    @php $pKey = getProvider($m->model_id); $pInfo = $providerMap[$pKey] ?? null; @endphp
+                    <div style="display: flex; align-items: center; gap: 14px; background: #faf9f6; border: 1px solid #dedbd6; border-radius: 8px; padding: 16px 20px; transition: all 0.2s;" onmouseover="this.style.transform='scale(1.02)'; this.style.borderColor='#ff5600';" onmouseout="this.style.transform='scale(1)'; this.style.borderColor='#dedbd6';">
+                        {{-- Logo --}}
+                        @if($pInfo)
+                            <img src="{{ $pInfo['logo'] }}" alt="{{ $pInfo['name'] }}" style="width: 28px; height: 28px; flex-shrink: 0;" loading="lazy">
+                        @endif
+                        {{-- Name + tier --}}
+                        <div style="flex: 1; min-width: 0;">
+                            <p style="font-size: 15px; font-weight: 500; color: #111111; margin: 0; letter-spacing: -0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $m->model_name }}</p>
+                        </div>
+                        {{-- Tier badge --}}
+                        <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; flex-shrink: 0; {{ $m->is_free_tier ? 'background: #dcfce7; color: #16a34a;' : 'background: #fff0e6; color: #ff5600;' }}">
+                            {{ $m->is_free_tier ? 'FREE' : 'PRO' }}
+                        </span>
+                    </div>
+                @endforeach
+            </div>
+
+            <p style="text-align: center; margin-top: 32px; color: #7b7b78; font-size: 14px;">
+                <span style="display: inline-flex; align-items: center; gap: 6px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff5600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                    Harga per model tersedia di <a href="/pricing" style="color: #ff5600; text-decoration: none; font-weight: 500;">halaman pricing</a>. Bayar sesuai pemakaian.
+                </span>
             </p>
         </div>
     </section>
 
-    <!-- Pricing -->
-    <section id="pricing" class="section" style="background: var(--color-surface); border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border);">
+    <!-- Pricing (only shown if subscription feature is enabled) -->
+    @if(\App\Models\Setting::get('subscription_enabled', '0') == '1')
+    <section id="pricing" class="section" style="background: var(--color-surface); border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border);" x-data="{ tab: 'monthly' }">
         <div class="container">
-            <div style="text-align: center; margin-bottom: 48px;">
+            <div style="text-align: center; margin-bottom: 32px;">
                 <p class="mono-label" style="margin-bottom: 12px;">HARGA</p>
-                <h2 class="heading-section">Sederhana & Transparan</h2>
-                <p class="body-lg" style="margin-top: 16px;">Bayar sesuai pemakaian. Tidak ada langganan bulanan.</p>
+                <h2 class="heading-section">Pilih Plan Anda</h2>
+                <p class="body-lg" style="margin-top: 16px;">Mulai gratis, upgrade kapan saja. Tanpa kontrak.</p>
             </div>
-            <div class="grid-2" style="max-width: 800px; margin: 0 auto;">
-                <!-- Free Tier -->
-                <div class="pricing-card">
-                    <p class="mono-label" style="margin-bottom: 16px;">FREE TRIAL</p>
-                    <div class="pricing-amount" style="color: var(--color-text);">Rp 0</div>
-                    <p style="font-size: 15px; color: var(--color-muted); margin: 8px 0 32px;">Langsung dapat Rp 100K credit</p>
-                    <ul class="check-list">
-                        <li>
-                            <i data-lucide="circle-check" class="check-icon"></i>
-                            <span><strong>Rp 100.000</strong> free credit</span>
-                        </li>
-                        <li>
-                            <i data-lucide="circle-check" class="check-icon"></i>
-                            <span>4 model AI (Sonnet, DeepSeek, MiniMax, GLM)</span>
-                        </li>
-                        <li>
-                            <i data-lucide="circle-check" class="check-icon"></i>
-                            <span>OpenAI-compatible API</span>
-                        </li>
-                        <li>
-                            <i data-lucide="circle-check" class="check-icon"></i>
-                            <span>Dashboard & statistik penggunaan</span>
-                        </li>
-                    </ul>
-                    <button @click="openModal()" class="btn btn-outline" style="width: 100%; margin-top: 32px; gap: 8px;">
-                        <i data-lucide="user-plus" style="width: 18px; height: 18px;"></i>
-                        Daftar Gratis
+
+            <!-- Toggle Bulanan / Harian — Harian highlighted as campaign -->
+            <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: 48px; gap: 8px;">
+                <div style="display: inline-flex; background: var(--color-canvas); border: 1px solid var(--color-border); border-radius: 4px; padding: 3px; position: relative;">
+                    <button @click="tab = 'monthly'" :style="tab === 'monthly' ? 'background: #111111; color: #fff;' : 'background: transparent; color: #111111;'" style="padding: 8px 24px; border: none; border-radius: 4px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: inherit; transition: all 0.2s; letter-spacing: 0.6px; text-transform: uppercase;">Bulanan</button>
+                    <button @click="tab = 'daily'" :style="tab === 'daily' ? 'background: #ff5600; color: #fff;' : 'background: transparent; color: #ff5600; font-weight: 600;'" style="padding: 8px 24px; border: none; border-radius: 4px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: inherit; transition: all 0.2s; letter-spacing: 0.6px; text-transform: uppercase; position: relative;">Harian
+                        <span style="position: absolute; top: -10px; right: -12px; background: #ff5600; color: #fff; font-size: 9px; font-weight: 700; letter-spacing: 0.8px; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; line-height: 1.2;">HEMAT</span>
                     </button>
                 </div>
+                <p style="font-size: 12px; color: #ff5600; font-weight: 500; margin: 0; letter-spacing: 0.3px;">💡 Paket Harian lebih hemat — unlimited request mulai Rp 29K/hari</p>
+            </div>
 
-                <!-- Paid Tier -->
-                <div class="pricing-card featured">
-                    <span class="badge-popular">POPULER</span>
-                    <p class="mono-label" style="margin-bottom: 16px; color: var(--color-accent);">TOP UP</p>
-                    <div class="pricing-amount" style="color: var(--color-text);">Rp 10K<span class="pricing-period">min</span></div>
-                    <p style="font-size: 15px; color: var(--color-muted); margin: 8px 0 32px;">Bayar sesuai pemakaian, saldo tidak expired</p>
-                    <ul class="check-list">
-                        <li>
-                            <i data-lucide="circle-check" class="check-icon"></i>
-                            <span><strong>Semua 26+ model</strong> termasuk Opus 4.6</span>
-                        </li>
-                        <li>
-                            <i data-lucide="circle-check" class="check-icon"></i>
-                            <span>Saldo <strong>tidak expired</strong>, pakai kapan saja</span>
-                        </li>
-                        <li>
-                            <i data-lucide="circle-check" class="check-icon"></i>
-                            <span>Bayar via QRIS (semua e-wallet & bank)</span>
-                        </li>
-                        <li>
-                            <i data-lucide="circle-check" class="check-icon"></i>
-                            <span>Harga per model transparan di dashboard</span>
-                        </li>
-                    </ul>
-                    <button @click="openModal()" class="btn btn-accent" style="width: 100%; margin-top: 32px; gap: 8px;">
-                        <i data-lucide="arrow-right" style="width: 18px; height: 18px;"></i>
-                        Mulai Sekarang
-                    </button>
+            @php
+                $plans = \App\Models\SubscriptionPlan::orderBy('sort_order')->get();
+                $monthlyPlans = $plans->where('type', 'monthly');
+                $dailyPlans = $plans->where('type', 'daily');
+            @endphp
+
+            <!-- Monthly Plans -->
+            <div x-show="tab === 'monthly'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+                <div class="grid-3" style="max-width: 1060px; margin: 0 auto;">
+                    @foreach($monthlyPlans as $plan)
+                        <div style="background: #faf9f6; border: {{ $plan->is_popular ? '2px solid #ff5600' : '1px solid #dedbd6' }}; border-radius: 8px; padding: 40px 32px; position: relative; display: flex; flex-direction: column;">
+                            @if($plan->is_popular)
+                                <span style="position: absolute; top: -14px; left: 50%; transform: translateX(-50%); background: #ff5600; color: #fff; font-size: 11px; font-weight: 600; letter-spacing: 1.2px; padding: 5px 16px; border-radius: 4px; text-transform: uppercase; white-space: nowrap;">⭐ PALING POPULER</span>
+                            @endif
+                            <p style="font-family: 'Inter', monospace; font-size: 12px; font-weight: 500; letter-spacing: 1.2px; text-transform: uppercase; color: {{ $plan->is_popular ? '#ff5600' : '#7b7b78' }}; margin: 0 0 16px;">{{ strtoupper($plan->name) }}</p>
+
+                            {{-- Subtitle --}}
+                            <p style="font-size: 14px; color: #7b7b78; margin: 0 0 16px; line-height: 1.4;">
+                                @if($plan->slug === 'free')
+                                    Untuk eksplorasi dan iseng
+                                @elseif($plan->slug === 'pro')
+                                    Untuk hobby & side project
+                                @elseif($plan->slug === 'premium')
+                                    Untuk tim & production scale
+                                @endif
+                            </p>
+
+                            <div style="font-size: 48px; font-weight: 400; letter-spacing: -1.5px; line-height: 1; color: #111111; margin: 0 0 4px;">
+                                @if($plan->price_idr == 0)
+                                    Rp 0
+                                @else
+                                    {{ $plan->formatted_price }}
+                                @endif
+                            </div>
+                            <p style="font-size: 14px; color: #7b7b78; margin: 0 0 24px;">
+                                @if($plan->price_idr == 0)
+                                    Selamanya, tanpa kartu kredit.
+                                @else
+                                    per bulan, IDR (sudah PPN)
+                                @endif
+                            </p>
+
+                            {{-- Limit badges --}}
+                            <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+                                <div style="flex: 1; background: #fff; border: 1px solid #dedbd6; border-radius: 4px; padding: 10px 12px; text-align: center;">
+                                    <p style="font-family: 'Inter', monospace; font-size: 10px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; color: #7b7b78; margin: 0 0 4px;">DAILY</p>
+                                    <p style="font-size: 18px; font-weight: 600; color: #111111; margin: 0; letter-spacing: -0.5px;">
+                                        @if($plan->daily_request_limit)
+                                            {{ number_format($plan->daily_request_limit) }}
+                                        @else
+                                            ∞
+                                        @endif
+                                    </p>
+                                </div>
+                                <div style="flex: 1; background: #fff; border: 1px solid #dedbd6; border-radius: 4px; padding: 10px 12px; text-align: center;">
+                                    <p style="font-family: 'Inter', monospace; font-size: 10px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; color: #7b7b78; margin: 0 0 4px;">PER MENIT</p>
+                                    <p style="font-size: 18px; font-weight: 600; color: #111111; margin: 0; letter-spacing: -0.5px;">{{ $plan->per_minute_limit }} req</p>
+                                </div>
+                            </div>
+
+                            @if($plan->features && count($plan->features) > 0)
+                                <ul style="list-style: none; padding: 0; margin: 0 0 0 0; flex: 1;">
+                                    @foreach($plan->features as $feature)
+                                        <li style="display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; font-size: 14px; color: #111111; line-height: 1.4;">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff5600" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px;"><path d="M20 6 9 17l-5-5"/></svg>
+                                            <span>{{ $feature }}</span>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @endif
+
+                            @if($plan->price_idr == 0)
+                                <button @click="openModal()" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 32px; padding: 12px 24px; background: transparent; color: #111111; border: 1px solid #111111; border-radius: 4px; font-size: 16px; font-weight: 500; font-family: inherit; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onmousedown="this.style.transform='scale(0.85)'">
+                                    Mulai gratis →
+                                </button>
+                            @elseif($plan->is_popular)
+                                <a href="/subscriptions" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 32px; padding: 12px 24px; background: #ff5600; color: #fff; border: none; border-radius: 4px; font-size: 16px; font-weight: 500; font-family: inherit; cursor: pointer; transition: all 0.2s; text-decoration: none; box-sizing: border-box;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onmousedown="this.style.transform='scale(0.85)'">
+                                    Pilih Premium →
+                                </a>
+                            @else
+                                <a href="/subscriptions" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 32px; padding: 12px 24px; background: #111111; color: #fff; border: none; border-radius: 4px; font-size: 16px; font-weight: 500; font-family: inherit; cursor: pointer; transition: all 0.2s; text-decoration: none; box-sizing: border-box;" onmouseover="this.style.transform='scale(1.05)'; this.style.background='#fff'; this.style.color='#111111'; this.style.boxShadow='inset 0 0 0 1px #111111';" onmouseout="this.style.transform='scale(1)'; this.style.background='#111111'; this.style.color='#fff'; this.style.boxShadow='none';" onmousedown="this.style.transform='scale(0.85)'">
+                                    Pilih Pro →
+                                </a>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Daily Plans -->
+            <div x-show="tab === 'daily'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+                <div style="max-width: 400px; margin: 0 auto;">
+                    @foreach($dailyPlans as $plan)
+                        <div style="background: #faf9f6; border: 1px solid #dedbd6; border-radius: 8px; padding: 40px 32px; position: relative;">
+                            <p style="font-family: 'Inter', monospace; font-size: 12px; font-weight: 500; letter-spacing: 1.2px; text-transform: uppercase; color: #7b7b78; margin: 0 0 16px;">PAKET {{ strtoupper($plan->name) }}</p>
+
+                            <p style="font-size: 14px; color: #7b7b78; margin: 0 0 16px; line-height: 1.4;">Unlimited Request, Max 100M Token</p>
+
+                            <div style="font-size: 48px; font-weight: 400; letter-spacing: -1.5px; line-height: 1; color: #111111; margin: 0 0 4px;">
+                                {{ $plan->formatted_price }}
+                            </div>
+                            <p style="font-size: 14px; color: #7b7b78; margin: 0 0 24px;">per hari, IDR</p>
+
+                            {{-- Limit badges --}}
+                            <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+                                <div style="flex: 1; background: #fff; border: 1px solid #dedbd6; border-radius: 4px; padding: 10px 12px; text-align: center;">
+                                    <p style="font-family: 'Inter', monospace; font-size: 10px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; color: #7b7b78; margin: 0 0 4px;">DAILY</p>
+                                    <p style="font-size: 18px; font-weight: 600; color: #111111; margin: 0;">Unlimited</p>
+                                </div>
+                                <div style="flex: 1; background: #fff; border: 1px solid #dedbd6; border-radius: 4px; padding: 10px 12px; text-align: center;">
+                                    <p style="font-family: 'Inter', monospace; font-size: 10px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; color: #7b7b78; margin: 0 0 4px;">PER MENIT</p>
+                                    <p style="font-size: 18px; font-weight: 600; color: #111111; margin: 0;">{{ $plan->per_minute_limit }} req</p>
+                                </div>
+                            </div>
+
+                            @if($plan->features && count($plan->features) > 0)
+                                <ul style="list-style: none; padding: 0; margin: 0;">
+                                    @foreach($plan->features as $feature)
+                                        <li style="display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; font-size: 14px; color: #111111; line-height: 1.4;">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff5600" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px;"><path d="M20 6 9 17l-5-5"/></svg>
+                                            <span>{{ $feature }}</span>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @endif
+
+                            <a href="/subscriptions" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 32px; padding: 12px 24px; background: #111111; color: #fff; border: none; border-radius: 4px; font-size: 16px; font-weight: 500; font-family: inherit; cursor: pointer; transition: all 0.2s; text-decoration: none; box-sizing: border-box;" onmouseover="this.style.transform='scale(1.05)'; this.style.background='#fff'; this.style.color='#111111'; this.style.boxShadow='inset 0 0 0 1px #111111';" onmouseout="this.style.transform='scale(1)'; this.style.background='#111111'; this.style.color='#fff'; this.style.boxShadow='none';" onmousedown="this.style.transform='scale(0.85)'">
+                                Beli Harian →
+                            </a>
+                        </div>
+                    @endforeach
                 </div>
             </div>
         </div>
     </section>
+    @endif
 
     <!-- Compatible Tools -->
     <section class="section">

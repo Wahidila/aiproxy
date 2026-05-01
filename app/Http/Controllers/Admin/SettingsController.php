@@ -20,6 +20,7 @@ class SettingsController extends Controller
             'site_description' => Setting::get('site_description', 'Akses AI Premium, Harga Terjangkau'),
             'gateway_pakasir_enabled' => Setting::get('gateway_pakasir_enabled', '1'),
             'gateway_manual_enabled' => Setting::get('gateway_manual_enabled', '1'),
+            'subscription_enabled' => Setting::get('subscription_enabled', '0'),
         ];
 
         return view('admin.settings.index', compact('settings'));
@@ -48,6 +49,7 @@ class SettingsController extends Controller
         Setting::set('site_description', $request->site_description);
         Setting::set('gateway_pakasir_enabled', $request->has('gateway_pakasir_enabled') ? '1' : '0');
         Setting::set('gateway_manual_enabled', $request->has('gateway_manual_enabled') ? '1' : '0');
+        Setting::set('subscription_enabled', $request->has('subscription_enabled') ? '1' : '0');
 
         return redirect()->route('admin.settings.index')
             ->with('success', 'Settings updated successfully.');
