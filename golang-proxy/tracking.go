@@ -10,7 +10,7 @@ import (
 type TrackingEvent struct {
 	UserID       int64
 	ApiKeyID     int64
-	Tier         string // "free" or "paid"
+	Tier         string // "free", "paid", or "subscription"
 	Model        string
 	InputTokens  int
 	OutputTokens int
@@ -98,8 +98,8 @@ func (t *Tracker) processEvent(event TrackingEvent) {
 		return
 	}
 
-	// 2. Deduct wallet balance based on tier
-	if event.CostIDR > 0 {
+	// 2. Deduct wallet balance based on tier (skip for subscription keys)
+	if event.CostIDR > 0 && event.Tier != "subscription" {
 		newBalance, ok, err := t.db.DeductBalance(event.UserID, event.CostIDR, event.Tier)
 		if err != nil {
 			log.Printf("ERROR: failed to deduct balance for user %d: %v", event.UserID, err)

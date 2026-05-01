@@ -93,7 +93,11 @@ func AuthMiddleware(db *Database, next http.Handler) http.Handler {
 				writeError(w, 429, "insufficient_balance", "Saldo free trial habis. Silakan top up untuk melanjutkan.", "insufficient_balance")
 				return
 			}
+		} else if tier == "subscription" {
+			// Subscription keys use daily quota, not wallet balance — skip balance check
+			log.Printf("AUTH: subscription key %d for user %d — skipping balance check", apiKey.ID, apiKey.UserID)
 		} else {
+			// paid tier — check wallet balance
 			if wallet.PaidBalance <= 0 {
 				writeError(w, 429, "insufficient_balance", "Saldo tidak mencukupi. Silakan top up saldo Anda.", "insufficient_balance")
 				return

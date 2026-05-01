@@ -18,7 +18,7 @@ type ApiKeyInfo struct {
 	ID       int64
 	UserID   int64
 	Key      string
-	Tier     string // "free" or "paid"
+	Tier     string // "free", "paid", or "subscription"
 	IsActive bool
 }
 
