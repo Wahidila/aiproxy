@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -12,9 +13,10 @@ import (
 type contextKey string
 
 const (
-	ctxApiKey contextKey = "apiKey"
-	ctxUser   contextKey = "user"
-	ctxWallet contextKey = "wallet"
+	ctxApiKey       contextKey = "apiKey"
+	ctxUser         contextKey = "user"
+	ctxWallet       contextKey = "wallet"
+	ctxSubscription contextKey = "subscription"
 )
 
 // AuthMiddleware validates API key from Authorization header
@@ -111,6 +113,99 @@ func AuthMiddleware(db *Database, next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+// RateLimitMiddleware enforces per-minute rate limit, concurrent limit, and daily request limit
+func RateLimitMiddleware(db *Database, rl *RateLimiter, cl *ConcurrentLimiter, dc *DailyCounter, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		apiKey := r.Context().Value(ctxApiKey).(*ApiKeyInfo)
+		user := r.Context().Value(ctxUser).(*UserInfo)
+
+		// Fetch subscription info
+		sub, err := db.GetActiveSubscription(user.ID)
+		if err != nil {
+			log.Printf("RATELIMIT: failed to get subscription for user %d: %v", user.ID, err)
+			// Don't block on DB error — let request through
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// If no subscription found, use defaults (very restrictive)
+		if sub == nil {
+			defaultLimit := 10
+			sub = &SubscriptionInfo{
+				PlanSlug:          "none",
+				DailyRequestLimit: &defaultLimit,
+				PerMinuteLimit:    3,
+				ConcurrentLimit:   1,
+			}
+			log.Printf("RATELIMIT: no active subscription for user %d, using defaults", user.ID)
+		}
+
+		// Store subscription in context for later use (tracking)
+		ctx := context.WithValue(r.Context(), ctxSubscription, sub)
+		r = r.WithContext(ctx)
+
+		// 1. Check concurrent limit
+		concAllowed, concCurrent, concLimit := cl.Acquire(user.ID, sub.ConcurrentLimit)
+		if !concAllowed {
+			log.Printf("RATELIMIT: concurrent limit hit for user %d (plan=%s, current=%d, limit=%d)",
+				user.ID, sub.PlanSlug, concCurrent, concLimit)
+			writeError(w, 429, "concurrent_limit",
+				fmt.Sprintf("Batas request bersamaan tercapai (%d/%d). Tunggu request sebelumnya selesai.", concCurrent, concLimit),
+				"rate_limit_error")
+			return
+		}
+		// Ensure we release the concurrent slot when done
+		defer cl.Release(user.ID)
+
+		// 2. Check per-minute rate limit
+		rateAllowed, rateCurrent, rateLimit := rl.Allow(user.ID, sub.PerMinuteLimit)
+		if !rateAllowed {
+			log.Printf("RATELIMIT: per-minute limit hit for user %d (plan=%s, current=%d, limit=%d)",
+				user.ID, sub.PlanSlug, rateCurrent, rateLimit)
+			writeError(w, 429, "rate_limit",
+				fmt.Sprintf("Batas request per menit tercapai (%d/%d). Coba lagi dalam beberapa detik.", rateCurrent, rateLimit),
+				"rate_limit_error")
+			return
+		}
+
+		// 3. Check daily request limit
+		dailyAllowed, dailyCurrent, dailyLimit := dc.LoadOrIncrement(
+			user.ID, sub.DailyRequestLimit, sub.DailyRequestsUsed, sub.ResetAt)
+		if !dailyAllowed {
+			log.Printf("RATELIMIT: daily limit hit for user %d (plan=%s, current=%d, limit=%d)",
+				user.ID, sub.PlanSlug, dailyCurrent, dailyLimit)
+			writeError(w, 429, "daily_limit",
+				fmt.Sprintf("Batas request harian tercapai (%d/%d). Limit akan reset besok.", dailyCurrent, dailyLimit),
+				"rate_limit_error")
+			return
+		}
+
+		// 4. Check token usage cap (if applicable)
+		if sub.MaxTokenUsage != nil && sub.TokenUsageTotal >= *sub.MaxTokenUsage {
+			log.Printf("RATELIMIT: token cap hit for user %d (plan=%s, used=%d, cap=%d)",
+				user.ID, sub.PlanSlug, sub.TokenUsageTotal, *sub.MaxTokenUsage)
+			writeError(w, 429, "token_cap",
+				fmt.Sprintf("Batas penggunaan token tercapai (%d/%d). Upgrade plan untuk melanjutkan.",
+					sub.TokenUsageTotal, *sub.MaxTokenUsage),
+				"rate_limit_error")
+			return
+		}
+
+		log.Printf("RATELIMIT: OK user=%d plan=%s rate=%d/%d conc=%d/%d daily=%d/%s tier=%s",
+			user.ID, sub.PlanSlug, rateCurrent, rateLimit, concCurrent, concLimit,
+			dailyCurrent, formatLimit(sub.DailyRequestLimit), apiKey.Tier)
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+func formatLimit(limit *int) string {
+	if limit == nil {
+		return "∞"
+	}
+	return fmt.Sprintf("%d", *limit)
 }
 
 // ModelRestrictionMiddleware checks free tier model access based on API key tier

@@ -134,4 +134,11 @@ func (t *Tracker) processEvent(event TrackingEvent) {
 
 	// 4. Update API key last used (fire and forget)
 	_ = t.db.UpdateApiKeyLastUsed(event.ApiKeyID)
+
+	// 5. Sync token usage total to user_subscriptions (for dashboard display)
+	if event.TotalTokens > 0 {
+		if err := t.db.IncrementTokenUsageTotal(event.UserID, event.TotalTokens); err != nil {
+			log.Printf("ERROR: failed to increment token_usage_total for user %d: %v", event.UserID, err)
+		}
+	}
 }

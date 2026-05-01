@@ -38,6 +38,12 @@ func main() {
 	tracker := NewTracker(db, cfg.TrackingBufferSize)
 	log.Printf("Tracker started (buffer size: %d)", cfg.TrackingBufferSize)
 
+	// Initialize rate limiters
+	rateLimiter := NewRateLimiter()
+	concurrentLimiter := NewConcurrentLimiter()
+	dailyCounter := NewDailyCounter(db)
+	log.Println("Rate limiters initialized (per-minute, concurrent, daily)")
+
 	// Setup handlers
 	handlers := NewHandlers(cfg, db, tracker)
 
@@ -54,9 +60,11 @@ func main() {
 	authRoutes.HandleFunc("/v1/responses", handlers.HandleResponses)
 	authRoutes.HandleFunc("/v1/models", handlers.HandleModels)
 
-	// Apply middleware chain: CORS -> Auth -> ModelRestriction -> Handler
+	// Apply middleware chain: CORS -> Auth -> RateLimit -> ModelRestriction -> Handler
 	authed := AuthMiddleware(db,
-		ModelRestrictionMiddleware(db, authRoutes),
+		RateLimitMiddleware(db, rateLimiter, concurrentLimiter, dailyCounter,
+			ModelRestrictionMiddleware(db, authRoutes),
+		),
 	)
 	mux.Handle("/v1/chat/completions", authed)
 	mux.Handle("/v1/messages", authed)

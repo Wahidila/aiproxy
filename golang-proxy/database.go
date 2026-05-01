@@ -301,6 +301,85 @@ func (d *Database) UpdateApiKeyLastUsed(apiKeyID int64) error {
 	return err
 }
 
+// GetActiveSubscription returns the user's active subscription with plan limits
+func (d *Database) GetActiveSubscription(userID int64) (*SubscriptionInfo, error) {
+	var info SubscriptionInfo
+	var dailyLimit, perMinLimit, concLimit sql.NullInt64
+	var maxTokenUsage sql.NullInt64
+	var expiresAt, resetAt sql.NullTime
+
+	err := d.db.QueryRow(`
+		SELECT us.plan_slug, us.status, us.daily_requests_used, us.token_usage_total,
+		       us.expires_at, us.daily_requests_reset_at,
+		       sp.daily_request_limit, sp.per_minute_limit, sp.concurrent_limit, sp.max_token_usage
+		FROM user_subscriptions us
+		JOIN subscription_plans sp ON sp.slug = us.plan_slug
+		WHERE us.user_id = ? AND us.status = 'active'
+		  AND (us.expires_at IS NULL OR us.expires_at > NOW())
+		ORDER BY us.starts_at DESC
+		LIMIT 1
+	`, userID).Scan(
+		&info.PlanSlug, &info.Status, &info.DailyRequestsUsed, &info.TokenUsageTotal,
+		&expiresAt, &resetAt,
+		&dailyLimit, &perMinLimit, &concLimit, &maxTokenUsage,
+	)
+	if err == sql.ErrNoRows {
+		return nil, nil // no active subscription
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if dailyLimit.Valid {
+		v := int(dailyLimit.Int64)
+		info.DailyRequestLimit = &v
+	}
+	if perMinLimit.Valid {
+		info.PerMinuteLimit = int(perMinLimit.Int64)
+	}
+	if concLimit.Valid {
+		info.ConcurrentLimit = int(concLimit.Int64)
+	}
+	if maxTokenUsage.Valid {
+		v := maxTokenUsage.Int64
+		info.MaxTokenUsage = &v
+	}
+	if expiresAt.Valid {
+		info.ExpiresAt = &expiresAt.Time
+	}
+	if resetAt.Valid {
+		info.ResetAt = &resetAt.Time
+	}
+
+	return &info, nil
+}
+
+// UpdateDailyRequests updates the daily request counter in user_subscriptions
+func (d *Database) UpdateDailyRequests(userID int64, count int, resetAt time.Time) error {
+	_, err := d.db.Exec(`
+		UPDATE user_subscriptions
+		SET daily_requests_used = ?, daily_requests_reset_at = ?
+		WHERE user_id = ? AND status = 'active'
+		  AND (expires_at IS NULL OR expires_at > NOW())
+		ORDER BY starts_at DESC
+		LIMIT 1
+	`, count, resetAt, userID)
+	return err
+}
+
+// IncrementTokenUsageTotal increments the token_usage_total in user_subscriptions
+func (d *Database) IncrementTokenUsageTotal(userID int64, tokens int) error {
+	_, err := d.db.Exec(`
+		UPDATE user_subscriptions
+		SET token_usage_total = token_usage_total + ?
+		WHERE user_id = ? AND status = 'active'
+		  AND (expires_at IS NULL OR expires_at > NOW())
+		ORDER BY starts_at DESC
+		LIMIT 1
+	`, tokens, userID)
+	return err
+}
+
 // GetExchangeRate returns USD to IDR rate from settings
 func (d *Database) GetExchangeRate() (float64, error) {
 	var value string
