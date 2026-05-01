@@ -256,8 +256,12 @@
                                     <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-medium text-off-black">
                                         {{ number_format($usage->total_tokens) }}
                                     </td>
-                                    <td class="whitespace-nowrap px-4 py-3 text-right text-sm {{ $usage->cost_idr > 0 ? 'text-fin-orange font-medium' : 'text-warm-sand' }}">
-                                        {{ $usage->cost_idr > 0 ? usageFormatRp($usage->cost_idr) : '-' }}
+                                    <td class="whitespace-nowrap px-4 py-3 text-right text-sm {{ optional($usage->apiKey)->tier === 'subscription' ? 'text-purple-600 font-medium' : ($usage->cost_idr > 0 ? 'text-fin-orange font-medium' : 'text-warm-sand') }}">
+                                        @if(optional($usage->apiKey)->tier === 'subscription')
+                                            Subscription
+                                        @else
+                                            {{ $usage->cost_idr > 0 ? usageFormatRp($usage->cost_idr) : '-' }}
+                                        @endif
                                     </td>
                                     <td class="whitespace-nowrap px-4 py-3 text-sm text-muted">
                                         <code class="text-xs font-mono">{{ $usage->apiKey->masked_key ?? '-' }}</code>

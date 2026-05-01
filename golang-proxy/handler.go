@@ -98,9 +98,13 @@ func (h *Handlers) handleProxy(w http.ResponseWriter, r *http.Request, path stri
 			}
 
 			cost := CalculateCost(h.db, model, inputTokens, result.OutputTokens)
+			// Subscription keys: record cost as 0 (no billing)
+			if apiKey.Tier == "subscription" {
+				cost = 0
+			}
 
-			log.Printf("TRACK [stream] user=%d model=%s input=%d output=%d cost=%.2f",
-				user.ID, model, inputTokens, result.OutputTokens, cost)
+			log.Printf("TRACK [stream] user=%d model=%s input=%d output=%d cost=%.2f tier=%s",
+				user.ID, model, inputTokens, result.OutputTokens, cost, apiKey.Tier)
 
 			h.tracker.Track(TrackingEvent{
 				UserID:       user.ID,
@@ -129,9 +133,13 @@ func (h *Handlers) handleProxy(w http.ResponseWriter, r *http.Request, path stri
 			model = result.Model
 		}
 		cost := CalculateCost(h.db, model, result.InputTokens, result.OutputTokens)
+		// Subscription keys: record cost as 0 (no billing)
+		if apiKey.Tier == "subscription" {
+			cost = 0
+		}
 
-		log.Printf("TRACK [non-stream] user=%d model=%s input=%d output=%d cost=%.2f",
-			user.ID, model, result.InputTokens, result.OutputTokens, cost)
+		log.Printf("TRACK [non-stream] user=%d model=%s input=%d output=%d cost=%.2f tier=%s",
+			user.ID, model, result.InputTokens, result.OutputTokens, cost, apiKey.Tier)
 
 		// Sanitize response to remove any EnowxAI identity leaks
 		respBody = SanitizeResponseBody(respBody)
