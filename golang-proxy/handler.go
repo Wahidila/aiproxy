@@ -92,19 +92,24 @@ func (h *Handlers) handleProxy(w http.ResponseWriter, r *http.Request, path stri
 			// Fallback: if upstream returned prompt_tokens=0 in streaming,
 			// estimate input tokens from the request body
 			inputTokens := result.InputTokens
-			if inputTokens == 0 && result.OutputTokens > 0 {
+			if inputTokens == 0 {
 				inputTokens = EstimateInputTokens(body)
-				log.Printf("USAGE_ESTIMATE: upstream returned 0 input tokens, estimated %d from request body", inputTokens)
+				if inputTokens > 0 {
+					log.Printf("USAGE_ESTIMATE: upstream returned 0 input tokens, estimated %d from request body", inputTokens)
+				}
 			}
 
-			cost := CalculateCost(h.db, model, inputTokens, result.OutputTokens)
+			// Output tokens already estimated in forwardStreamingSingle if needed
+			outputTokens := result.OutputTokens
+
+			cost := CalculateCost(h.db, model, inputTokens, outputTokens)
 			// Subscription keys: record cost as 0 (no billing)
 			if apiKey.Tier == "subscription" {
 				cost = 0
 			}
 
 			log.Printf("TRACK [stream] user=%d model=%s input=%d output=%d cost=%.2f tier=%s",
-				user.ID, model, inputTokens, result.OutputTokens, cost, apiKey.Tier)
+				user.ID, model, inputTokens, outputTokens, cost, apiKey.Tier)
 
 			h.tracker.Track(TrackingEvent{
 				UserID:       user.ID,
@@ -112,8 +117,8 @@ func (h *Handlers) handleProxy(w http.ResponseWriter, r *http.Request, path stri
 				Tier:         apiKey.Tier,
 				Model:        model,
 				InputTokens:  inputTokens,
-				OutputTokens: result.OutputTokens,
-				TotalTokens:  inputTokens + result.OutputTokens,
+				OutputTokens: outputTokens,
+				TotalTokens:  inputTokens + outputTokens,
 				RequestPath:  path,
 				StatusCode:   result.StatusCode,
 				ResponseTime: result.ResponseTimeMs,
@@ -132,14 +137,27 @@ func (h *Handlers) handleProxy(w http.ResponseWriter, r *http.Request, path stri
 		if result.Model != "" {
 			model = result.Model
 		}
-		cost := CalculateCost(h.db, model, result.InputTokens, result.OutputTokens)
+
+		// Estimate tokens if upstream returned 0 (e.g., Kiro proxy)
+		inputTokens := result.InputTokens
+		outputTokens := result.OutputTokens
+		if inputTokens == 0 && result.StatusCode == 200 {
+			inputTokens = EstimateInputTokens(body)
+			log.Printf("USAGE_ESTIMATE: upstream returned 0 input tokens (non-stream), estimated %d from request body", inputTokens)
+		}
+		if outputTokens == 0 && result.StatusCode == 200 {
+			outputTokens = EstimateOutputTokens(respBody)
+			log.Printf("USAGE_ESTIMATE: upstream returned 0 output tokens (non-stream), estimated %d from response body", outputTokens)
+		}
+
+		cost := CalculateCost(h.db, model, inputTokens, outputTokens)
 		// Subscription keys: record cost as 0 (no billing)
 		if apiKey.Tier == "subscription" {
 			cost = 0
 		}
 
 		log.Printf("TRACK [non-stream] user=%d model=%s input=%d output=%d cost=%.2f tier=%s",
-			user.ID, model, result.InputTokens, result.OutputTokens, cost, apiKey.Tier)
+			user.ID, model, inputTokens, outputTokens, cost, apiKey.Tier)
 
 		// Sanitize response to remove any EnowxAI identity leaks
 		respBody = SanitizeResponseBody(respBody)
@@ -155,9 +173,9 @@ func (h *Handlers) handleProxy(w http.ResponseWriter, r *http.Request, path stri
 			ApiKeyID:     apiKey.ID,
 			Tier:         apiKey.Tier,
 			Model:        model,
-			InputTokens:  result.InputTokens,
-			OutputTokens: result.OutputTokens,
-			TotalTokens:  result.TotalTokens,
+			InputTokens:  inputTokens,
+			OutputTokens: outputTokens,
+			TotalTokens:  inputTokens + outputTokens,
 			RequestPath:  path,
 			StatusCode:   result.StatusCode,
 			ResponseTime: result.ResponseTimeMs,

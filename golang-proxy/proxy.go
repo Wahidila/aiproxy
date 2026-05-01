@@ -320,6 +320,7 @@ func forwardStreamingSingle(cfg *Config, w http.ResponseWriter, body []byte, pat
 	outputTokens := 0
 	model := ""
 	lastEventType := ""
+	streamedContentLen := 0 // Track total streamed content length for token estimation
 
 	scanner := bufio.NewScanner(resp.Body)
 	scanner.Buffer(make([]byte, 256*1024), 256*1024)
@@ -334,7 +335,7 @@ func forwardStreamingSingle(cfg *Config, w http.ResponseWriter, body []byte, pat
 		if strings.HasPrefix(line, "data: ") && line != "data: [DONE]" {
 			jsonStr := strings.TrimPrefix(line, "data: ")
 
-			if strings.Contains(jsonStr, "usage") {
+			if strings.Contains(jsonStr, "usage") && !strings.Contains(jsonStr, "\"usage\":null") {
 				log.Printf("SSE_DEBUG [usage_chunk] upstream=%s event=%s data=%s", upstream.Name, lastEventType, jsonStr)
 			}
 
@@ -348,6 +349,9 @@ func forwardStreamingSingle(cfg *Config, w http.ResponseWriter, body []byte, pat
 			if out > 0 {
 				outputTokens = out
 			}
+
+			// Track streamed content length for output token estimation
+			streamedContentLen += extractContentLength(jsonStr)
 		}
 
 		// Sanitize and forward line
@@ -375,6 +379,13 @@ func forwardStreamingSingle(cfg *Config, w http.ResponseWriter, body []byte, pat
 	}
 	if model == "" {
 		model = originalModel
+	}
+
+	// If upstream returned 0 output tokens but we streamed content, estimate from content length
+	if outputTokens == 0 && streamedContentLen > 0 {
+		outputTokens = streamedContentLen / 3
+		log.Printf("USAGE_ESTIMATE: upstream returned 0 output tokens for stream, estimated %d from %d chars of streamed content",
+			outputTokens, streamedContentLen)
 	}
 
 	log.Printf("USAGE [stream] upstream=%s path=%s model=%s input=%d output=%d",
@@ -435,6 +446,26 @@ func extractUsageFromJSON(body []byte) (inputTokens, outputTokens, totalTokens i
 	// Already handled above since Anthropic non-streaming also uses top-level "usage"
 
 	return
+}
+
+// extractContentLength extracts the length of content from an SSE data chunk.
+// Used to estimate output tokens when upstream doesn't provide token counts.
+func extractContentLength(jsonStr string) int {
+	var chunk struct {
+		Choices []struct {
+			Delta struct {
+				Content string `json:"content"`
+			} `json:"delta"`
+		} `json:"choices"`
+	}
+	if json.Unmarshal([]byte(jsonStr), &chunk) != nil {
+		return 0
+	}
+	total := 0
+	for _, choice := range chunk.Choices {
+		total += len(choice.Delta.Content)
+	}
+	return total
 }
 
 // extractUsageFromSSELine extracts token usage from a single SSE data line.
@@ -658,6 +689,32 @@ func EstimateInputTokens(body []byte) int {
 	if totalChars == 0 {
 		return 0
 	}
+	return totalChars / 3
+}
+
+// EstimateOutputTokens estimates the number of output tokens from a non-streaming response body.
+// Used when upstream returns completion_tokens=0 (e.g., Kiro proxy).
+func EstimateOutputTokens(respBody []byte) int {
+	var resp struct {
+		Choices []struct {
+			Message struct {
+				Content string `json:"content"`
+			} `json:"message"`
+		} `json:"choices"`
+	}
+	if json.Unmarshal(respBody, &resp) != nil {
+		return 0
+	}
+
+	totalChars := 0
+	for _, choice := range resp.Choices {
+		totalChars += len(choice.Message.Content)
+	}
+
+	if totalChars == 0 {
+		return 0
+	}
+	// ~3 chars per token for mixed-language content
 	return totalChars / 3
 }
 
