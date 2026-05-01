@@ -30,9 +30,9 @@
             {{-- Current Balances --}}
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div class="bg-surface border border-oat rounded-card p-5 text-center">
-                    <p class="text-xs font-medium text-muted uppercase">Saldo Free Trial</p>
-                    <p class="mt-2 text-3xl font-bold {{ $quota->free_balance > 0 ? 'text-green-600' : 'text-warm-sand' }}">
-                        {{ $quota->formatted_free_balance }}
+                    <p class="text-xs font-medium text-muted uppercase">Saldo Wallet</p>
+                    <p class="mt-2 text-3xl font-bold {{ $quota->total_balance > 0 ? 'text-green-600' : 'text-warm-sand' }}">
+                        {{ $quota->formatted_balance }}
                     </p>
                 </div>
                 <div class="bg-surface border border-oat rounded-card p-5 text-center">

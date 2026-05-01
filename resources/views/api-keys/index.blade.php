@@ -315,14 +315,20 @@
             {{-- ============================================================ --}}
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div class="bg-surface border border-oat rounded-card p-5">
-                    <p class="text-xs font-medium text-muted uppercase">Saldo Free Trial</p>
-                    <p class="mt-1 text-2xl font-bold {{ $quota->free_balance > 0 ? 'text-green-600' : 'text-red-500' }}">{{ $quota->formatted_free_balance }}</p>
-                    <p class="mt-1 text-xs text-warm-sand">Hanya untuk model free tier</p>
+                    <p class="text-xs font-medium text-muted uppercase">Saldo Wallet (Pay-as-you-go)</p>
+                    <p class="mt-1 text-2xl font-bold {{ $quota->paid_balance > 0 ? 'text-fin-orange' : 'text-red-500' }}">{{ $quota->formatted_paid_balance }}</p>
+                    <p class="mt-1 text-xs text-warm-sand">Untuk semua model</p>
                 </div>
                 <div class="bg-surface border border-oat rounded-card p-5">
-                    <p class="text-xs font-medium text-muted uppercase">Saldo Top Up</p>
-                    <p class="mt-1 text-2xl font-bold {{ $quota->paid_balance > 0 ? 'text-fin-orange' : 'text-red-500' }}">{{ $quota->formatted_paid_balance }}</p>
-                    <p class="mt-1 text-xs text-warm-sand">Untuk semua model (termasuk premium)</p>
+                    <p class="text-xs font-medium text-muted uppercase">Subscription Plan</p>
+                    <p class="mt-1 text-2xl font-bold text-purple-600">{{ $activePlan->name ?? 'Tidak Ada' }}</p>
+                    <p class="mt-1 text-xs text-warm-sand">
+                        @if($activeSubscription && $activeSubscription->isActive())
+                            Aktif hingga {{ $activeSubscription->expires_at ? $activeSubscription->expires_at->format('d M Y') : 'Selamanya' }}
+                        @else
+                            <a href="{{ route('pricing') }}" class="text-fin-orange hover:underline">Pilih plan →</a>
+                        @endif
+                    </p>
                 </div>
             </div>
 
@@ -348,45 +354,32 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-off-black mb-1">Tipe Saldo</label>
-                                <div class="flex gap-3 mt-1 flex-wrap" x-data="{ tier: '{{ old('tier', 'free') }}' }">
+                                <div class="flex gap-3 mt-1 flex-wrap" x-data="{ tier: '{{ old('tier', 'paid') }}' }">
                                     <label class="flex items-center gap-2 cursor-pointer rounded-lg border-2 px-4 py-2.5 transition flex-1 min-w-[140px]"
-                                           :class="tier === 'free' ? 'border-green-500 bg-green-50' : '{{ $quota->free_balance > 0 ? "border-oat hover:border-green-300" : "border-oat opacity-50" }}'">
-                                        <input type="radio" name="tier" value="free" x-model="tier"
-                                            class="text-green-600 focus:ring-green-500"
-                                            {{ $quota->free_balance <= 0 ? 'disabled' : '' }}>
-                                        <div>
-                                            <span class="text-sm font-semibold text-off-black">Free Tier</span>
-                                            <p class="text-xs text-muted">Model terbatas</p>
-                                        </div>
-                                    </label>
-                                    <label class="flex items-center gap-2 cursor-pointer rounded-lg border-2 px-4 py-2.5 transition flex-1 min-w-[140px]"
-                                           :class="tier === 'paid' ? 'border-fin-orange bg-fin-orange-light' : '{{ $quota->paid_balance > 0 ? "border-oat hover:border-fin-orange/50" : "border-oat opacity-50" }}'">
+                                           :class="tier === 'paid' ? 'border-fin-orange bg-fin-orange-light' : 'border-oat hover:border-fin-orange/50'">
                                         <input type="radio" name="tier" value="paid" x-model="tier"
-                                            class="text-fin-orange focus:ring-fin-orange"
-                                            {{ $quota->paid_balance <= 0 ? 'disabled' : '' }}>
+                                            class="text-fin-orange focus:ring-fin-orange">
                                         <div>
-                                            <span class="text-sm font-semibold text-off-black">Paid</span>
-                                            <p class="text-xs text-muted">Semua model</p>
+                                            <span class="text-sm font-semibold text-off-black">Paid (Pay-as-you-go)</span>
+                                            <p class="text-xs text-muted">Bayar sesuai pemakaian</p>
                                         </div>
                                     </label>
-                                    @if($subscriptionEnabled)
-                                        <label class="flex items-center gap-2 cursor-pointer rounded-lg border-2 px-4 py-2.5 transition flex-1 min-w-[140px]"
-                                               :class="tier === 'subscription' ? 'border-purple-500 bg-purple-50' : '{{ ($activeSubscription && $activeSubscription->isActive()) ? "border-oat hover:border-purple-300" : "border-oat opacity-50" }}'">
-                                            <input type="radio" name="tier" value="subscription" x-model="tier"
-                                                class="text-purple-600 focus:ring-purple-500"
-                                                {{ (!$activeSubscription || !$activeSubscription->isActive()) ? 'disabled' : '' }}>
-                                            <div>
-                                                <span class="text-sm font-semibold text-off-black">Subscription</span>
-                                                <p class="text-xs text-muted">
-                                                    @if($activeSubscription && $activeSubscription->isActive())
-                                                        Plan: {{ $activePlan->name ?? 'Active' }}
-                                                    @else
-                                                        Belum ada plan aktif
-                                                    @endif
-                                                </p>
-                                            </div>
-                                        </label>
-                                    @endif
+                                    <label class="flex items-center gap-2 cursor-pointer rounded-lg border-2 px-4 py-2.5 transition flex-1 min-w-[140px]"
+                                           :class="tier === 'subscription' ? 'border-purple-500 bg-purple-50' : '{{ ($activeSubscription && $activeSubscription->isActive()) ? "border-oat hover:border-purple-300" : "border-oat opacity-50" }}'">
+                                        <input type="radio" name="tier" value="subscription" x-model="tier"
+                                            class="text-purple-600 focus:ring-purple-500"
+                                            {{ (!$activeSubscription || !$activeSubscription->isActive()) ? 'disabled' : '' }}>
+                                        <div>
+                                            <span class="text-sm font-semibold text-off-black">Subscription</span>
+                                            <p class="text-xs text-muted">
+                                                @if($activeSubscription && $activeSubscription->isActive())
+                                                    Plan: {{ $activePlan->name ?? 'Active' }}
+                                                @else
+                                                    Belum ada plan aktif
+                                                @endif
+                                            </p>
+                                        </div>
+                                    </label>
                                 </div>
                                 @error('tier')
                                     <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -435,9 +428,7 @@
                                             <code class="text-sm font-mono text-muted">{{ $key->masked_key }}</code>
                                         </td>
                                         <td class="whitespace-nowrap px-4 py-3 text-center">
-                                            @if($key->isFree())
-                                                <span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">Free</span>
-                                            @elseif($key->isSubscription())
+                                            @if($key->isSubscription())
                                                 <span class="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-700">Subscription</span>
                                             @else
                                                 <span class="inline-flex items-center rounded-full bg-fin-orange-light px-2.5 py-0.5 text-xs font-medium text-fin-orange">Paid</span>

@@ -186,7 +186,7 @@
                         {{-- Free & Paid Balance Breakdown --}}
                         <div class="grid grid-cols-2 gap-3 mb-4">
                             <div class="rounded-lg bg-emerald-50 border border-emerald-200 p-3">
-                                <p class="text-xs font-medium text-emerald-600 uppercase tracking-wider">Free Tier</p>
+                                <p class="text-xs font-medium text-emerald-600 uppercase tracking-wider">Legacy Free</p>
                                 <p class="mt-1 text-lg font-bold text-emerald-700">
                                     {{ $quota ? $quota->formatted_free_balance : 'Rp 0' }}
                                 </p>

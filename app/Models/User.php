@@ -151,22 +151,19 @@ class User extends Authenticatable
 
     /**
      * Get or create wallet (token_quota record with balance).
-     * Auto-claims free credit on first creation.
      */
-    public function getOrCreateQuota(): TokenQuota
+    public function getOrCreateQuota()
     {
-        if ($this->tokenQuota) {
-            return $this->tokenQuota;
+        $quota = $this->tokenQuota;
+        if (!$quota) {
+            $quota = TokenQuota::create([
+                'user_id' => $this->id,
+                'free_balance' => 0,
+                'paid_balance' => 0,
+                'free_credit_claimed' => true,
+            ]);
+            $this->setRelation('tokenQuota', $quota);
         }
-
-        $quota = $this->tokenQuota()->create([
-            'balance' => 0,
-            'free_credit_claimed' => false,
-        ]);
-
-        // Auto-claim free credit for new users
-        $quota->claimFreeCredit();
-
-        return $quota->fresh();
+        return $quota;
     }
 }

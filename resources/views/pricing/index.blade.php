@@ -38,7 +38,7 @@
                         <a href="{{ route('register') }}"
                            class="inline-flex items-center rounded-btn px-4 py-2 text-sm font-medium text-white bg-off-black hover:scale-105 active:scale-95 transition-all"
                            style="border-radius: 4px;">
-                            Daftar Gratis
+                            Daftar Sekarang
                         </a>
                     @endauth
                 </div>
@@ -55,7 +55,7 @@
                 Pilih Plan yang Tepat
             </h1>
             <p class="mt-4 text-lg text-muted max-w-2xl mx-auto" style="letter-spacing: -0.2px;">
-                Akses AI models terbaik dengan harga terjangkau. Mulai gratis, upgrade kapan saja.
+                Akses AI models terbaik dengan harga terjangkau. Mulai sekarang, upgrade kapan saja.
             </p>
         </div>
 
@@ -118,7 +118,7 @@
                                     <a href="{{ route('register') }}"
                                        class="w-full inline-flex items-center justify-center rounded-btn px-4 py-3 text-sm font-medium border border-off-black text-off-black hover:bg-off-black hover:text-white hover:scale-105 active:scale-95 transition-all"
                                        style="border-radius: 4px;">
-                                        Mulai Gratis
+                                        Mulai Sekarang
                                     </a>
                                 @else
                                     @auth

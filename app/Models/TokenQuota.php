@@ -56,14 +56,6 @@ class TokenQuota extends Model
     // ===== WALLET METHODS =====
 
     /**
-     * Check if user has balance for a given tier.
-     */
-    public function hasBalanceForTier(string $tier): bool
-    {
-        return $tier === 'free' ? $this->free_balance > 0 : $this->paid_balance > 0;
-    }
-
-    /**
      * Check if user has any balance (either free or paid).
      */
     public function hasBalance(): bool
@@ -82,6 +74,8 @@ class TokenQuota extends Model
     /**
      * Deduct from free balance. Always deducts (can go negative) to keep wallet in sync.
      * Returns true if balance was sufficient, false if it went negative.
+     *
+     * @deprecated Kept only for migration command to zero out free balances. Do not use for new code.
      */
     public function deductFreeBalance(float $amount, string $description, $reference = null): bool
     {
@@ -144,39 +138,13 @@ class TokenQuota extends Model
     }
 
     /**
-     * Deduct balance based on API key tier.
-     * When paid balance is insufficient, automatically falls back to free (trial) balance.
-     * Returns the wallet type actually used: 'paid', 'free', or 'paid_to_free' (fallback).
+     * Deduct balance from paid wallet.
+     * Returns 'paid' always (free tier removed).
      */
     public function deductBalance(float $amount, string $description, $reference = null, string $tier = 'paid'): string
     {
-        if ($tier === 'free') {
-            $this->deductFreeBalance($amount, $description, $reference);
-            return 'free';
-        }
-
-        // Paid tier: check if paid balance is sufficient
-        $currentPaid = (float) $this->paid_balance;
-
-        if ($currentPaid >= $amount) {
-            // Paid balance covers the full cost
-            $this->deductPaidBalance($amount, $description, $reference);
-            return 'paid';
-        }
-
-        if ($currentPaid > 0) {
-            // Paid balance partially covers: drain paid, remainder from free
-            $fromPaid = $currentPaid;
-            $fromFree = $amount - $fromPaid;
-
-            $this->deductPaidBalance($fromPaid, $description . ' (paid portion)', $reference);
-            $this->deductFreeBalance($fromFree, $description . ' (free fallback)', $reference);
-            return 'paid_to_free';
-        }
-
-        // Paid balance is zero/negative: fall back entirely to free balance
-        $this->deductFreeBalance($amount, $description, $reference);
-        return 'paid_to_free';
+        $this->deductPaidBalance($amount, $description, $reference);
+        return 'paid';
     }
 
     /**
@@ -207,6 +175,8 @@ class TokenQuota extends Model
 
     /**
      * Add to free balance (admin adjustment).
+     *
+     * @deprecated Kept only for migration command to zero out free balances. Do not use for new code.
      */
     public function addFreeBalance(float $amount, string $type, string $description, $reference = null): void
     {
@@ -258,24 +228,6 @@ class TokenQuota extends Model
                 'created_at' => now(),
             ]);
         });
-    }
-
-    /**
-     * Claim one-time free credit → goes to free_balance.
-     */
-    public function claimFreeCredit(): bool
-    {
-        if ($this->free_credit_claimed) {
-            return false;
-        }
-
-        $freeAmount = (float) config('enowxai.free_credit_amount', 100000);
-
-        $this->addBalance($freeAmount, WalletTransaction::TYPE_FREE_CREDIT, 'Free trial credit Rp ' . number_format($freeAmount, 0, ',', '.'));
-
-        $this->update(['free_credit_claimed' => true]);
-
-        return true;
     }
 
     /**

@@ -16,6 +16,8 @@ use App\Http\Controllers\Admin\InvitationController as AdminInvitationController
 use App\Http\Controllers\Admin\TrialRequestController as AdminTrialRequestController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\BroadcastNotificationController as AdminBroadcastNotificationController;
+use App\Http\Controllers\Admin\SubscriptionController as AdminSubscriptionController;
+use App\Http\Controllers\Admin\SubscriptionPlanController as AdminSubscriptionPlanController;
 use App\Http\Controllers\Admin\SupportTicketController as AdminSupportTicketController;
 use App\Http\Controllers\NotificationDismissalController;
 use App\Http\Controllers\SupportTicketController;
@@ -142,6 +144,17 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::patch('/broadcast-notifications/{broadcastNotification}', [AdminBroadcastNotificationController::class, 'update'])->name('broadcast-notifications.update');
     Route::post('/broadcast-notifications/{broadcastNotification}/toggle', [AdminBroadcastNotificationController::class, 'toggleActive'])->name('broadcast-notifications.toggle');
     Route::delete('/broadcast-notifications/{broadcastNotification}', [AdminBroadcastNotificationController::class, 'destroy'])->name('broadcast-notifications.destroy');
+
+    // Subscription Management
+    Route::get('/subscriptions', [AdminSubscriptionController::class, 'index'])->name('subscriptions.index');
+    Route::post('/subscriptions/assign', [AdminSubscriptionController::class, 'assign'])->name('subscriptions.assign');
+    Route::post('/subscriptions/{subscription}/cancel', [AdminSubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
+
+    // Subscription Plans CRUD
+    Route::get('/subscription-plans', [AdminSubscriptionPlanController::class, 'index'])->name('subscription-plans.index');
+    Route::post('/subscription-plans', [AdminSubscriptionPlanController::class, 'store'])->name('subscription-plans.store');
+    Route::patch('/subscription-plans/{subscriptionPlan}', [AdminSubscriptionPlanController::class, 'update'])->name('subscription-plans.update');
+    Route::delete('/subscription-plans/{subscriptionPlan}', [AdminSubscriptionPlanController::class, 'destroy'])->name('subscription-plans.destroy');
 });
 
 require __DIR__.'/auth.php';

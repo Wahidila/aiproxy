@@ -29,7 +29,7 @@ class CheckTokenQuota
             ], 401);
         }
 
-        $tier = $apiKey->tier ?? 'free';
+        $tier = $apiKey->tier;
         $requestedModel = $request->input('model');
 
         // ─── SUBSCRIPTION KEY: validate via subscription plan, NOT wallet ───
@@ -37,8 +37,8 @@ class CheckTokenQuota
             return $this->handleSubscriptionKey($request, $next, $user, $apiKey, $requestedModel);
         }
 
-        // ─── FREE / PAID KEY: validate via wallet balance ───
-        return $this->handleWalletKey($request, $next, $user, $apiKey, $tier, $requestedModel);
+        // ─── PAID KEY: validate via wallet balance ───
+        return $this->handleWalletKey($request, $next, $user, $apiKey, $requestedModel);
     }
 
     /**
@@ -94,71 +94,43 @@ class CheckTokenQuota
     }
 
     /**
-     * Handle free/paid (wallet-based) API keys.
+     * Handle paid (wallet-based) API keys.
      * These keys use wallet balance and CANNOT access subscription-only models.
      */
-    private function handleWalletKey(Request $request, Closure $next, $user, $apiKey, string $tier, ?string $requestedModel): Response
+    private function handleWalletKey(Request $request, Closure $next, $user, $apiKey, ?string $requestedModel): Response
     {
         $quota = $user->getOrCreateQuota();
         $paidBalance = (float) $quota->paid_balance;
-        $freeBalance = (float) $quota->free_balance;
 
-        // Determine effective balance based on tier
-        // For paid tier: paid + free (fallback), for free tier: free only
-        if ($tier === 'free') {
-            $effectiveBalance = $freeBalance;
-        } else {
-            // Paid tier can fall back to free balance when paid is exhausted
-            $effectiveBalance = max($paidBalance, 0) + max($freeBalance, 0);
-        }
-
-        // Block if no effective balance available
-        if ($effectiveBalance <= 0) {
+        if ($paidBalance <= 0) {
             return response()->json([
                 'error' => [
-                    'message' => $tier === 'free'
-                        ? 'Saldo free trial habis. Silakan top up untuk melanjutkan.'
-                        : 'Saldo tidak mencukupi. Silakan top up saldo Anda.',
+                    'message' => 'Saldo tidak mencukupi. Silakan top up saldo Anda.',
                     'type' => 'insufficient_balance',
                     'code' => 'insufficient_balance',
-                    'tier' => $tier,
                     'paid_balance' => $paidBalance,
-                    'free_balance' => $freeBalance,
                 ]
             ], 429);
         }
 
-        // Estimate minimum cost for the requested model and check if balance is sufficient
         if ($requestedModel) {
             $pricing = ModelPricing::findForModel($requestedModel);
             if ($pricing) {
-                // Estimate minimum cost: at least 100 input tokens + 1 output token
                 $minCost = $pricing->calculateCost(100, 1);
-                if ($effectiveBalance < $minCost) {
+                if ($paidBalance < $minCost) {
                     return response()->json([
                         'error' => [
                             'message' => 'Saldo tidak mencukupi untuk model ini. Silakan top up saldo Anda.',
                             'type' => 'insufficient_balance',
                             'code' => 'insufficient_balance',
-                            'tier' => $tier,
                             'paid_balance' => $paidBalance,
-                            'free_balance' => $freeBalance,
                             'min_cost_estimate' => $minCost,
                         ]
                     ], 429);
                 }
             }
 
-            // ─── BLOCK free/paid keys from subscription-only models ───
-            // If subscription is enabled and the model is ONLY in subscription plans
-            // (not in free tier and not in paid tier pricing), block access.
             if (Setting::get('subscription_enabled', '0') == '1') {
-                $plan = $user->getActivePlan();
-
-                // Check if this model is a subscription-plan-only model
-                // A model is subscription-only if:
-                // 1. It exists in plan_model_access table, AND
-                // 2. It does NOT exist in model_pricings as an active model
                 $isInPlanAccess = \App\Models\PlanModelAccess::where('model_id', $requestedModel)->exists();
                 $isInPricing = ModelPricing::where('model_id', $requestedModel)->where('is_active', true)->exists();
 
@@ -168,25 +140,9 @@ class CheckTokenQuota
                             'message' => "Model '{$requestedModel}' hanya tersedia untuk subscription. Buat API key subscription untuk mengakses model ini.",
                             'type' => 'model_restricted',
                             'code' => 'subscription_only_model',
-                            'tier' => $tier,
                             'hint' => 'Buat API key baru dengan tipe Subscription untuk mengakses model ini.',
                         ]
                     ], 403);
-                }
-
-                // Also block if model is in pricing but user's free/paid key tier doesn't match
-                if ($isInPricing && $pricing) {
-                    // Free tier key can only use free tier models
-                    if ($tier === 'free' && !$pricing->is_free_tier) {
-                        return response()->json([
-                            'error' => [
-                                'message' => "Model '{$requestedModel}' tidak tersedia untuk Free Tier. Gunakan API key Paid untuk model premium.",
-                                'type' => 'model_restricted',
-                                'code' => 'paid_model_only',
-                                'tier' => $tier,
-                            ]
-                        ], 403);
-                    }
                 }
             }
         }

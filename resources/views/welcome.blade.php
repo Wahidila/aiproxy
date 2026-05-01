@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>AIMurah - Akses AI Premium, Harga Terjangkau</title>
-    <meta name="description" content="Akses model AI terbaik dunia - Assistant Opus 4.6, GPT-5, Gemini Pro - langsung dari Cursor, VS Code, atau tool favorit Anda. Mulai gratis Rp 100.000 credit.">
+    <meta name="description" content="Akses model AI terbaik dunia - Assistant Opus 4.6, GPT-5, Gemini Pro - langsung dari Cursor, VS Code, atau tool favorit Anda. Platform AI API proxy termurah di Indonesia.">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:300,400,500,600,700,800&display=swap" rel="stylesheet" />
@@ -189,7 +189,7 @@
                     <a href="{{ route('dashboard') }}" class="nav-link">Dashboard</a>
                 @else
                     <a href="{{ route('login') }}" class="nav-link">Login</a>
-                    <button @click="openModal()" class="btn btn-primary" style="padding: 8px 16px; font-size: 14px;">Daftar Gratis</button>
+                    <button @click="openModal()" class="btn btn-primary" style="padding: 8px 16px; font-size: 14px;">Daftar Sekarang</button>
                 @endauth
             </div>
         </div>
@@ -208,7 +208,7 @@
             <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;" class="hero-buttons">
                 <button @click="openModal()" class="btn btn-accent" style="padding: 14px 32px; font-size: 16px; gap: 8px;">
                     <i data-lucide="sparkles" style="width: 20px; height: 20px;"></i>
-                    Mulai Gratis &mdash; Rp 100K Credit
+                    Mulai Sekarang
                 </button>
                 <a href="#pricing" class="btn btn-outline" style="gap: 8px;">
                     <i data-lucide="tag" style="width: 18px; height: 18px;"></i>
@@ -232,7 +232,7 @@
                         <i data-lucide="key-round"></i>
                     </div>
                     <h3 class="heading-feature" style="margin: 0 0 12px;">Daftar & Generate Key</h3>
-                    <p class="body-md">Buat akun gratis, generate API key dari dashboard. Langsung dapat Rp 100.000 free credit.</p>
+                    <p class="body-md">Buat akun, generate API key dari dashboard. Langsung dapat Rp 100.000 free credit.</p>
                 </div>
                 <div class="card" style="text-align: center;">
                     <div class="icon-box">
@@ -332,7 +332,7 @@
             <div style="text-align: center; margin-bottom: 32px;">
                 <p class="mono-label" style="margin-bottom: 12px;">HARGA</p>
                 <h2 class="heading-section">Pilih Plan Anda</h2>
-                <p class="body-lg" style="margin-top: 16px;">Mulai gratis, upgrade kapan saja. Tanpa kontrak.</p>
+                <p class="body-lg" style="margin-top: 16px;">Mulai sekarang, upgrade kapan saja. Tanpa kontrak.</p>
             </div>
 
             <!-- Toggle Bulanan / Harian — Harian highlighted as campaign -->
@@ -419,7 +419,7 @@
 
                             @if($plan->price_idr == 0)
                                 <button @click="openModal()" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 32px; padding: 12px 24px; background: transparent; color: #111111; border: 1px solid #111111; border-radius: 4px; font-size: 16px; font-weight: 500; font-family: inherit; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onmousedown="this.style.transform='scale(0.85)'">
-                                    Mulai gratis →
+                                    Mulai sekarang →
                                 </button>
                             @elseif($plan->is_popular)
                                 <a href="/subscriptions" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 32px; padding: 12px 24px; background: #ff5600; color: #fff; border: none; border-radius: 4px; font-size: 16px; font-weight: 500; font-family: inherit; cursor: pointer; transition: all 0.2s; text-decoration: none; box-sizing: border-box;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onmousedown="this.style.transform='scale(0.85)'">
@@ -529,9 +529,9 @@
     <section class="section-sm" style="background: var(--color-dark); text-align: center;">
         <div class="container">
             <h2 class="heading-sub" style="color: #fff; margin: 0 0 16px;">Siap mulai?</h2>
-            <p style="font-size: 18px; color: #9c9fa5; margin: 0 0 32px;">Daftar gratis, dapat Rp 100K credit, langsung pakai di tool favorit Anda.</p>
+            <p style="font-size: 18px; color: #9c9fa5; margin: 0 0 32px;">Daftar sekarang dan mulai gunakan AI.</p>
             <button @click="openModal()" class="btn btn-accent" style="padding: 16px 40px; font-size: 17px; gap: 10px;">
-                Daftar Gratis Sekarang
+                Daftar Sekarang
                 <i data-lucide="arrow-right" style="width: 20px; height: 20px;"></i>
             </button>
         </div>
@@ -552,7 +552,7 @@
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ff5600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                             <span style="font-size: 16px; font-weight: 600; color: var(--color-text);">AIMurah</span>
                         </div>
-                        <h3 style="font-size: 22px; font-weight: 600; color: var(--color-text); letter-spacing: -0.5px; margin: 0 0 6px;">Daftar Trial Gratis</h3>
+                        <h3 style="font-size: 22px; font-weight: 600; color: var(--color-text); letter-spacing: -0.5px; margin: 0 0 6px;">Daftar Trial</h3>
                         <p style="font-size: 14px; color: var(--color-muted); margin: 0; line-height: 1.5;">Masukkan nama dan email Anda. Kami akan mengirimkan undangan akses beserta Rp 100.000 free credit.</p>
                     </div>
                     <div class="modal-body">
@@ -582,7 +582,7 @@
                             <template x-if="!loading">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
                             </template>
-                            <span x-text="loading ? 'Mengirim...' : 'Daftar Trial Gratis'"></span>
+                            <span x-text="loading ? 'Mengirim...' : 'Daftar Trial'"></span>
                         </button>
                         <p style="font-size: 12px; color: var(--color-muted); text-align: center; margin: 12px 0 0;">Tidak perlu kartu kredit. Data Anda aman.</p>
                     </div>

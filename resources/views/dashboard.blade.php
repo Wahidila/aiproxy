@@ -23,7 +23,7 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
             {{-- Low Balance Banner (zero balance) --}}
-            @if($quota->free_balance <= 0 && $quota->paid_balance <= 0)
+            @if($quota->paid_balance <= 0 && (!$activeSubscription || !$activeSubscription->isActive()))
                 <div class="bg-red-50 border border-red-200 rounded-lg p-4">
                     <div class="flex items-center">
                         <svg class="w-5 h-5 text-red-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -40,7 +40,7 @@
             @endif
 
             {{-- Low Balance Threshold Warning Banner --}}
-            @if($showBalanceAlert && !($quota->free_balance <= 0 && $quota->paid_balance <= 0))
+            @if($showBalanceAlert && !($quota->paid_balance <= 0 && (!$activeSubscription || !$activeSubscription->isActive())))
                 <div class="border rounded-card p-4" style="background-color: #fff7ed; border-color: #ff5600;">
                     <div class="flex items-center">
                         <svg class="w-5 h-5 mr-3 flex-shrink-0" style="color: #ff5600;" fill="currentColor" viewBox="0 0 20 20">
@@ -51,7 +51,7 @@
                                 Peringatan: Saldo Anda di bawah batas minimum ({{ formatRupiah($quota->balance_alert_threshold ?? 10000) }})
                             </p>
                             <p class="text-sm mt-0.5" style="color: #7b7b78;">
-                                Saldo Free: {{ $quota->formatted_free_balance }} &middot; Saldo Top Up: {{ $quota->formatted_paid_balance }}
+                                Saldo Wallet: {{ $quota->formatted_paid_balance }}
                             </p>
                         </div>
                         <a href="{{ route('donations.index') }}" class="ml-4 px-4 py-2 text-white text-sm font-medium rounded-btn transition hover:opacity-90" style="background-color: #ff5600;">
@@ -115,21 +115,29 @@
 
             {{-- Wallet Balance Cards --}}
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {{-- Free Balance --}}
+                {{-- Wallet Balance (Pay-as-you-go) --}}
                 <div class="bg-surface border border-oat rounded-card p-5">
-                    <p class="text-xs font-medium text-muted uppercase tracking-wide">Saldo Free Trial</p>
-                    <p class="mt-2 text-3xl font-bold {{ $quota->free_balance > 0 ? 'text-green-600' : 'text-warm-sand' }}">
-                        {{ $quota->formatted_free_balance }}
-                    </p>
-                    <p class="mt-1 text-xs text-warm-sand">Model terbatas (free tier only)</p>
-                </div>
-                {{-- Paid Balance --}}
-                <div class="bg-surface border border-oat rounded-card p-5">
-                    <p class="text-xs font-medium text-muted uppercase tracking-wide">Saldo Top Up</p>
+                    <p class="text-xs font-medium text-muted uppercase tracking-wide">Saldo Wallet</p>
                     <p class="mt-2 text-3xl font-bold {{ $quota->paid_balance > 0 ? 'text-fin-orange' : 'text-warm-sand' }}">
                         {{ $quota->formatted_paid_balance }}
                     </p>
-                    <p class="mt-1 text-xs text-warm-sand">Semua model (termasuk premium)</p>
+                    <p class="mt-1 text-xs text-warm-sand">Pay-as-you-go — semua model</p>
+                </div>
+                {{-- Subscription Info --}}
+                <div class="bg-surface border border-oat rounded-card p-5">
+                    <p class="text-xs font-medium text-muted uppercase tracking-wide">Subscription</p>
+                    <p class="mt-2 text-3xl font-bold {{ ($activeSubscription && $activeSubscription->isActive()) ? 'text-purple-600' : 'text-warm-sand' }}">
+                        {{ $activePlan->name ?? 'Tidak Ada' }}
+                    </p>
+                    <p class="mt-1 text-xs text-warm-sand">
+                        @if($activeSubscription && $activeSubscription->isActive() && $activeSubscription->expires_at)
+                            Berlaku hingga {{ $activeSubscription->expires_at->format('d M Y') }}
+                        @elseif($activeSubscription && $activeSubscription->isActive())
+                            Aktif (selamanya)
+                        @else
+                            <a href="{{ route('pricing') }}" class="text-fin-orange hover:underline">Pilih plan →</a>
+                        @endif
+                    </p>
                 </div>
                 {{-- Top Up Button --}}
                 <div class="bg-surface border border-oat rounded-card p-5 flex items-center justify-center">

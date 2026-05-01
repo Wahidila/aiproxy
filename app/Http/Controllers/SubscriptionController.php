@@ -11,11 +11,6 @@ class SubscriptionController extends Controller
 {
     public function index(Request $request)
     {
-        // Return 404 if subscription feature is disabled
-        if (Setting::get('subscription_enabled', '0') != '1') {
-            abort(404);
-        }
-
         $user = $request->user();
         $plans = SubscriptionPlan::orderBy('sort_order')->get();
         $activeSubscription = $user->activeSubscription();

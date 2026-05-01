@@ -22,12 +22,11 @@ class SubscriptionPlanSeeder extends Seeder
                 'is_popular' => false,
                 'sort_order' => 1,
                 'features' => [
-                    '3 model cepat (GLM-5, Claude Sonnet 4.5, Claude Haiku 4.5, Minimax-m2.5)',
-                    '50 request per hari',
-                    '6 request per menit',
-                    '1 request bersamaan',
-                    'API key untuk integrasi',
-                    'Dashboard usage real-time',
+                    'Akses model dasar',
+                    '50 request/hari',
+                    '6 request/menit',
+                    '1 concurrent request',
+                    'Cocok untuk coba-coba',
                 ],
             ],
             [

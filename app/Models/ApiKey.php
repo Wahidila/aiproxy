@@ -11,7 +11,6 @@ class ApiKey extends Model
 {
     use HasFactory;
 
-    const TIER_FREE = 'free';
     const TIER_PAID = 'paid';
     const TIER_SUBSCRIPTION = 'subscription';
 
@@ -29,11 +28,6 @@ class ApiKey extends Model
         'last_used_at' => 'datetime',
     ];
 
-    public function isFree(): bool
-    {
-        return $this->tier === self::TIER_FREE;
-    }
-
     public function isPaid(): bool
     {
         return $this->tier === self::TIER_PAID;
@@ -45,18 +39,17 @@ class ApiKey extends Model
     }
 
     /**
-     * Check if this key uses wallet balance (free or paid tier).
+     * Check if this key uses wallet balance (paid tier).
      */
     public function isWalletBased(): bool
     {
-        return in_array($this->tier, [self::TIER_FREE, self::TIER_PAID]);
+        return $this->tier === self::TIER_PAID;
     }
 
     public function getTierLabelAttribute(): string
     {
         return match ($this->tier) {
-            self::TIER_FREE => 'Free Tier',
-            self::TIER_PAID => 'Paid',
+            self::TIER_PAID => 'Pay-as-you-go',
             self::TIER_SUBSCRIPTION => 'Subscription',
             default => ucfirst($this->tier),
         };
