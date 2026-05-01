@@ -31,7 +31,7 @@ use Illuminate\Support\Facades\Route;
 
 // TEMPORARY MAINTENANCE MODE - revert to view('welcome') when done
 Route::get('/', function () {
-    return view('welcome');
+    return view('maintenance');
 })->name('home');
 
 // Public pricing page
