@@ -63,11 +63,35 @@
                         <svg class="w-6 h-6 text-orange-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
                         </svg>
-                        <div>
+                        <div class="flex-1">
                             <h3 class="text-lg font-semibold text-orange-800">Menunggu Pembayaran</h3>
                             <p class="mt-1 text-orange-700">Pembayaran Pakasir sebesar <strong>{{ $pendingPakasir->formatted_amount }}</strong> sedang menunggu konfirmasi.</p>
                             <p class="mt-1 text-sm text-orange-600">Dibuat: {{ $pendingPakasir->created_at->format('d/m/Y H:i') }}</p>
                             <p class="mt-2 text-sm text-orange-600">Saldo akan otomatis ditambahkan setelah pembayaran dikonfirmasi.</p>
+
+                            <div class="mt-4 flex items-center gap-3">
+                                <a href="{{ route('donations.pakasir.resume') }}"
+                                   class="inline-flex items-center gap-1.5 rounded-btn px-4 py-2 text-sm font-semibold text-white transition-all hover:scale-105 active:scale-95"
+                                   style="background-color: #ff5600; border-radius: 4px;">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                    </svg>
+                                    Lanjutkan Pembayaran
+                                </a>
+
+                                <form method="POST" action="{{ route('donations.pakasir.cancel') }}" class="inline">
+                                    @csrf
+                                    <button type="submit"
+                                            class="inline-flex items-center gap-1.5 rounded-btn px-4 py-2 text-sm font-medium border border-orange-300 text-orange-700 hover:bg-orange-100 transition-all"
+                                            style="border-radius: 4px;"
+                                            onclick="return confirm('Batalkan pembayaran ini? Anda bisa membuat pembayaran baru setelahnya.')">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                        Batalkan
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>

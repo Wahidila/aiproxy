@@ -62,6 +62,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/donations', [DonationController::class, 'store'])->name('donations.store');
     Route::post('/donations/pakasir', [DonationController::class, 'pakasirPayment'])->name('donations.pakasir');
     Route::get('/donations/pakasir/callback', [DonationController::class, 'pakasirCallback'])->name('donations.pakasir.callback');
+    Route::get('/donations/pakasir/resume', [DonationController::class, 'pakasirResume'])->name('donations.pakasir.resume');
+    Route::post('/donations/pakasir/cancel', [DonationController::class, 'pakasirCancel'])->name('donations.pakasir.cancel');
     Route::get('/donations/history', [DonationController::class, 'history'])->name('donations.history');
 
     // Subscriptions

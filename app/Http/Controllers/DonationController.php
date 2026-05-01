@@ -128,6 +128,56 @@ class DonationController extends Controller
     }
 
     /**
+     * Resume a pending Pakasir payment (reconstruct payment URL).
+     */
+    public function pakasirResume(Request $request)
+    {
+        $user = $request->user();
+
+        $donation = $user->donations()
+            ->where('status', 'pending')
+            ->where('payment_gateway', 'pakasir')
+            ->latest()
+            ->first();
+
+        if (!$donation) {
+            return redirect()->route('donations.index')
+                ->with('error', 'Tidak ada pembayaran yang tertunda.');
+        }
+
+        // Reconstruct payment URL
+        $pakasir = new PakasirService();
+        $callbackUrl = route('donations.pakasir.callback');
+        $paymentUrl = $pakasir->createPaymentUrl($donation->amount, $donation->gateway_order_id, $callbackUrl);
+
+        return redirect()->away($paymentUrl);
+    }
+
+    /**
+     * Cancel a pending Pakasir payment.
+     */
+    public function pakasirCancel(Request $request)
+    {
+        $user = $request->user();
+
+        $donation = $user->donations()
+            ->where('status', 'pending')
+            ->where('payment_gateway', 'pakasir')
+            ->latest()
+            ->first();
+
+        if (!$donation) {
+            return redirect()->route('donations.index')
+                ->with('error', 'Tidak ada pembayaran yang tertunda.');
+        }
+
+        $donation->update(['status' => 'cancelled']);
+
+        return redirect()->route('donations.index')
+            ->with('success', 'Pembayaran dibatalkan. Anda bisa membuat pembayaran baru.');
+    }
+
+    /**
      * Handle redirect back from Pakasir after payment.
      */
     public function pakasirCallback(Request $request)
