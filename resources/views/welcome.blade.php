@@ -191,13 +191,19 @@
         /* Icon box */
         .icon-box { width: 48px; height: 48px; margin: 0 auto 20px; background: rgba(255,86,0,0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
         .icon-box i { width: 24px; height: 24px; color: var(--color-accent); }
-        /* Model card */
+        /* Model chip — compact */
         .model-item {
-            display: flex; align-items: center; gap: 14px; background: var(--color-surface);
-            border: 1px solid var(--color-border); border-radius: 10px; padding: 16px 20px;
-            transition: all 0.2s;
+            display: flex; align-items: center; gap: 8px; background: var(--color-surface);
+            border: 1px solid var(--color-border); border-radius: 6px; padding: 8px 12px;
+            transition: all 0.2s; cursor: default;
         }
-        .model-item:hover { transform: scale(1.02); border-color: var(--color-accent); }
+        .model-item:hover { border-color: var(--color-accent); background: rgba(255,86,0,0.04); }
+        .model-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+            max-width: 860px; margin: 0 auto;
+        }
+        @media (max-width: 768px) { .model-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; } }
+        @media (max-width: 480px) { .model-grid { grid-template-columns: 1fr; } }
         /* Footer */
         .footer { background: #050508; color: #6b6b80; padding: 64px 0 32px; border-top: 1px solid var(--color-border); }
         .footer a { color: #6b6b80; text-decoration: none; transition: color 0.2s; }
@@ -432,20 +438,16 @@
                 @endforeach
             </div>
 
-            {{-- Model grid --}}
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; max-width: 900px; margin: 0 auto;">
+            {{-- Model grid — compact chips --}}
+            <div class="model-grid">
                 @foreach($dbModels as $m)
                     @php $pKey = getProvider($m->model_id); $pInfo = $providerMap[$pKey] ?? null; @endphp
                     <div class="model-item">
                         @if($pInfo)
-                            <img src="{{ $pInfo['logo'] }}" alt="{{ $pInfo['name'] }}" style="width: 28px; height: 28px; flex-shrink: 0; filter: brightness(0) invert(0.8);" loading="lazy">
+                            <img src="{{ $pInfo['logo'] }}" alt="{{ $pInfo['name'] }}" style="width: 18px; height: 18px; flex-shrink: 0; filter: brightness(0) invert(0.7);" loading="lazy">
                         @endif
-                        <div style="flex: 1; min-width: 0;">
-                            <p style="font-size: 15px; font-weight: 500; color: var(--color-text); margin: 0; letter-spacing: -0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $m->model_name }}</p>
-                        </div>
-                        <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; flex-shrink: 0;" class="{{ $m->is_free_tier ? 'tier-badge-free' : 'tier-badge-pro' }}">
-                            {{ $m->is_free_tier ? 'FREE' : 'PRO' }}
-                        </span>
+                        <span style="flex: 1; min-width: 0; font-size: 13px; font-weight: 500; color: var(--color-text); letter-spacing: -0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $m->model_name }}</span>
+                        <span style="font-size: 9px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; padding: 2px 6px; border-radius: 3px; flex-shrink: 0; line-height: 1;" class="{{ $m->is_free_tier ? 'tier-badge-free' : 'tier-badge-pro' }}">{{ $m->is_free_tier ? 'FREE' : 'PRO' }}</span>
                     </div>
                 @endforeach
             </div>
@@ -1274,13 +1276,13 @@
             });
         });
 
-        // Model items subtle highlight on hover
+        // Model chips subtle glow on hover
         document.querySelectorAll('.model-item').forEach(item => {
             item.addEventListener('mouseenter', () => {
-                anime.animate(item, { translateX: 4, duration: 200, easing: 'easeOutCubic' });
+                anime.animate(item, { scale: 1.03, duration: 150, easing: 'easeOutCubic' });
             });
             item.addEventListener('mouseleave', () => {
-                anime.animate(item, { translateX: 0, duration: 200, easing: 'easeOutCubic' });
+                anime.animate(item, { scale: 1, duration: 150, easing: 'easeOutCubic' });
             });
         });
     })();
