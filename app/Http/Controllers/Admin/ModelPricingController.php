@@ -17,6 +17,62 @@ class ModelPricingController extends Controller
         return view('admin.model-pricing.index', compact('models', 'exchangeRate'));
     }
 
+    /**
+     * Check upstream model availability.
+     * Makes 1 GET request to Go proxy /v1/models and compares with DB.
+     */
+    public function checkStatus()
+    {
+        try {
+            // Use any active API key to call our own proxy
+            $apiKey = \App\Models\ApiKey::where('is_active', 1)->first();
+            if (!$apiKey) {
+                return response()->json(['error' => 'No active API key found'], 500);
+            }
+
+            $response = \Illuminate\Support\Facades\Http::timeout(15)
+                ->withHeaders([
+                    'Authorization' => 'Bearer ' . $apiKey->key,
+                ])
+                ->get('http://127.0.0.1:8080/v1/models');
+
+            if (!$response->successful()) {
+                return response()->json([
+                    'error' => 'Upstream returned HTTP ' . $response->status(),
+                ], 502);
+            }
+
+            $data = $response->json('data', []);
+            $upstreamModels = collect($data)->pluck('id')->toArray();
+
+            // Get all models from our DB
+            $dbModels = ModelPricing::orderBy('model_name')->get(['model_id', 'model_name', 'is_active']);
+
+            $results = [];
+            foreach ($dbModels as $model) {
+                $results[] = [
+                    'model_id' => $model->model_id,
+                    'model_name' => $model->model_name,
+                    'is_active' => (bool) $model->is_active,
+                    'upstream_available' => in_array($model->model_id, $upstreamModels),
+                ];
+            }
+
+            // Also find models available upstream but not in our DB
+            $dbModelIds = $dbModels->pluck('model_id')->toArray();
+            $newModels = array_diff($upstreamModels, $dbModelIds);
+
+            return response()->json([
+                'models' => $results,
+                'upstream_total' => count($upstreamModels),
+                'new_models' => array_values($newModels),
+                'checked_at' => now()->format('H:i:s'),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
     public function store(Request $request)
     {
         $request->validate([

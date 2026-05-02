@@ -92,6 +92,12 @@
                                     <input type="number" name="sort_order" min="0" value="0"
                                         class="w-full rounded-lg border-oat focus:border-fin-orange focus:ring-fin-orange">
                                 </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-off-black mb-1">Tier Level</label>
+                                    <input type="number" name="tier_level" min="0" value="0" placeholder="0=free, 1=pro, 2=premium"
+                                        class="w-full rounded-lg border-oat focus:border-fin-orange focus:ring-fin-orange">
+                                    <p class="text-xs text-muted mt-1">Hierarki plan untuk logika upgrade/downgrade</p>
+                                </div>
                             </div>
 
                             {{-- Features --}}
@@ -108,6 +114,26 @@
                                 </template>
                                 <button type="button" @click="features.push('')"
                                     class="text-sm text-fin-orange hover:text-fin-orange/80 font-medium">+ Tambah Fitur</button>
+                            </div>
+
+                            {{-- Allowed Models --}}
+                            <div x-data="{ allModels: true, selectedModels: [] }">
+                                <label class="block text-sm font-medium text-off-black mb-2">Model yang Tersedia</label>
+                                <label class="flex items-center space-x-2 mb-3">
+                                    <input type="checkbox" name="all_models" value="1" x-model="allModels"
+                                        class="rounded border-oat text-fin-orange focus:ring-fin-orange">
+                                    <span class="text-sm text-off-black font-medium">Semua Model (tanpa batasan)</span>
+                                </label>
+                                <div x-show="!allModels" x-transition class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 p-3 bg-canvas rounded-lg border border-oat">
+                                    @foreach($availableModels as $model)
+                                    <label class="flex items-center space-x-2">
+                                        <input type="checkbox" name="allowed_models[]" value="{{ $model }}"
+                                            class="rounded border-oat text-fin-orange focus:ring-fin-orange">
+                                        <span class="text-xs text-off-black font-mono">{{ $model }}</span>
+                                    </label>
+                                    @endforeach
+                                </div>
+                                <p class="text-xs text-muted mt-1">Pilih model yang bisa diakses oleh plan ini. Centang "Semua Model" untuk tanpa batasan.</p>
                             </div>
 
                             <div class="flex items-center gap-4">
@@ -146,6 +172,8 @@
                                     <th class="px-3 py-3 text-right text-xs font-medium text-muted uppercase">Concurrent</th>
                                     <th class="px-3 py-3 text-right text-xs font-medium text-muted uppercase">Subscriber</th>
                                     <th class="px-3 py-3 text-center text-xs font-medium text-muted uppercase">Popular</th>
+                                    <th class="px-3 py-3 text-center text-xs font-medium text-muted uppercase">Tier</th>
+                                    <th class="px-3 py-3 text-center text-xs font-medium text-muted uppercase">Models</th>
                                     <th class="px-3 py-3 text-center text-xs font-medium text-muted uppercase">Aksi</th>
                                 </tr>
                             </thead>
@@ -177,6 +205,16 @@
                                             @endif
                                         </td>
                                         <td class="px-3 py-3 text-center">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">{{ $plan->tier_level ?? 0 }}</span>
+                                        </td>
+                                        <td class="px-3 py-3 text-center">
+                                            @if($plan->allowed_models === null)
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Semua</span>
+                                            @else
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">{{ count($plan->allowed_models) }} model</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-3 py-3 text-center">
                                             <div class="flex items-center justify-center space-x-2">
                                                 <button type="button" @click="editing = true" class="text-fin-orange hover:text-fin-orange/80 text-sm font-medium">Edit</button>
                                                 @if($plan->slug !== 'free')
@@ -193,7 +231,7 @@
 
                                     {{-- Edit Row --}}
                                     <tr x-show="editing" x-cloak class="bg-canvas">
-                                        <td colspan="10" class="px-3 py-4">
+                                        <td colspan="12" class="px-3 py-4">
                                             <form action="{{ route('admin.subscription-plans.update', $plan) }}" method="POST">
                                                 @csrf
                                                 @method('PATCH')
@@ -241,6 +279,11 @@
                                                             placeholder="∞"
                                                             class="w-full text-sm rounded-lg border-oat focus:border-fin-orange focus:ring-fin-orange">
                                                     </div>
+                                                    <div>
+                                                        <label class="block text-xs font-medium text-muted mb-1">Tier Level</label>
+                                                        <input type="number" name="tier_level" value="{{ $plan->tier_level ?? 0 }}" min="0"
+                                                            class="w-full text-sm rounded-lg border-oat focus:border-fin-orange focus:ring-fin-orange">
+                                                    </div>
                                                     <div class="flex items-center space-x-4 pb-1">
                                                         <label class="flex items-center space-x-1.5">
                                                             <input type="checkbox" name="is_popular" value="1" {{ $plan->is_popular ? 'checked' : '' }}
@@ -265,6 +308,26 @@
                                                         class="text-xs text-fin-orange hover:text-fin-orange/80 font-medium mt-1">+ Fitur</button>
                                                 </div>
 
+                                                {{-- Edit Allowed Models --}}
+                                                <div class="mt-3" x-data="{ allModels: {{ ($plan->allowed_models === null) ? 'true' : 'false' }} }">
+                                                    <label class="block text-xs font-medium text-muted mb-1">Model yang Tersedia</label>
+                                                    <label class="flex items-center space-x-2 mb-2">
+                                                        <input type="checkbox" name="all_models" value="1" x-model="allModels"
+                                                            class="rounded border-oat text-fin-orange focus:ring-fin-orange">
+                                                        <span class="text-xs text-off-black font-medium">Semua Model</span>
+                                                    </label>
+                                                    <div x-show="!allModels" x-transition class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5 p-2 bg-canvas rounded-lg border border-oat max-h-48 overflow-y-auto">
+                                                        @foreach($availableModels as $model)
+                                                        <label class="flex items-center space-x-1.5">
+                                                            <input type="checkbox" name="allowed_models[]" value="{{ $model }}"
+                                                                {{ in_array($model, $plan->allowed_models ?? []) ? 'checked' : '' }}
+                                                                class="rounded border-oat text-fin-orange focus:ring-fin-orange">
+                                                            <span class="text-xs text-off-black font-mono truncate">{{ $model }}</span>
+                                                        </label>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+
                                                 <div class="flex items-center space-x-2 mt-3">
                                                     <input type="hidden" name="sort_order" value="{{ $plan->sort_order }}">
                                                     <button type="submit" class="px-4 py-2 bg-off-black text-white text-sm font-medium rounded-btn hover:bg-off-black/90 transition">
@@ -280,7 +343,7 @@
                                 </tbody>
                                 @empty
                                     <tr>
-                                        <td colspan="10" class="px-3 py-6 text-sm text-muted text-center">Belum ada plan. Tambahkan plan pertama di atas.</td>
+                                        <td colspan="12" class="px-3 py-6 text-sm text-muted text-center">Belum ada plan. Tambahkan plan pertama di atas.</td>
                                     </tr>
                                 @endforelse
                             </tbody>

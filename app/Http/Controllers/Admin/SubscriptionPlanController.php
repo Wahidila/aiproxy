@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SubscriptionPlan;
 use App\Models\UserSubscription;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SubscriptionPlanController extends Controller
 {
@@ -23,7 +24,14 @@ class SubscriptionPlanController extends Controller
                 ->count() * $plan->price_idr;
         });
 
-        return view('admin.subscriptions.plans', compact('plans'));
+        // All active models from model_pricings
+        $availableModels = DB::table('model_pricings')
+            ->where('is_active', 1)
+            ->orderBy('model_id')
+            ->pluck('model_id')
+            ->toArray();
+
+        return view('admin.subscriptions.plans', compact('plans', 'availableModels'));
     }
 
     public function store(Request $request)
@@ -41,10 +49,18 @@ class SubscriptionPlanController extends Controller
             'features.*' => 'string|max:200',
             'is_popular' => 'boolean',
             'sort_order' => 'integer|min:0',
+            'tier_level' => 'integer|min:0',
+            'allowed_models' => 'nullable|array',
+            'allowed_models.*' => 'string',
         ]);
 
         $validated['is_popular'] = $request->boolean('is_popular');
         $validated['sort_order'] = $validated['sort_order'] ?? SubscriptionPlan::max('sort_order') + 1;
+        $validated['tier_level'] = $validated['tier_level'] ?? 0;
+        // If no models selected or "all" checkbox, store null (= all models allowed)
+        if ($request->boolean('all_models') || empty($validated['allowed_models'])) {
+            $validated['allowed_models'] = null;
+        }
 
         SubscriptionPlan::create($validated);
 
@@ -66,11 +82,18 @@ class SubscriptionPlanController extends Controller
             'features.*' => 'string|max:200',
             'is_popular' => 'boolean',
             'sort_order' => 'integer|min:0',
+            'tier_level' => 'integer|min:0',
+            'allowed_models' => 'nullable|array',
+            'allowed_models.*' => 'string',
         ]);
 
         $validated['is_popular'] = $request->boolean('is_popular');
         $validated['daily_request_limit'] = $validated['daily_request_limit'] ?? null;
         $validated['max_token_usage'] = $validated['max_token_usage'] ?? null;
+        // If "all models" checkbox or empty selection, store null (= all models allowed)
+        if ($request->boolean('all_models') || empty($validated['allowed_models'])) {
+            $validated['allowed_models'] = null;
+        }
 
         $subscriptionPlan->update($validated);
 

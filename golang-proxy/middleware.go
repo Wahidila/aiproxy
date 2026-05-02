@@ -208,23 +208,49 @@ func formatLimit(limit *int) string {
 	return fmt.Sprintf("%d", *limit)
 }
 
-// ModelRestrictionMiddleware checks free tier model access based on API key tier
+// ModelRestrictionMiddleware checks model access based on API key tier and subscription plan
 func ModelRestrictionMiddleware(db *Database, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		apiKey := r.Context().Value(ctxApiKey).(*ApiKeyInfo)
 
-		// Only restrict if API key is free tier
+		model := extractModelFromRequest(r)
+		if model == "" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// 1. Free tier API keys: restrict to free tier models only
 		if apiKey.Tier == "free" {
-			model := extractModelFromRequest(r)
-			if model != "" {
-				isFreeTier, err := db.IsFreeTierModel(model)
-				if err != nil {
-					writeError(w, 500, "internal_error", "Internal server error.", "server_error")
-					return
+			isFreeTier, err := db.IsFreeTierModel(model)
+			if err != nil {
+				writeError(w, 500, "internal_error", "Internal server error.", "server_error")
+				return
+			}
+			if !isFreeTier {
+				freeModels, _ := db.GetFreeTierModels()
+				writeModelRestrictionError(w, model, freeModels)
+				return
+			}
+		}
+
+		// 2. Subscription-based keys: check plan's allowed_models
+		if apiKey.Tier == "subscription" {
+			sub, ok := r.Context().Value(ctxSubscription).(*SubscriptionInfo)
+			if ok && sub != nil && sub.AllowedModels != nil {
+				allowed := false
+				for _, m := range sub.AllowedModels {
+					if m == model {
+						allowed = true
+						break
+					}
 				}
-				if !isFreeTier {
-					freeModels, _ := db.GetFreeTierModels()
-					writeModelRestrictionError(w, model, freeModels)
+				if !allowed {
+					log.Printf("MODEL_RESTRICT: user plan=%s model=%s not in allowed_models=%v",
+						sub.PlanSlug, model, sub.AllowedModels)
+					writeError(w, 403, "model_not_available",
+						fmt.Sprintf("Model '%s' tidak tersedia di plan %s. Upgrade plan untuk akses model ini.",
+							model, sub.PlanSlug),
+						"invalid_request_error")
 					return
 				}
 			}

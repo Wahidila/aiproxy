@@ -273,25 +273,73 @@
 
                                 {{-- Action --}}
                                 <div class="mt-auto">
-                                    @if(($activePlan->slug ?? 'free') === $plan->slug)
+                                    @php
+                                        $currentTier = $activePlan->tier_level ?? 0;
+                                        $planTier = $plan->tier_level ?? 0;
+                                        $isCurrentPlan = ($activePlan->slug ?? 'free') === $plan->slug;
+                                        $isUpgrade = $planTier > $currentTier;
+                                        $isDowngrade = $planTier < $currentTier;
+                                        $isSameTier = $planTier === $currentTier && !$isCurrentPlan;
+                                        $hasActivePaid = $activeSubscription && ($activeSubscription->plan_slug ?? 'free') !== 'free';
+
+                                        // Calculate prorated upgrade price
+                                        $upgradeCharge = null;
+                                        if ($isUpgrade && $hasActivePaid && $activeSubscription->expires_at) {
+                                            $remainingDays = max(0, (int) now()->diffInDays($activeSubscription->expires_at, false));
+                                            if ($remainingDays > 0) {
+                                                $currentDailyPrice = $activePlan->daily_price;
+                                                $credit = round($remainingDays * $currentDailyPrice);
+                                                $upgradeCharge = max(0, $plan->price_idr - $credit);
+                                            }
+                                        }
+                                    @endphp
+
+                                    @if($isCurrentPlan)
                                         <button disabled
                                                 class="w-full inline-flex items-center justify-center rounded-btn px-4 py-2.5 text-sm font-medium bg-canvas text-muted border border-oat cursor-not-allowed"
                                                 style="border-radius: 4px;">
                                             <i data-lucide="check-circle" class="w-4 h-4 mr-1.5"></i>
                                             Plan Aktif
                                         </button>
-                                    @elseif($plan->slug === 'free')
+                                    @elseif($isDowngrade && $hasActivePaid)
+                                        {{-- Block downgrade --}}
+                                        <button disabled
+                                                class="w-full inline-flex items-center justify-center rounded-btn px-4 py-2.5 text-sm font-medium bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed"
+                                                style="border-radius: 4px;"
+                                                title="Tidak bisa downgrade saat masih berlangganan {{ $activePlan->name }}">
+                                            <i data-lucide="lock" class="w-4 h-4 mr-1.5"></i>
+                                            Tidak Tersedia
+                                        </button>
+                                        <p class="text-[10px] text-muted text-center mt-1.5">Batalkan plan aktif untuk beralih</p>
+                                    @elseif($plan->slug === 'free' && !$hasActivePaid)
+                                        <button disabled
+                                                class="w-full inline-flex items-center justify-center rounded-btn px-4 py-2.5 text-sm font-medium bg-canvas text-muted border border-oat cursor-not-allowed"
+                                                style="border-radius: 4px;">
+                                            Plan Default
+                                        </button>
+                                    @elseif($isUpgrade)
+                                        {{-- Upgrade button with prorated price --}}
                                         <form method="POST" action="{{ route('subscriptions.purchase') }}">
                                             @csrf
-                                            <input type="hidden" name="plan_slug" value="free">
+                                            <input type="hidden" name="plan_slug" value="{{ $plan->slug }}">
                                             <button type="submit"
-                                                    class="w-full inline-flex items-center justify-center rounded-btn px-4 py-2.5 text-sm font-medium border border-off-black text-off-black hover:bg-off-black hover:text-white transition-all"
-                                                    style="border-radius: 4px;"
-                                                    onclick="return confirm('Beralih ke plan FREE?')">
-                                                Pilih FREE
+                                                    class="w-full inline-flex items-center justify-center rounded-btn px-4 py-2.5 text-sm font-medium text-white hover:scale-105 active:scale-95 transition-all {{ $plan->is_popular ? '' : 'bg-off-black' }}"
+                                                    style="border-radius: 4px; {{ $plan->is_popular ? 'background-color: #ff5600;' : '' }}"
+                                                    onclick="return confirm('Upgrade ke plan {{ $plan->name }}{{ $upgradeCharge !== null ? ' seharga Rp ' . number_format($upgradeCharge, 0, ',', '.') . ' (setelah kredit sisa hari plan aktif)' : ' seharga ' . $plan->formatted_price }}? Saldo wallet akan dipotong.')">
+                                                <i data-lucide="arrow-up-circle" class="w-4 h-4 mr-1.5"></i>
+                                                Upgrade
+                                                @if($upgradeCharge !== null && $upgradeCharge < $plan->price_idr)
+                                                    <span class="ml-1 text-xs opacity-80">(Rp {{ number_format($upgradeCharge, 0, ',', '.') }})</span>
+                                                @endif
                                             </button>
                                         </form>
+                                        @if($upgradeCharge !== null && $upgradeCharge < $plan->price_idr)
+                                            <p class="text-[10px] text-green-600 text-center mt-1.5">
+                                                Hemat Rp {{ number_format($plan->price_idr - $upgradeCharge, 0, ',', '.') }} dari kredit sisa plan
+                                            </p>
+                                        @endif
                                     @else
+                                        {{-- Normal purchase (from free plan or same tier switch) --}}
                                         <form method="POST" action="{{ route('subscriptions.purchase') }}">
                                             @csrf
                                             <input type="hidden" name="plan_slug" value="{{ $plan->slug }}">

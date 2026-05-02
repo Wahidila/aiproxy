@@ -50,43 +50,88 @@ class SubscriptionController extends Controller
         ]);
 
         $user = $request->user();
-        $plan = SubscriptionPlan::getBySlug($request->plan_slug);
+        $newPlan = SubscriptionPlan::getBySlug($request->plan_slug);
 
-        if (!$plan) {
+        if (!$newPlan) {
             return back()->with('error', 'Plan tidak ditemukan.');
         }
 
+        $activePlan = $user->getActivePlan();
+        $activeSubscription = $user->activeSubscription();
+
+        // ═══════════════════════════════════════════════════════════
+        // DOWNGRADE PROTECTION: Block if new plan is lower tier
+        // ═══════════════════════════════════════════════════════════
+        if ($activeSubscription && $activeSubscription->plan_slug !== 'free') {
+            // User has a paid subscription — check tier hierarchy
+            if ($newPlan->tier_level < $activePlan->tier_level) {
+                return back()->with('error', "Tidak bisa beralih ke plan yang lebih rendah ({$newPlan->name}). Plan aktif Anda ({$activePlan->name}) memiliki tingkat lebih tinggi. Silakan tunggu hingga masa berlangganan berakhir atau batalkan terlebih dahulu.");
+            }
+        }
+
         // Free plan doesn't need payment
-        if ($plan->slug === 'free') {
+        if ($newPlan->slug === 'free') {
             $user->subscribeTo('free');
             return redirect()->route('subscriptions.index')
                 ->with('success', 'Berhasil beralih ke plan FREE.');
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // PRORATED UPGRADE: Calculate charge with daily credit
+        // ═══════════════════════════════════════════════════════════
+        $chargeAmount = (float) $newPlan->price_idr;
+        $creditAmount = 0;
+        $upgradeNote = '';
+
+        if ($activeSubscription && $activeSubscription->plan_slug !== 'free' && $activeSubscription->expires_at) {
+            // User is upgrading from a paid plan — calculate prorated credit
+            $remainingDays = max(0, (int) now()->diffInDays($activeSubscription->expires_at, false));
+
+            if ($remainingDays > 0) {
+                // Credit = remaining days × daily price of current plan
+                $currentDailyPrice = $activePlan->daily_price;
+                $creditAmount = round($remainingDays * $currentDailyPrice);
+
+                // Charge = new plan price - credit from remaining days
+                $chargeAmount = max(0, (float) $newPlan->price_idr - $creditAmount);
+
+                $upgradeNote = " (Upgrade dari {$activePlan->name}: kredit {$remainingDays} hari × Rp " . number_format($currentDailyPrice, 0, ',', '.') . " = Rp " . number_format($creditAmount, 0, ',', '.') . " dipotong)";
+            }
         }
 
         // Check wallet balance
         $quota = $user->getOrCreateQuota();
         $totalBalance = (float) $quota->paid_balance;
 
-        if ($totalBalance < $plan->price_idr) {
-            return back()->with('error', "Saldo tidak mencukupi. Dibutuhkan {$plan->formatted_price}, saldo Anda: Rp " . number_format($totalBalance, 0, ',', '.') . ". Silakan top up terlebih dahulu.");
+        if ($totalBalance < $chargeAmount) {
+            $needed = $chargeAmount > 0 ? 'Rp ' . number_format($chargeAmount, 0, ',', '.') : $newPlan->formatted_price;
+            return back()->with('error', "Saldo tidak mencukupi. Dibutuhkan {$needed}{$upgradeNote}, saldo Anda: Rp " . number_format($totalBalance, 0, ',', '.') . ". Silakan top up terlebih dahulu.");
         }
 
         // Deduct from paid balance
-        $description = "Pembelian plan {$plan->name} ({$plan->formatted_price})";
-        $quota->deductBalance($plan->price_idr, $description, null, 'paid');
+        if ($chargeAmount > 0) {
+            $description = "Pembelian plan {$newPlan->name} ({$newPlan->formatted_price}){$upgradeNote}";
+            $quota->deductBalance($chargeAmount, $description, null, 'paid');
+        }
 
         // Set expiry
-        if ($plan->type === 'daily') {
+        if ($newPlan->type === 'daily') {
             $expiresAt = now()->addDay();
         } else {
             $expiresAt = now()->addDays(30);
         }
 
         // Create subscription
-        $user->subscribeTo($plan->slug, $expiresAt);
+        $user->subscribeTo($newPlan->slug, $expiresAt);
+
+        $chargeFormatted = $chargeAmount > 0 ? 'Rp ' . number_format($chargeAmount, 0, ',', '.') : 'Rp 0';
+        $successMsg = "Berhasil berlangganan plan {$newPlan->name}! Berlaku hingga {$expiresAt->format('d M Y H:i')}.";
+        if ($creditAmount > 0) {
+            $successMsg .= " (Dikenakan {$chargeFormatted} setelah kredit Rp " . number_format($creditAmount, 0, ',', '.') . " dari sisa plan {$activePlan->name})";
+        }
 
         return redirect()->route('subscriptions.index')
-            ->with('success', "Berhasil berlangganan plan {$plan->name}! Berlaku hingga {$expiresAt->format('d M Y H:i')}.");
+            ->with('success', $successMsg);
     }
 
     /**

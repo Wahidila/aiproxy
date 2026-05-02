@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"sync"
@@ -307,11 +308,13 @@ func (d *Database) GetActiveSubscription(userID int64) (*SubscriptionInfo, error
 	var dailyLimit, perMinLimit, concLimit sql.NullInt64
 	var maxTokenUsage sql.NullInt64
 	var expiresAt, resetAt sql.NullTime
+	var allowedModelsJSON sql.NullString
 
 	err := d.db.QueryRow(`
 		SELECT us.plan_slug, us.status, us.daily_requests_used, us.token_usage_total,
 		       us.expires_at, us.daily_requests_reset_at,
-		       sp.daily_request_limit, sp.per_minute_limit, sp.concurrent_limit, sp.max_token_usage
+		       sp.daily_request_limit, sp.per_minute_limit, sp.concurrent_limit, sp.max_token_usage,
+		       sp.allowed_models
 		FROM user_subscriptions us
 		JOIN subscription_plans sp ON sp.slug = us.plan_slug
 		WHERE us.user_id = ? AND us.status = 'active'
@@ -322,6 +325,7 @@ func (d *Database) GetActiveSubscription(userID int64) (*SubscriptionInfo, error
 		&info.PlanSlug, &info.Status, &info.DailyRequestsUsed, &info.TokenUsageTotal,
 		&expiresAt, &resetAt,
 		&dailyLimit, &perMinLimit, &concLimit, &maxTokenUsage,
+		&allowedModelsJSON,
 	)
 	if err == sql.ErrNoRows {
 		return nil, nil // no active subscription
@@ -349,6 +353,13 @@ func (d *Database) GetActiveSubscription(userID int64) (*SubscriptionInfo, error
 	}
 	if resetAt.Valid {
 		info.ResetAt = &resetAt.Time
+	}
+	// Parse allowed_models JSON array
+	if allowedModelsJSON.Valid && allowedModelsJSON.String != "" && allowedModelsJSON.String != "null" {
+		var models []string
+		if err := json.Unmarshal([]byte(allowedModelsJSON.String), &models); err == nil {
+			info.AllowedModels = models
+		}
 	}
 
 	return &info, nil

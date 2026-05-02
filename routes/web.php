@@ -29,9 +29,24 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-// TEMPORARY MAINTENANCE MODE - revert to view('welcome') when done
+// Landing page with dynamic plan data
 Route::get('/', function () {
-    return view('maintenance');
+    $freePlan = \App\Models\SubscriptionPlan::where('slug', 'free')->first();
+    $totalModels = \App\Models\ModelPricing::where('is_active', true)->count();
+    
+    // Get the "star" model from free plan's allowed_models (first one that contains 'sonnet' or 'claude')
+    $freeModels = $freePlan->allowed_models ?? [];
+    $starModel = collect($freeModels)->first(fn($m) => str_contains($m, 'sonnet')) 
+                 ?? collect($freeModels)->first() 
+                 ?? 'claude-sonnet-4.5';
+    
+    // Format star model name for display (e.g. "claude-sonnet-4.5" -> "Claude Sonnet 4.5")
+    $starModelDisplay = ucwords(str_replace(['-', '.'], [' ', '.'], $starModel));
+    // Fix casing: "Claude Sonnet 4.5" not "Claude Sonnet 4 5"
+    $starModelDisplay = preg_replace_callback('/(\d+)\.(\d+)/', fn($m) => $m[1].'.'.$m[2], 
+                         ucwords(str_replace('-', ' ', $starModel)));
+    
+    return view('welcome', compact('freePlan', 'totalModels', 'starModel', 'starModelDisplay', 'freeModels'));
 })->name('home');
 
 // Public pricing page
@@ -123,6 +138,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Model Pricing
     Route::get('/model-pricing', [AdminModelPricingController::class, 'index'])->name('model-pricing.index');
+    Route::get('/model-pricing/check-status', [AdminModelPricingController::class, 'checkStatus'])->name('model-pricing.check-status');
     Route::post('/model-pricing', [AdminModelPricingController::class, 'store'])->name('model-pricing.store');
     Route::patch('/model-pricing/{modelPricing}', [AdminModelPricingController::class, 'update'])->name('model-pricing.update');
     Route::delete('/model-pricing/{modelPricing}', [AdminModelPricingController::class, 'destroy'])->name('model-pricing.destroy');

@@ -109,10 +109,65 @@
             </div>
 
             {{-- Models Table --}}
-            <div class="bg-surface border border-oat rounded-card">
+            <div class="bg-surface border border-oat rounded-card" x-data="modelStatusChecker()">
                 <div class="p-6">
-                    <h3 class="text-lg font-semibold text-off-black tracking-sub mb-4">Model Pricing List</h3>
-                    <p class="text-sm text-muted mb-4">Exchange Rate: <strong>1 USD = Rp {{ number_format($exchangeRate, 0, ',', '.') }}</strong></p>
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-lg font-semibold text-off-black tracking-sub">Model Pricing List</h3>
+                            <p class="text-sm text-muted">Exchange Rate: <strong>1 USD = Rp {{ number_format($exchangeRate, 0, ',', '.') }}</strong></p>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <button type="button" @click="checkStatus()"
+                                :disabled="loading"
+                                class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-btn border border-oat hover:bg-canvas transition disabled:opacity-50 disabled:cursor-wait">
+                                <svg x-show="!loading" class="w-4 h-4 mr-2 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <svg x-show="loading" class="w-4 h-4 mr-2 animate-spin text-muted" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                </svg>
+                                <span x-text="loading ? 'Checking...' : 'Cek Status Model'"></span>
+                            </button>
+                            <span x-show="checkedAt" x-text="'✓ ' + checkedAt" class="text-xs text-muted"></span>
+                        </div>
+                    </div>
+
+                    {{-- Status Results Panel --}}
+                    <template x-if="error">
+                        <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                            <p class="text-sm text-red-700" x-text="error"></p>
+                        </div>
+                    </template>
+                    <template x-if="results.length > 0">
+                        <div class="mb-4 p-4 bg-canvas border border-oat rounded-lg">
+                            <div class="flex items-center justify-between mb-3">
+                                <h4 class="text-sm font-semibold text-off-black">Status Upstream Model</h4>
+                                <span class="text-xs text-muted" x-text="'Total upstream: ' + upstreamTotal + ' model'"></span>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                                <template x-for="m in results" :key="m.model_id">
+                                    <div class="flex items-center justify-between px-3 py-2 rounded-lg border"
+                                        :class="m.upstream_available ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'">
+                                        <span class="text-xs font-mono truncate mr-2" x-text="m.model_id"></span>
+                                        <span class="flex-shrink-0 text-xs font-medium"
+                                            :class="m.upstream_available ? 'text-green-700' : 'text-red-700'"
+                                            x-text="m.upstream_available ? '✅ Online' : '❌ Offline'"></span>
+                                    </div>
+                                </template>
+                            </div>
+                            <template x-if="newModels.length > 0">
+                                <div class="mt-3 pt-3 border-t border-oat">
+                                    <h5 class="text-xs font-semibold text-off-black mb-2">🆕 Model baru di upstream (belum ada di DB):</h5>
+                                    <div class="flex flex-wrap gap-1.5">
+                                        <template x-for="nm in newModels" :key="nm">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-mono bg-blue-100 text-blue-800" x-text="nm"></span>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
 
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-oat">
@@ -248,4 +303,43 @@
 
         </div>
     </div>
+
+    @push('scripts')
+    <script>
+        function modelStatusChecker() {
+            return {
+                loading: false,
+                results: [],
+                newModels: [],
+                upstreamTotal: 0,
+                checkedAt: '',
+                error: '',
+
+                async checkStatus() {
+                    this.loading = true;
+                    this.error = '';
+
+                    try {
+                        const response = await fetch('{{ route("admin.model-pricing.check-status") }}');
+                        const data = await response.json();
+
+                        if (!response.ok) {
+                            this.error = data.error || 'Gagal mengecek status model';
+                            return;
+                        }
+
+                        this.results = data.models;
+                        this.newModels = data.new_models || [];
+                        this.upstreamTotal = data.upstream_total;
+                        this.checkedAt = data.checked_at;
+                    } catch (e) {
+                        this.error = 'Network error: ' + e.message;
+                    } finally {
+                        this.loading = false;
+                    }
+                }
+            }
+        }
+    </script>
+    @endpush
 </x-app-layout>

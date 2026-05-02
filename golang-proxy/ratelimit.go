@@ -18,6 +18,7 @@ type SubscriptionInfo struct {
 	TokenUsageTotal   int64
 	ExpiresAt         *time.Time
 	ResetAt           *time.Time
+	AllowedModels     []string // nil = all models allowed
 }
 
 // ── Per-user rate limiter (sliding window per minute) ──────────────

@@ -12,6 +12,8 @@ var primaryModelMap = map[string]string{
 	// Kiro models (prefix kiro- on primary)
 	"claude-sonnet-4.5": "kiro-claude-sonnet-4.5",
 	"claude-haiku-4.5":  "kiro-claude-haiku-4.5",
+	"minimax-m2.5":      "kiro-minimax-m2.5",
+	"deepseek-3.2":      "kiro-deepseek-3.2",
 }
 
 // Models that should ONLY go to fallback (not available on primary)
@@ -24,6 +26,8 @@ var primaryOnlyModels = map[string]bool{
 	"kiro-auto":              true,
 	"kiro-claude-sonnet-4.5": true,
 	"kiro-claude-haiku-4.5":  true,
+	"kiro-minimax-m2.5":      true,
+	"kiro-deepseek-3.2":      true,
 }
 
 // mapModelForPrimary converts user-facing model name to primary upstream model name
