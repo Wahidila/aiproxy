@@ -10,7 +10,7 @@
     <link href="https://fonts.bunny.net/css?family=inter:300,400,500,600,700,800&display=swap" rel="stylesheet" />
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+    <!-- anime.js handles all animations, no AOS needed -->
     <script src="https://cdn.jsdelivr.net/npm/animejs@4.4.1/dist/bundles/anime.umd.min.js"></script>
     <style>
         :root {
@@ -24,6 +24,30 @@
             --color-surface-elevated: #16161f;
             --color-glow: rgba(255, 86, 0, 0.15);
         }
+
+        /* Scroll-reveal: elements start hidden, anime.js reveals them */
+        #section-steps .mono-label,
+        #section-steps .heading-section,
+        #section-steps .anim-card,
+        #section-models .mono-label,
+        #section-models .heading-section,
+        #section-models .body-lg,
+        #section-models .model-item,
+        #pricing .mono-label,
+        #pricing .heading-section,
+        #pricing .body-lg,
+        #pricing .pricing-card,
+        #section-tools .mono-label,
+        #section-tools .heading-section,
+        #section-tools .body-lg,
+        #section-tools .tool-badge,
+        #section-tools .code-block,
+        #section-cta .heading-sub,
+        #section-cta p,
+        #section-cta .btn {
+            opacity: 0;
+        }
+
         * { box-sizing: border-box; }
         body {
             font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
@@ -261,16 +285,16 @@
         <canvas id="hero-dot-grid" class="hero-canvas"></canvas>
 
         <!-- Floating model badges — minimal, only 4 -->
-        <div class="hero-model-badge" id="badge-1" style="top: 18%; left: 8%;">
+        <div class="hero-model-badge" id="badge-1" style="top: 18%; left: 15%;">
             <span class="badge-dot" style="background: #d4a574;"></span> Claude Sonnet 4.5
         </div>
-        <div class="hero-model-badge" id="badge-2" style="top: 22%; right: 10%;">
+        <div class="hero-model-badge" id="badge-2" style="top: 22%; right: 15%;">
             <span class="badge-dot" style="background: #22c55e;"></span> GPT-5
         </div>
-        <div class="hero-model-badge" id="badge-3" style="top: 60%; left: 6%;">
+        <div class="hero-model-badge" id="badge-3" style="top: 60%; left: 14%;">
             <span class="badge-dot" style="background: #4285f4;"></span> Gemini 2.5 Pro
         </div>
-        <div class="hero-model-badge" id="badge-4" style="top: 55%; right: 7%;">
+        <div class="hero-model-badge" id="badge-4" style="top: 55%; right: 14%;">
             <span class="badge-dot" style="background: #a78bfa;"></span> Claude Opus 4.6
         </div>
 
@@ -334,28 +358,28 @@
     </section>
 
     <!-- How It Works -->
-    <section class="section section-divider">
+    <section class="section section-divider" id="section-steps">
         <div class="container">
             <div style="text-align: center; margin-bottom: 56px;">
                 <p class="mono-label" style="margin-bottom: 12px;">CARA KERJA</p>
                 <h2 class="heading-section">3 Langkah, Langsung Pakai</h2>
             </div>
             <div class="grid-3">
-                <div class="card" style="text-align: center;" data-aos="fade-up" data-aos-delay="0">
+                <div class="card anim-card" style="text-align: center;">
                     <div class="icon-box">
                         <i data-lucide="key-round"></i>
                     </div>
                     <h3 class="heading-feature" style="margin: 0 0 12px;">Daftar & Generate Key</h3>
                     <p class="body-md">Buat akun gratis, generate API key dari dashboard. Langsung dapat free credit.</p>
                 </div>
-                <div class="card" style="text-align: center;" data-aos="fade-up" data-aos-delay="100">
+                <div class="card anim-card" style="text-align: center;">
                     <div class="icon-box">
                         <i data-lucide="plug"></i>
                     </div>
                     <h3 class="heading-feature" style="margin: 0 0 12px;">Pasang di Tool Anda</h3>
                     <p class="body-md">Set Base URL dan API Key di Cursor, Kilo Code, VS Code, atau tool OpenAI-compatible lainnya.</p>
                 </div>
-                <div class="card" style="text-align: center;" data-aos="fade-up" data-aos-delay="200">
+                <div class="card anim-card" style="text-align: center;">
                     <div class="icon-box">
                         <i data-lucide="rocket"></i>
                     </div>
@@ -367,7 +391,7 @@
     </section>
 
     <!-- Supported Models -->
-    <section class="section section-divider">
+    <section class="section section-divider" id="section-models">
         <div class="container">
             <div style="text-align: center; margin-bottom: 48px;">
                 <p class="mono-label" style="margin-bottom: 12px;">MODEL TERSEDIA</p>
@@ -588,7 +612,7 @@
     @endif
 
     <!-- Compatible Tools -->
-    <section class="section section-divider">
+    <section class="section section-divider" id="section-tools">
         <div class="container">
             <div style="text-align: center; margin-bottom: 48px;">
                 <p class="mono-label" style="margin-bottom: 12px;">KOMPATIBILITAS</p>
@@ -630,7 +654,7 @@
     </section>
 
     <!-- CTA -->
-    <section class="section-sm" style="background: var(--color-surface); text-align: center; border-top: 1px solid var(--color-border);">
+    <section class="section-sm" id="section-cta" style="background: var(--color-surface); text-align: center; border-top: 1px solid var(--color-border);">
         <div class="container">
             <h2 class="heading-sub" style="color: var(--color-text); margin: 0 0 16px;">Siap mulai?</h2>
             <p style="font-size: 18px; color: var(--color-muted); margin: 0 0 32px;">Daftar sekarang dan mulai gunakan AI premium gratis.</p>
@@ -837,11 +861,11 @@
         let mouseX = -1000, mouseY = -1000;
 
         const DOT_SPACING = isMobile ? 40 : 32;
-        const DOT_BASE_SIZE = 1;
+        const DOT_BASE_SIZE = 1.2;
         const DOT_MAX_SIZE = isMobile ? 3 : 4.5;
         const MOUSE_RADIUS = isMobile ? 80 : 140;
-        const DOT_BASE_ALPHA = 0.12;
-        const DOT_MAX_ALPHA = 0.7;
+        const DOT_BASE_ALPHA = 0.25;
+        const DOT_MAX_ALPHA = 0.75;
 
         function resize() {
             w = canvas.width = canvas.offsetWidth;
@@ -1054,8 +1078,212 @@
     });
     </script>
 
-    <!-- AOS -->
-    <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
-    <script>AOS.init({ once: true, offset: 50, duration: 600 });</script>
+    <!-- AOS replaced by anime.js scroll animations -->
+    <script>
+    // === SCROLL-TRIGGERED ANIMATIONS (anime.js) ===
+    (function() {
+        const observed = new Set();
+
+        function onIntersect(entries, observer) {
+            entries.forEach(entry => {
+                if (!entry.isIntersecting || observed.has(entry.target.id || entry.target)) return;
+                observed.add(entry.target.id || entry.target);
+                const id = entry.target.id;
+
+                // --- HOW IT WORKS SECTION ---
+                if (id === 'section-steps') {
+                    // Section heading
+                    anime.animate('#section-steps .mono-label, #section-steps .heading-section', {
+                        opacity: [0, 1],
+                        translateY: [20, 0],
+                        delay: anime.stagger(100),
+                        duration: 600,
+                        easing: 'easeOutCubic',
+                    });
+
+                    // Cards stagger entrance
+                    anime.animate('#section-steps .anim-card', {
+                        opacity: [0, 1],
+                        translateY: [40, 0],
+                        scale: [0.95, 1],
+                        delay: anime.stagger(150, { start: 200 }),
+                        duration: 700,
+                        easing: 'easeOutCubic',
+                    });
+
+                    // Icon boxes pulse after cards appear
+                    setTimeout(() => {
+                        anime.animate('#section-steps .icon-box', {
+                            scale: [1, 1.15, 1],
+                            delay: anime.stagger(150, { start: 0 }),
+                            duration: 600,
+                            easing: 'easeInOutSine',
+                        });
+                    }, 700);
+                }
+
+                // --- SUPPORTED MODELS SECTION ---
+                if (id === 'section-models') {
+                    // Heading
+                    anime.animate('#section-models .mono-label, #section-models .heading-section, #section-models .body-lg', {
+                        opacity: [0, 1],
+                        translateY: [20, 0],
+                        delay: anime.stagger(80),
+                        duration: 600,
+                        easing: 'easeOutCubic',
+                    });
+
+                    // Provider logos slide in
+                    const providerLogos = document.querySelectorAll('#section-models [style*="opacity: 0.7"]');
+                    anime.animate(providerLogos, {
+                        opacity: [0, 0.7],
+                        translateX: [-20, 0],
+                        delay: anime.stagger(100, { start: 300 }),
+                        duration: 500,
+                        easing: 'easeOutCubic',
+                    });
+
+                    // Model items cascade
+                    const modelItems = document.querySelectorAll('#section-models .model-item');
+                    anime.animate(modelItems, {
+                        opacity: [0, 1],
+                        translateY: [15, 0],
+                        delay: anime.stagger(30, { start: 500 }),
+                        duration: 400,
+                        easing: 'easeOutCubic',
+                    });
+                }
+
+                // --- PRICING SECTION ---
+                if (id === 'pricing') {
+                    anime.animate('#pricing .mono-label, #pricing .heading-section, #pricing .body-lg', {
+                        opacity: [0, 1],
+                        translateY: [20, 0],
+                        delay: anime.stagger(80),
+                        duration: 600,
+                        easing: 'easeOutCubic',
+                    });
+
+                    // Pricing cards scale entrance
+                    anime.animate('#pricing .pricing-card', {
+                        opacity: [0, 1],
+                        translateY: [30, 0],
+                        scale: [0.92, 1],
+                        delay: anime.stagger(120, { start: 300 }),
+                        duration: 700,
+                        easing: 'easeOutBack',
+                    });
+                }
+
+                // --- COMPATIBLE TOOLS SECTION ---
+                if (id === 'section-tools') {
+                    anime.animate('#section-tools .mono-label, #section-tools .heading-section, #section-tools .body-lg', {
+                        opacity: [0, 1],
+                        translateY: [20, 0],
+                        delay: anime.stagger(80),
+                        duration: 600,
+                        easing: 'easeOutCubic',
+                    });
+
+                    // Tool badges bounce in
+                    anime.animate('#section-tools .tool-badge', {
+                        opacity: [0, 1],
+                        scale: [0.5, 1],
+                        delay: anime.stagger(60, { start: 250 }),
+                        duration: 500,
+                        easing: 'easeOutBack',
+                    });
+
+                    // Code block slide up
+                    anime.animate('#section-tools .code-block', {
+                        opacity: [0, 1],
+                        translateY: [25, 0],
+                        duration: 700,
+                        easing: 'easeOutCubic',
+                        delay: 600,
+                    });
+                }
+
+                // --- CTA SECTION ---
+                if (id === 'section-cta') {
+                    anime.animate('#section-cta .heading-sub', {
+                        opacity: [0, 1],
+                        translateY: [20, 0],
+                        duration: 600,
+                        easing: 'easeOutCubic',
+                    });
+
+                    anime.animate('#section-cta p', {
+                        opacity: [0, 1],
+                        translateY: [15, 0],
+                        duration: 600,
+                        easing: 'easeOutCubic',
+                        delay: 150,
+                    });
+
+                    anime.animate('#section-cta .btn', {
+                        opacity: [0, 1],
+                        scale: [0.9, 1],
+                        duration: 600,
+                        easing: 'easeOutBack',
+                        delay: 300,
+                    });
+
+                    // Subtle pulse loop on CTA button
+                    setTimeout(() => {
+                        anime.animate('#section-cta .btn', {
+                            scale: [1, 1.03, 1],
+                            duration: 2000,
+                            easing: 'easeInOutSine',
+                            loop: true,
+                        });
+                    }, 1000);
+                }
+            });
+        }
+
+        const observer = new IntersectionObserver(onIntersect, {
+            threshold: 0.15,
+            rootMargin: '0px 0px -50px 0px',
+        });
+
+        // Observe all sections
+        document.querySelectorAll('#section-steps, #section-models, #pricing, #section-tools, #section-cta').forEach(el => {
+            observer.observe(el);
+        });
+
+        // === INTERACTIVE HOVER EFFECTS (all sections) ===
+
+        // Cards lift on hover
+        document.querySelectorAll('.anim-card, .pricing-card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                anime.animate(card, { translateY: -6, scale: 1.02, duration: 300, easing: 'easeOutCubic' });
+            });
+            card.addEventListener('mouseleave', () => {
+                anime.animate(card, { translateY: 0, scale: 1, duration: 300, easing: 'easeOutCubic' });
+            });
+        });
+
+        // Tool badges pop on hover
+        document.querySelectorAll('.tool-badge').forEach(badge => {
+            badge.addEventListener('mouseenter', () => {
+                anime.animate(badge, { scale: 1.1, duration: 200, easing: 'easeOutCubic' });
+            });
+            badge.addEventListener('mouseleave', () => {
+                anime.animate(badge, { scale: 1, duration: 200, easing: 'easeOutCubic' });
+            });
+        });
+
+        // Model items subtle highlight on hover
+        document.querySelectorAll('.model-item').forEach(item => {
+            item.addEventListener('mouseenter', () => {
+                anime.animate(item, { translateX: 4, duration: 200, easing: 'easeOutCubic' });
+            });
+            item.addEventListener('mouseleave', () => {
+                anime.animate(item, { translateX: 0, duration: 200, easing: 'easeOutCubic' });
+            });
+        });
+    })();
+    </script>
 </body>
 </html>
