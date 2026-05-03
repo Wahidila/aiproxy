@@ -238,6 +238,8 @@
         .btn-submit:hover { background: var(--color-accent-hover); transform: translateY(-1px); }
         .btn-submit:active { transform: translateY(0); }
         .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .btn-google:hover { background: #f8f8f8 !important; border-color: #999 !important; transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .btn-google:active { transform: translateY(0); }
         .success-state { text-align: center; padding: 16px 0; }
         .success-icon { width: 56px; height: 56px; background: rgba(22,163,106,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
         .success-icon svg { width: 28px; height: 28px; color: #22c55e; }
@@ -687,10 +689,29 @@
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ff5600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                             <span style="font-size: 16px; font-weight: 600; color: var(--color-text);">AIMurah</span>
                         </div>
-                        <h3 style="font-size: 22px; font-weight: 600; color: var(--color-text); letter-spacing: -0.5px; margin: 0 0 6px;">Daftar Trial</h3>
-                        <p style="font-size: 14px; color: var(--color-muted); margin: 0; line-height: 1.5;">Masukkan nama dan email Anda. Kami akan mengirimkan undangan akses beserta free credit.</p>
+                        <h3 style="font-size: 22px; font-weight: 600; color: var(--color-text); letter-spacing: -0.5px; margin: 0 0 6px;">Daftar Gratis</h3>
+                        <p style="font-size: 14px; color: var(--color-muted); margin: 0; line-height: 1.5;">Buat akun dalam 1 klik. Langsung dapat akses API + free credit.</p>
                     </div>
                     <div class="modal-body">
+                        <!-- Google Sign In (Primary) -->
+                        <a href="{{ route('auth.google') }}" class="btn-google" style="display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; padding: 14px 20px; background: #fff; border: 1.5px solid var(--color-border); border-radius: 8px; font-size: 15px; font-weight: 500; color: #333; text-decoration: none; cursor: pointer; transition: all 0.2s ease;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                            </svg>
+                            Daftar dengan Google
+                        </a>
+
+                        <!-- Divider -->
+                        <div style="display: flex; align-items: center; gap: 12px; margin: 20px 0;">
+                            <div style="flex: 1; height: 1px; background: var(--color-border);"></div>
+                            <span style="font-size: 12px; color: var(--color-muted); white-space: nowrap;">atau daftar manual</span>
+                            <div style="flex: 1; height: 1px; background: var(--color-border);"></div>
+                        </div>
+
+                        <!-- Manual Trial Form -->
                         <div class="form-group">
                             <label class="form-label" for="trial_name">Nama Lengkap</label>
                             <input type="text" id="trial_name" class="form-input" placeholder="Masukkan nama Anda" x-model="form.name" @keydown.enter="submit()">
@@ -710,14 +731,14 @@
                                 <p style="font-size: 13px; color: #ef4444; margin: 0;" x-text="generalError"></p>
                             </div>
                         </template>
-                        <button class="btn-submit" @click="submit()" :disabled="loading">
+                        <button class="btn-submit" @click="submit()" :disabled="loading" style="background: var(--color-surface-alt, #1a1a2e); margin-top: 4px;">
                             <template x-if="loading">
                                 <span class="spinner"></span>
                             </template>
                             <template x-if="!loading">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                             </template>
-                            <span x-text="loading ? 'Mengirim...' : 'Daftar Trial'"></span>
+                            <span x-text="loading ? 'Mengirim...' : 'Daftar via Email'"></span>
                         </button>
                         <p style="font-size: 12px; color: var(--color-muted); text-align: center; margin: 12px 0 0;">Tidak perlu kartu kredit. Data Anda aman.</p>
                     </div>
