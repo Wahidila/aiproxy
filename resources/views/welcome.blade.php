@@ -263,6 +263,7 @@
         .tier-badge-pro { background: rgba(255,86,0,0.15); color: var(--color-accent); }
         /* Section divider */
         .section-divider { border-top: 1px solid var(--color-border); }
+        .section-dot-grid { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
         /* Glow effect on featured pricing */
         @keyframes glow { from { box-shadow: 0 0 8px rgba(255,86,0,0.2), 0 0 16px rgba(255,86,0,0.1); } to { box-shadow: 0 0 16px rgba(255,86,0,0.4), 0 0 32px rgba(255,86,0,0.2); } }
     </style>
@@ -364,8 +365,9 @@
     </section>
 
     <!-- How It Works -->
-    <section class="section section-divider" id="section-steps">
-        <div class="container">
+    <section class="section section-divider" id="section-steps" style="position: relative; overflow: hidden;">
+        <canvas class="section-dot-grid" id="dots-steps"></canvas>
+        <div class="container" style="position: relative; z-index: 1;">
             <div style="text-align: center; margin-bottom: 56px;">
                 <p class="mono-label" style="margin-bottom: 12px;">CARA KERJA</p>
                 <h2 class="heading-section">3 Langkah, Langsung Pakai</h2>
@@ -397,8 +399,9 @@
     </section>
 
     <!-- Supported Models -->
-    <section class="section section-divider" id="section-models">
-        <div class="container">
+    <section class="section section-divider" id="section-models" style="position: relative; overflow: hidden;">
+        <canvas class="section-dot-grid" id="dots-models"></canvas>
+        <div class="container" style="position: relative; z-index: 1;">
             <div style="text-align: center; margin-bottom: 48px;">
                 <p class="mono-label" style="margin-bottom: 12px;">MODEL TERSEDIA</p>
                 <h2 class="heading-section">{{ $totalModels }}+ Model AI, Satu API</h2>
@@ -463,8 +466,9 @@
 
     <!-- Pricing -->
     @if(\App\Models\Setting::get('subscription_enabled', '0') == '1')
-    <section id="pricing" class="section section-divider" x-data="{ tab: 'monthly' }">
-        <div class="container">
+    <section id="pricing" class="section section-divider" x-data="{ tab: 'monthly' }" style="position: relative; overflow: hidden;">
+        <canvas class="section-dot-grid" id="dots-pricing"></canvas>
+        <div class="container" style="position: relative; z-index: 1;">
             <div style="text-align: center; margin-bottom: 32px;">
                 <p class="mono-label" style="margin-bottom: 12px;">HARGA</p>
                 <h2 class="heading-section">Pilih Plan Anda</h2>
@@ -614,8 +618,9 @@
     @endif
 
     <!-- Compatible Tools -->
-    <section class="section section-divider" id="section-tools">
-        <div class="container">
+    <section class="section section-divider" id="section-tools" style="position: relative; overflow: hidden;">
+        <canvas class="section-dot-grid" id="dots-tools"></canvas>
+        <div class="container" style="position: relative; z-index: 1;">
             <div style="text-align: center; margin-bottom: 48px;">
                 <p class="mono-label" style="margin-bottom: 12px;">KOMPATIBILITAS</p>
                 <h2 class="heading-section">Drop-in OpenAI Replacement</h2>
@@ -655,9 +660,9 @@
         </div>
     </section>
 
-    <!-- CTA — interactive particle background -->
+    <!-- CTA — interactive dot grid background (consistent with hero) -->
     <section class="section-sm" id="section-cta" style="position: relative; overflow: hidden; text-align: center; border-top: 1px solid var(--color-border); background: linear-gradient(180deg, var(--color-surface) 0%, #0d0d14 100%);">
-        <canvas id="cta-particles" style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0;"></canvas>
+        <canvas class="section-dot-grid" id="dots-cta"></canvas>
         <div class="container" style="position: relative; z-index: 1;">
             <h2 class="heading-sub" style="color: var(--color-text); margin: 0 0 16px;">Siap mulai?</h2>
             <p style="font-size: 18px; color: var(--color-muted); margin: 0 0 32px;">Daftar sekarang dan mulai gunakan AI premium gratis.</p>
@@ -1287,141 +1292,145 @@
             });
         });
 
-        // === CTA INTERACTIVE PARTICLE BACKGROUND ===
-        (function initCtaParticles() {
-            const canvas = document.getElementById('cta-particles');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            const section = document.getElementById('section-cta');
-            let W, H, particles = [], mouse = { x: -999, y: -999 };
+        // === SHARED DOT GRID BACKGROUNDS (consistent with hero) ===
+        (function initSectionDotGrids() {
+            const isMob = window.innerWidth < 768;
             const ACCENT = { r: 255, g: 86, b: 0 };
-            const isMobile = window.innerWidth < 768;
-            const COUNT = isMobile ? 35 : 70;
-            const CONNECT_DIST = isMobile ? 100 : 140;
-            const MOUSE_RADIUS = 180;
 
-            function resize() {
-                const rect = section.getBoundingClientRect();
-                const dpr = window.devicePixelRatio || 1;
-                W = rect.width; H = rect.height;
-                canvas.width = W * dpr; canvas.height = H * dpr;
-                canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
-                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-            }
+            // Config per section — CTA gets brighter dots, others subtle
+            const configs = {
+                'dots-steps':   { spacing: isMob ? 48 : 38, baseAlpha: 0.12, maxAlpha: 0.50, baseSize: 0.9, maxSize: isMob ? 2.5 : 3.5, mouseRadius: isMob ? 70 : 120, connectDist: 1.5 },
+                'dots-models':  { spacing: isMob ? 48 : 38, baseAlpha: 0.12, maxAlpha: 0.50, baseSize: 0.9, maxSize: isMob ? 2.5 : 3.5, mouseRadius: isMob ? 70 : 120, connectDist: 1.5 },
+                'dots-pricing': { spacing: isMob ? 48 : 38, baseAlpha: 0.12, maxAlpha: 0.50, baseSize: 0.9, maxSize: isMob ? 2.5 : 3.5, mouseRadius: isMob ? 70 : 120, connectDist: 1.5 },
+                'dots-tools':   { spacing: isMob ? 48 : 38, baseAlpha: 0.12, maxAlpha: 0.50, baseSize: 0.9, maxSize: isMob ? 2.5 : 3.5, mouseRadius: isMob ? 70 : 120, connectDist: 1.5 },
+                'dots-cta':     { spacing: isMob ? 40 : 32, baseAlpha: 0.20, maxAlpha: 0.70, baseSize: 1.1, maxSize: isMob ? 3 : 4.5, mouseRadius: isMob ? 80 : 140, connectDist: 1.6 },
+            };
 
-            function createParticle() {
-                return {
-                    x: Math.random() * W,
-                    y: Math.random() * H,
-                    vx: (Math.random() - 0.5) * 0.4,
-                    vy: (Math.random() - 0.5) * 0.4,
-                    r: Math.random() * 2 + 0.8,
-                    alpha: Math.random() * 0.5 + 0.25,
-                };
-            }
+            function initDotGrid(canvasId) {
+                const canvas = document.getElementById(canvasId);
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                const section = canvas.parentElement;
+                const cfg = configs[canvasId];
+                let w, h, cols, rows, dots = [];
+                let mouseX = -1000, mouseY = -1000;
+                let animId = null;
 
-            function init() {
-                resize();
-                particles = [];
-                for (let i = 0; i < COUNT; i++) particles.push(createParticle());
-            }
-
-            section.addEventListener('mousemove', (e) => {
-                const rect = section.getBoundingClientRect();
-                mouse.x = e.clientX - rect.left;
-                mouse.y = e.clientY - rect.top;
-            });
-            section.addEventListener('mouseleave', () => { mouse.x = -999; mouse.y = -999; });
-
-            let animId;
-            function draw() {
-                ctx.clearRect(0, 0, W, H);
-
-                // Radial glow at center
-                const grd = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W, H) * 0.5);
-                grd.addColorStop(0, 'rgba(255,86,0,0.06)');
-                grd.addColorStop(0.5, 'rgba(255,86,0,0.02)');
-                grd.addColorStop(1, 'rgba(255,86,0,0)');
-                ctx.fillStyle = grd;
-                ctx.fillRect(0, 0, W, H);
-
-                // Update & draw particles
-                for (let i = 0; i < particles.length; i++) {
-                    const p = particles[i];
-                    p.x += p.vx; p.y += p.vy;
-                    if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
-                    if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
-
-                    // Mouse repulsion — gentle push
-                    const dx = p.x - mouse.x, dy = p.y - mouse.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < MOUSE_RADIUS && dist > 0) {
-                        const force = (MOUSE_RADIUS - dist) / MOUSE_RADIUS * 0.8;
-                        p.vx += (dx / dist) * force * 0.3;
-                        p.vy += (dy / dist) * force * 0.3;
-                    }
-                    // Dampen velocity
-                    p.vx *= 0.98; p.vy *= 0.98;
-
-                    // Glow near mouse
-                    const glowFactor = dist < MOUSE_RADIUS ? 1 + (MOUSE_RADIUS - dist) / MOUSE_RADIUS * 2 : 1;
-                    const drawAlpha = Math.min(p.alpha * glowFactor, 1);
-
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.r * glowFactor, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(${ACCENT.r},${ACCENT.g},${ACCENT.b},${drawAlpha})`;
-                    ctx.fill();
-                }
-
-                // Draw connections
-                for (let i = 0; i < particles.length; i++) {
-                    for (let j = i + 1; j < particles.length; j++) {
-                        const a = particles[i], b = particles[j];
-                        const dx = a.x - b.x, dy = a.y - b.y;
-                        const dist = Math.sqrt(dx * dx + dy * dy);
-                        if (dist < CONNECT_DIST) {
-                            const lineAlpha = (1 - dist / CONNECT_DIST) * 0.25;
-                            ctx.beginPath();
-                            ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
-                            ctx.strokeStyle = `rgba(${ACCENT.r},${ACCENT.g},${ACCENT.b},${lineAlpha})`;
-                            ctx.lineWidth = 0.6;
-                            ctx.stroke();
+                function resize() {
+                    w = canvas.width = canvas.offsetWidth;
+                    h = canvas.height = canvas.offsetHeight;
+                    cols = Math.ceil(w / cfg.spacing) + 1;
+                    rows = Math.ceil(h / cfg.spacing) + 1;
+                    dots = [];
+                    for (let r = 0; r < rows; r++) {
+                        for (let c = 0; c < cols; c++) {
+                            dots.push({
+                                x: c * cfg.spacing,
+                                y: r * cfg.spacing,
+                                baseX: c * cfg.spacing,
+                                baseY: r * cfg.spacing,
+                                size: cfg.baseSize,
+                                alpha: cfg.baseAlpha,
+                                targetSize: cfg.baseSize,
+                                targetAlpha: cfg.baseAlpha,
+                            });
                         }
                     }
                 }
 
-                // Mouse connection lines to nearby particles
-                if (mouse.x > 0) {
-                    for (const p of particles) {
-                        const dx = p.x - mouse.x, dy = p.y - mouse.y;
-                        const dist = Math.sqrt(dx * dx + dy * dy);
-                        if (dist < MOUSE_RADIUS) {
-                            const lineAlpha = (1 - dist / MOUSE_RADIUS) * 0.45;
-                            ctx.beginPath();
-                            ctx.moveTo(mouse.x, mouse.y); ctx.lineTo(p.x, p.y);
-                            ctx.strokeStyle = `rgba(${ACCENT.r},${ACCENT.g},${ACCENT.b},${lineAlpha})`;
-                            ctx.lineWidth = 1;
-                            ctx.stroke();
-                        }
-                    }
+                // Mouse tracking
+                if (!isMob) {
+                    section.addEventListener('mousemove', (e) => {
+                        const rect = canvas.getBoundingClientRect();
+                        mouseX = e.clientX - rect.left;
+                        mouseY = e.clientY - rect.top;
+                    });
+                    section.addEventListener('mouseleave', () => { mouseX = -1000; mouseY = -1000; });
+                }
+                if (isMob) {
+                    section.addEventListener('touchmove', (e) => {
+                        const rect = canvas.getBoundingClientRect();
+                        const touch = e.touches[0];
+                        mouseX = touch.clientX - rect.left;
+                        mouseY = touch.clientY - rect.top;
+                    });
+                    section.addEventListener('touchend', () => { mouseX = -1000; mouseY = -1000; });
                 }
 
-                animId = requestAnimationFrame(draw);
+                function drawFrame() {
+                    ctx.clearRect(0, 0, w, h);
+
+                    dots.forEach(dot => {
+                        const dx = mouseX - dot.baseX;
+                        const dy = mouseY - dot.baseY;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+
+                        if (dist < cfg.mouseRadius) {
+                            const factor = 1 - (dist / cfg.mouseRadius);
+                            const eased = factor * factor;
+                            dot.targetSize = cfg.baseSize + (cfg.maxSize - cfg.baseSize) * eased;
+                            dot.targetAlpha = cfg.baseAlpha + (cfg.maxAlpha - cfg.baseAlpha) * eased;
+                            const pushForce = eased * 3;
+                            dot.x = dot.baseX - (dx / dist) * pushForce;
+                            dot.y = dot.baseY - (dy / dist) * pushForce;
+                        } else {
+                            dot.targetSize = cfg.baseSize;
+                            dot.targetAlpha = cfg.baseAlpha;
+                            dot.x = dot.baseX;
+                            dot.y = dot.baseY;
+                        }
+
+                        dot.size += (dot.targetSize - dot.size) * 0.15;
+                        dot.alpha += (dot.targetAlpha - dot.alpha) * 0.15;
+
+                        ctx.beginPath();
+                        ctx.arc(dot.x, dot.y, dot.size, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(${ACCENT.r},${ACCENT.g},${ACCENT.b},${dot.alpha})`;
+                        ctx.fill();
+                    });
+
+                    // Connection lines between activated dots (desktop only)
+                    if (!isMob) {
+                        for (let i = 0; i < dots.length; i++) {
+                            if (dots[i].alpha <= cfg.baseAlpha + 0.05) continue;
+                            for (let j = i + 1; j < dots.length; j++) {
+                                if (dots[j].alpha <= cfg.baseAlpha + 0.05) continue;
+                                const dx = dots[i].x - dots[j].x;
+                                const dy = dots[i].y - dots[j].y;
+                                const dist = Math.sqrt(dx * dx + dy * dy);
+                                if (dist < cfg.spacing * cfg.connectDist) {
+                                    const lineAlpha = Math.min(dots[i].alpha, dots[j].alpha) * 0.3;
+                                    ctx.beginPath();
+                                    ctx.moveTo(dots[i].x, dots[i].y);
+                                    ctx.lineTo(dots[j].x, dots[j].y);
+                                    ctx.strokeStyle = `rgba(${ACCENT.r},${ACCENT.g},${ACCENT.b},${lineAlpha})`;
+                                    ctx.lineWidth = 0.5;
+                                    ctx.stroke();
+                                }
+                            }
+                        }
+                    }
+
+                    animId = requestAnimationFrame(drawFrame);
+                }
+
+                // IntersectionObserver — only animate when visible
+                const obs = new IntersectionObserver((entries) => {
+                    entries.forEach(e => {
+                        if (e.isIntersecting) {
+                            if (!animId) { resize(); drawFrame(); }
+                        } else {
+                            if (animId) { cancelAnimationFrame(animId); animId = null; }
+                        }
+                    });
+                }, { threshold: 0.05 });
+                obs.observe(section);
+
+                window.addEventListener('resize', () => { if (animId) resize(); });
             }
 
-            // Start only when section is visible
-            const ctaObs = new IntersectionObserver((entries) => {
-                entries.forEach(e => {
-                    if (e.isIntersecting) {
-                        if (!animId) { init(); draw(); }
-                    } else {
-                        if (animId) { cancelAnimationFrame(animId); animId = null; }
-                    }
-                });
-            }, { threshold: 0.05 });
-            ctaObs.observe(section);
-
-            window.addEventListener('resize', () => { if (animId) resize(); });
+            // Initialize all section dot grids
+            Object.keys(configs).forEach(id => initDotGrid(id));
         })();
     })();
     </script>
