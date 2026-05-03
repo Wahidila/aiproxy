@@ -655,9 +655,10 @@
         </div>
     </section>
 
-    <!-- CTA -->
-    <section class="section-sm" id="section-cta" style="background: var(--color-surface); text-align: center; border-top: 1px solid var(--color-border);">
-        <div class="container">
+    <!-- CTA — interactive particle background -->
+    <section class="section-sm" id="section-cta" style="position: relative; overflow: hidden; text-align: center; border-top: 1px solid var(--color-border); background: linear-gradient(180deg, var(--color-surface) 0%, #0d0d14 100%);">
+        <canvas id="cta-particles" style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0;"></canvas>
+        <div class="container" style="position: relative; z-index: 1;">
             <h2 class="heading-sub" style="color: var(--color-text); margin: 0 0 16px;">Siap mulai?</h2>
             <p style="font-size: 18px; color: var(--color-muted); margin: 0 0 32px;">Daftar sekarang dan mulai gunakan AI premium gratis.</p>
             <button @click="openModal()" class="btn btn-accent" style="padding: 16px 40px; font-size: 17px; gap: 10px;">
@@ -1285,6 +1286,143 @@
                 anime.animate(item, { scale: 1, duration: 150, easing: 'easeOutCubic' });
             });
         });
+
+        // === CTA INTERACTIVE PARTICLE BACKGROUND ===
+        (function initCtaParticles() {
+            const canvas = document.getElementById('cta-particles');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const section = document.getElementById('section-cta');
+            let W, H, particles = [], mouse = { x: -999, y: -999 };
+            const ACCENT = { r: 255, g: 86, b: 0 };
+            const isMobile = window.innerWidth < 768;
+            const COUNT = isMobile ? 35 : 70;
+            const CONNECT_DIST = isMobile ? 100 : 140;
+            const MOUSE_RADIUS = 180;
+
+            function resize() {
+                const rect = section.getBoundingClientRect();
+                const dpr = window.devicePixelRatio || 1;
+                W = rect.width; H = rect.height;
+                canvas.width = W * dpr; canvas.height = H * dpr;
+                canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            }
+
+            function createParticle() {
+                return {
+                    x: Math.random() * W,
+                    y: Math.random() * H,
+                    vx: (Math.random() - 0.5) * 0.4,
+                    vy: (Math.random() - 0.5) * 0.4,
+                    r: Math.random() * 2 + 0.8,
+                    alpha: Math.random() * 0.5 + 0.25,
+                };
+            }
+
+            function init() {
+                resize();
+                particles = [];
+                for (let i = 0; i < COUNT; i++) particles.push(createParticle());
+            }
+
+            section.addEventListener('mousemove', (e) => {
+                const rect = section.getBoundingClientRect();
+                mouse.x = e.clientX - rect.left;
+                mouse.y = e.clientY - rect.top;
+            });
+            section.addEventListener('mouseleave', () => { mouse.x = -999; mouse.y = -999; });
+
+            let animId;
+            function draw() {
+                ctx.clearRect(0, 0, W, H);
+
+                // Radial glow at center
+                const grd = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W, H) * 0.5);
+                grd.addColorStop(0, 'rgba(255,86,0,0.06)');
+                grd.addColorStop(0.5, 'rgba(255,86,0,0.02)');
+                grd.addColorStop(1, 'rgba(255,86,0,0)');
+                ctx.fillStyle = grd;
+                ctx.fillRect(0, 0, W, H);
+
+                // Update & draw particles
+                for (let i = 0; i < particles.length; i++) {
+                    const p = particles[i];
+                    p.x += p.vx; p.y += p.vy;
+                    if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+                    if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+
+                    // Mouse repulsion — gentle push
+                    const dx = p.x - mouse.x, dy = p.y - mouse.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < MOUSE_RADIUS && dist > 0) {
+                        const force = (MOUSE_RADIUS - dist) / MOUSE_RADIUS * 0.8;
+                        p.vx += (dx / dist) * force * 0.3;
+                        p.vy += (dy / dist) * force * 0.3;
+                    }
+                    // Dampen velocity
+                    p.vx *= 0.98; p.vy *= 0.98;
+
+                    // Glow near mouse
+                    const glowFactor = dist < MOUSE_RADIUS ? 1 + (MOUSE_RADIUS - dist) / MOUSE_RADIUS * 2 : 1;
+                    const drawAlpha = Math.min(p.alpha * glowFactor, 1);
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r * glowFactor, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${ACCENT.r},${ACCENT.g},${ACCENT.b},${drawAlpha})`;
+                    ctx.fill();
+                }
+
+                // Draw connections
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const a = particles[i], b = particles[j];
+                        const dx = a.x - b.x, dy = a.y - b.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < CONNECT_DIST) {
+                            const lineAlpha = (1 - dist / CONNECT_DIST) * 0.25;
+                            ctx.beginPath();
+                            ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+                            ctx.strokeStyle = `rgba(${ACCENT.r},${ACCENT.g},${ACCENT.b},${lineAlpha})`;
+                            ctx.lineWidth = 0.6;
+                            ctx.stroke();
+                        }
+                    }
+                }
+
+                // Mouse connection lines to nearby particles
+                if (mouse.x > 0) {
+                    for (const p of particles) {
+                        const dx = p.x - mouse.x, dy = p.y - mouse.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < MOUSE_RADIUS) {
+                            const lineAlpha = (1 - dist / MOUSE_RADIUS) * 0.45;
+                            ctx.beginPath();
+                            ctx.moveTo(mouse.x, mouse.y); ctx.lineTo(p.x, p.y);
+                            ctx.strokeStyle = `rgba(${ACCENT.r},${ACCENT.g},${ACCENT.b},${lineAlpha})`;
+                            ctx.lineWidth = 1;
+                            ctx.stroke();
+                        }
+                    }
+                }
+
+                animId = requestAnimationFrame(draw);
+            }
+
+            // Start only when section is visible
+            const ctaObs = new IntersectionObserver((entries) => {
+                entries.forEach(e => {
+                    if (e.isIntersecting) {
+                        if (!animId) { init(); draw(); }
+                    } else {
+                        if (animId) { cancelAnimationFrame(animId); animId = null; }
+                    }
+                });
+            }, { threshold: 0.05 });
+            ctaObs.observe(section);
+
+            window.addEventListener('resize', () => { if (animId) resize(); });
+        })();
     })();
     </script>
 </body>
