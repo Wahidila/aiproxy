@@ -60,17 +60,17 @@ class SubscriptionController extends Controller
         $activeSubscription = $user->activeSubscription();
 
         // ═══════════════════════════════════════════════════════════
-        // DOWNGRADE PROTECTION: Block if new plan is lower tier
+        // BLOCK PLAN CHANGE: No switching while subscription is active
         // ═══════════════════════════════════════════════════════════
-        if ($activeSubscription && $activeSubscription->plan_slug !== 'free') {
-            // User has a paid subscription — check tier hierarchy
-            if ($newPlan->tier_level < $activePlan->tier_level) {
-                return back()->with('error', "Tidak bisa beralih ke plan yang lebih rendah ({$newPlan->name}). Plan aktif Anda ({$activePlan->name}) memiliki tingkat lebih tinggi. Silakan tunggu hingga masa berlangganan berakhir atau batalkan terlebih dahulu.");
-            }
+        if ($activeSubscription && $activeSubscription->plan_slug !== 'free' && $newPlan->slug !== $activeSubscription->plan_slug) {
+            return back()->with('error', "Tidak bisa ganti plan saat subscription aktif. Hubungi admin via Telegram untuk bantuan ganti plan.");
         }
 
-        // Free plan doesn't need payment
+        // Free plan doesn't need payment — but block if active paid subscription
         if ($newPlan->slug === 'free') {
+            if ($activeSubscription && $activeSubscription->plan_slug !== 'free') {
+                return back()->with('error', "Tidak bisa ganti ke plan FREE saat subscription aktif. Hubungi admin via Telegram untuk bantuan.");
+            }
             $user->subscribeTo('free');
             return redirect()->route('subscriptions.index')
                 ->with('success', 'Berhasil beralih ke plan FREE.');
