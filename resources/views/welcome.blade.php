@@ -3,8 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AIMurah - Akses {{ $starModelDisplay }} Gratis Selamanya</title>
-    <meta name="description" content="Daftar gratis, langsung akses {{ $starModelDisplay }} selamanya. Tanpa kartu kredit, tanpa trial period. Platform AI API proxy termurah di Indonesia — Cursor, VS Code, Kilo Code compatible.">
+    <title>AIMurah - 1 Billion Token Gratis {{ $starModelDisplay }} 🎉</title>
+    <meta name="description" content="Campaign 1 Billion Token Gratis {{ $starModelDisplay }}! Daftar dengan Google, langsung pakai. Tanpa kartu kredit. Platform AI API proxy termurah di Indonesia — Cursor, VS Code, Kilo Code compatible.">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:300,400,500,600,700,800&display=swap" rel="stylesheet" />
@@ -243,17 +243,17 @@
         .success-state { text-align: center; padding: 16px 0; }
         .success-icon { width: 56px; height: 56px; background: rgba(22,163,106,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
         .success-icon svg { width: 28px; height: 28px; color: #22c55e; }
-        /* WhatsApp Bubble */
-        .wa-bubble { position: fixed; bottom: 24px; right: 24px; z-index: 150; width: 56px; height: 56px; background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(37,211,102,0.4); cursor: pointer; transition: all 0.3s ease; text-decoration: none; }
-        .wa-bubble:hover { transform: scale(1.1); box-shadow: 0 6px 20px rgba(37,211,102,0.5); }
-        .wa-bubble:active { transform: scale(0.95); }
-        .wa-bubble svg { width: 28px; height: 28px; fill: #fff; }
-        .wa-tooltip { position: absolute; right: 68px; bottom: 50%; transform: translateY(50%); background: var(--color-surface); color: var(--color-text); font-size: 13px; font-weight: 500; padding: 8px 14px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s; border: 1px solid var(--color-border); }
-        .wa-bubble:hover .wa-tooltip { opacity: 1; }
+        /* Telegram Bubble */
+        .tg-bubble { position: fixed; bottom: 24px; right: 24px; z-index: 150; width: 56px; height: 56px; background: #2AABEE; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(42,171,238,0.4); cursor: pointer; transition: all 0.3s ease; text-decoration: none; }
+        .tg-bubble:hover { transform: scale(1.1); box-shadow: 0 6px 20px rgba(42,171,238,0.5); }
+        .tg-bubble:active { transform: scale(0.95); }
+        .tg-bubble svg { width: 28px; height: 28px; fill: #fff; }
+        .tg-tooltip { position: absolute; right: 68px; bottom: 50%; transform: translateY(50%); background: var(--color-surface); color: var(--color-text); font-size: 13px; font-weight: 500; padding: 8px 14px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s; border: 1px solid var(--color-border); }
+        .tg-bubble:hover .tg-tooltip { opacity: 1; }
         @media (max-width: 640px) {
-            .wa-bubble { width: 48px; height: 48px; bottom: 16px; right: 16px; }
-            .wa-bubble svg { width: 24px; height: 24px; }
-            .wa-tooltip { display: none; }
+            .tg-bubble { width: 48px; height: 48px; bottom: 16px; right: 16px; }
+            .tg-bubble svg { width: 24px; height: 24px; }
+            .tg-tooltip { display: none; }
         }
         /* Spinner */
         .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 0.6s linear infinite; }
@@ -283,7 +283,7 @@
                     <a href="{{ route('dashboard') }}" class="nav-link">Dashboard</a>
                 @else
                     <a href="{{ route('login') }}" class="nav-link">Login</a>
-                    <button @click="openModal()" class="btn btn-accent" style="padding: 8px 18px; font-size: 14px; border-radius: 6px;">Daftar Gratis</button>
+                    <button @click="openModal()" class="btn btn-accent" style="padding: 8px 18px; font-size: 14px; border-radius: 6px;">Klaim Token Gratis</button>
                 @endauth
             </div>
         </div>
@@ -310,22 +310,23 @@
         <div class="container hero-content">
             <div class="hero-badge">
                 <span class="hero-badge-dot"></span>
-                AI Proxy Termurah di Indonesia
+                🔥 Campaign 1 Billion Token Gratis
             </div>
 
             <h1 class="heading-display" style="margin: 0 0 20px;">
+                <span style="color: var(--color-text);">1 Billion Token</span><br>
                 <span class="hero-gradient-text">{{ $starModelDisplay }}</span><br>
-                <span style="color: var(--color-text);">Gratis Selamanya</span>
+                <span style="color: var(--color-text); font-size: 0.7em;">Gratis. Tinggal Daftar.</span>
             </h1>
 
             <p class="body-lg" style="max-width: 560px; margin: 0 auto 36px; font-size: 18px;">
-                Akses {{ $totalModels }}+ model AI premium — Claude, GPT, Gemini — langsung dari Cursor, VS Code, atau tool favorit Anda. Tanpa kartu kredit.
+                Login dengan Google, langsung dapat akses {{ $starModelDisplay }} dan {{ $totalModels }}+ model AI premium lainnya. Tanpa kartu kredit, tanpa ribet.
             </p>
 
             <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;" class="hero-buttons">
                 <button @click="openModal()" class="btn btn-accent" style="padding: 14px 32px; font-size: 16px; gap: 8px;">
                     <i data-lucide="sparkles" style="width: 20px; height: 20px;"></i>
-                    Mulai Gratis Sekarang
+                    Klaim Token Gratis
                 </button>
                 <a href="#pricing" class="btn btn-outline" style="gap: 8px;">
                     <i data-lucide="tag" style="width: 18px; height: 18px;"></i>
@@ -577,11 +578,14 @@
 
             <!-- Daily Plans -->
             <div x-show="tab === 'daily'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
-                <div style="max-width: 400px; margin: 0 auto;">
-                    @foreach($dailyPlans as $plan)
-                        <div class="pricing-card featured">
-                            <p class="mono-label" style="margin: 0 0 16px;">PAKET {{ strtoupper($plan->name) }}</p>
-                            <p style="font-size: 14px; color: var(--color-muted); margin: 0 0 16px; line-height: 1.4;">Unlimited Request, Max 100M Token</p>
+                <div class="grid-daily" style="max-width: 1060px; margin: 0 auto; display: grid; gap: 24px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+                    @foreach($dailyPlans->sortByDesc('is_popular') as $plan)
+                        <div class="pricing-card {{ $plan->is_popular ? 'featured' : '' }}">
+                            @if($plan->is_popular)
+                                <span class="badge-popular">⭐ PALING POPULER</span>
+                            @endif
+                            <p class="mono-label" style="margin: 0 0 16px; color: {{ $plan->is_popular ? 'var(--color-accent)' : 'var(--color-muted)' }};">PAKET {{ strtoupper($plan->name) }}</p>
+                            <p style="font-size: 14px; color: var(--color-muted); margin: 0 0 16px; line-height: 1.4;">Unlimited Request, Max {{ $plan->max_token_usage ? number_format($plan->max_token_usage / 1000000) : '∞' }}M Token</p>
 
                             <div class="pricing-amount" style="margin: 0 0 4px;">{{ $plan->formatted_price }}</div>
                             <p style="font-size: 14px; color: var(--color-muted); margin: 0 0 24px;">per hari, IDR</p>
@@ -598,7 +602,7 @@
                             </div>
 
                             @if($plan->features && count($plan->features) > 0)
-                                <ul style="list-style: none; padding: 0; margin: 0;">
+                                <ul style="list-style: none; padding: 0; margin: 0; flex: 1;">
                                     @foreach($plan->features as $feature)
                                         <li style="display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; font-size: 14px; color: var(--color-text); line-height: 1.4;">
                                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff5600" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px;"><path d="M20 6 9 17l-5-5"/></svg>
@@ -666,10 +670,10 @@
     <section class="section-sm" id="section-cta" style="position: relative; overflow: hidden; text-align: center; border-top: 1px solid var(--color-border); background: linear-gradient(180deg, var(--color-surface) 0%, #0d0d14 100%);">
         <canvas class="section-dot-grid" id="dots-cta"></canvas>
         <div class="container" style="position: relative; z-index: 1;">
-            <h2 class="heading-sub" style="color: var(--color-text); margin: 0 0 16px;">Siap mulai?</h2>
-            <p style="font-size: 18px; color: var(--color-muted); margin: 0 0 32px;">Daftar sekarang dan mulai gunakan AI premium gratis.</p>
+            <h2 class="heading-sub" style="color: var(--color-text); margin: 0 0 16px;">Jangan sampai kehabisan!</h2>
+            <p style="font-size: 18px; color: var(--color-muted); margin: 0 0 32px;">Klaim bagian Anda dari 1 Billion Token gratis {{ $starModelDisplay }}. Cukup login dengan Google.</p>
             <button @click="openModal()" class="btn btn-accent" style="padding: 16px 40px; font-size: 17px; gap: 10px;">
-                Daftar Gratis Sekarang
+                Klaim Token Gratis Sekarang
                 <i data-lucide="arrow-right" style="width: 20px; height: 20px;"></i>
             </button>
         </div>
@@ -689,8 +693,8 @@
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ff5600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                             <span style="font-size: 16px; font-weight: 600; color: var(--color-text);">AIMurah</span>
                         </div>
-                        <h3 style="font-size: 22px; font-weight: 600; color: var(--color-text); letter-spacing: -0.5px; margin: 0 0 6px;">Daftar Gratis</h3>
-                        <p style="font-size: 14px; color: var(--color-muted); margin: 0; line-height: 1.5;">Buat akun dalam 1 klik. Langsung dapat akses API + free credit.</p>
+                        <h3 style="font-size: 22px; font-weight: 600; color: var(--color-text); letter-spacing: -0.5px; margin: 0 0 6px;">Klaim 1 Billion Token Gratis</h3>
+                        <p style="font-size: 14px; color: var(--color-muted); margin: 0; line-height: 1.5;">Daftar dalam 1 klik dengan Google. Langsung dapat akses {{ $starModelDisplay }} gratis.</p>
                     </div>
                     <div class="modal-body">
                         <!-- Google Sign In (Primary) -->
@@ -760,10 +764,10 @@
         </div>
     </template>
 
-    <!-- WhatsApp Floating Bubble -->
-    <a href="https://wa.me/6285111201722" target="_blank" rel="noopener noreferrer" class="wa-bubble" aria-label="Chat via WhatsApp">
-        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-        <span class="wa-tooltip">Chat via WhatsApp</span>
+    <!-- Telegram Floating Bubble -->
+    <a href="https://t.me/+P1jSmpeMhmcyMTQ9" target="_blank" rel="noopener noreferrer" class="tg-bubble" aria-label="Join Telegram Group">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12.056 0h-.112Zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635Z"/></svg>
+        <span class="tg-tooltip">Join Telegram Group</span>
     </a>
 
     <!-- Footer -->
@@ -777,10 +781,13 @@
                     </p>
                     <p style="font-size: 14px; margin: 0;">Akses AI Premium, Harga Terjangkau</p>
                 </div>
-                <div style="display: flex; gap: 24px; font-size: 14px;">
+                <div style="display: flex; gap: 24px; flex-wrap: wrap; font-size: 14px;">
                     <a href="{{ route('login') }}">Login</a>
                     <a href="#" @click.prevent="openModal()">Register</a>
                     <a href="#pricing">Pricing</a>
+                    <a href="{{ route('legal.terms') }}">Ketentuan Layanan</a>
+                    <a href="{{ route('legal.privacy') }}">Kebijakan Privasi</a>
+                    <a href="{{ route('legal.donation') }}">Ketentuan Donasi</a>
                 </div>
             </div>
             <div style="margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--color-border); text-align: center; font-size: 13px;">

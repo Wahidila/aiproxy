@@ -640,6 +640,270 @@
                 </div>
             </div>
 
+            {{-- Playground --}}
+            <div class="bg-surface border border-oat rounded-card" x-data="playground()" x-cloak>
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-5">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="terminal" class="w-5 h-5 text-off-black"></i>
+                            <h3 class="text-lg font-semibold text-off-black tracking-sub">Playground</h3>
+                        </div>
+                        <span class="text-xs text-muted">Test API langsung dari browser</span>
+                    </div>
+
+                    @if($apiKeys->isEmpty())
+                        <div class="py-8 text-center">
+                            <svg class="w-10 h-10 mx-auto mb-3" style="color: #dedbd6;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                            </svg>
+                            <p class="text-sm" style="color: #7b7b78;">Anda belum memiliki API key aktif.</p>
+                            <a href="{{ route('api-keys.index') }}" class="inline-block mt-3 px-4 py-2 text-sm font-medium text-white rounded-btn transition-transform hover:scale-110 active:scale-95" style="background-color: #111111;">
+                                Buat API Key
+                            </a>
+                        </div>
+                    @else
+                        {{-- Controls --}}
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                            {{-- API Key Selector --}}
+                            <div>
+                                <label class="block text-xs font-medium text-muted uppercase tracking-wide mb-1.5">API Key</label>
+                                <select x-model="selectedKey" class="w-full px-3 py-2 text-sm border rounded-btn focus:outline-none focus:ring-1" style="border-color: #dedbd6; color: #111111; background-color: #ffffff;" onfocus="this.style.borderColor='#ff5600'; this.style.boxShadow='0 0 0 1px #ff5600';" onblur="this.style.borderColor='#dedbd6'; this.style.boxShadow='none';">
+                                    @foreach($apiKeys as $key)
+                                        <option value="{{ $key->key }}">{{ $key->name }} ({{ $key->tier }})</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            {{-- Model Selector --}}
+                            <div>
+                                <label class="block text-xs font-medium text-muted uppercase tracking-wide mb-1.5">Model</label>
+                                <select x-model="selectedModel" class="w-full px-3 py-2 text-sm border rounded-btn focus:outline-none focus:ring-1" style="border-color: #dedbd6; color: #111111; background-color: #ffffff;" onfocus="this.style.borderColor='#ff5600'; this.style.boxShadow='0 0 0 1px #ff5600';" onblur="this.style.borderColor='#dedbd6'; this.style.boxShadow='none';">
+                                    @if($freeModels->isNotEmpty())
+                                        <optgroup label="Free Tier">
+                                            @foreach($freeModels as $model)
+                                                <option value="{{ $model->model_id }}">{{ $model->model_name }}</option>
+                                            @endforeach
+                                        </optgroup>
+                                    @endif
+                                    @if($paidModels->isNotEmpty())
+                                        <optgroup label="Premium">
+                                            @foreach($paidModels as $model)
+                                                <option value="{{ $model->model_id }}">{{ $model->model_name }}</option>
+                                            @endforeach
+                                        </optgroup>
+                                    @endif
+                                </select>
+                            </div>
+                        </div>
+
+                        {{-- Quick Prompts --}}
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="text-xs text-muted self-center mr-1">Coba:</span>
+                            <button type="button" @click="prompt = 'Halo, siapa kamu?'" class="border rounded-btn px-3 py-1 text-sm transition-all hover:scale-110 active:scale-95" style="border-color: #dedbd6; color: #111111;" onmouseenter="this.style.borderColor='#111111'" onmouseleave="this.style.borderColor='#dedbd6'">
+                                Halo, siapa kamu?
+                            </button>
+                            <button type="button" @click="prompt = 'Jelaskan AI dalam 1 kalimat'" class="border rounded-btn px-3 py-1 text-sm transition-all hover:scale-110 active:scale-95" style="border-color: #dedbd6; color: #111111;" onmouseenter="this.style.borderColor='#111111'" onmouseleave="this.style.borderColor='#dedbd6'">
+                                Jelaskan AI dalam 1 kalimat
+                            </button>
+                            <button type="button" @click="prompt = 'Tulis puisi pendek tentang coding'" class="border rounded-btn px-3 py-1 text-sm transition-all hover:scale-110 active:scale-95" style="border-color: #dedbd6; color: #111111;" onmouseenter="this.style.borderColor='#111111'" onmouseleave="this.style.borderColor='#dedbd6'">
+                                Tulis puisi pendek tentang coding
+                            </button>
+                        </div>
+
+                        {{-- Prompt Input --}}
+                        <div class="mb-4">
+                            <textarea x-model="prompt" rows="3" placeholder="Ketik pesan Anda di sini..." class="w-full px-4 py-3 text-sm border rounded-btn resize-y focus:outline-none focus:ring-1" style="border-color: #dedbd6; color: #111111; background-color: #ffffff;" onfocus="this.style.borderColor='#ff5600'; this.style.boxShadow='0 0 0 1px #ff5600';" onblur="this.style.borderColor='#dedbd6'; this.style.boxShadow='none';" @keydown.ctrl.enter="sendMessage()"></textarea>
+                            <p class="text-xs mt-1" style="color: #7b7b78;">Ctrl+Enter untuk mengirim</p>
+                        </div>
+
+                        {{-- Send Button --}}
+                        <div class="flex items-center gap-3 mb-4">
+                            <button type="button" @click="sendMessage()" :disabled="isLoading || !prompt.trim()" class="px-5 py-2 text-sm font-medium text-white rounded-btn transition-transform hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100" style="background-color: #111111;">
+                                <span x-show="!isLoading">Kirim</span>
+                                <span x-show="isLoading" class="inline-flex items-center gap-2">
+                                    <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Streaming...
+                                </span>
+                            </button>
+                            <button type="button" x-show="isLoading" @click="abortStream()" class="px-4 py-2 text-sm font-medium border rounded-btn transition-transform hover:scale-110 active:scale-95" style="border-color: #c41c1c; color: #c41c1c;">
+                                Stop
+                            </button>
+                            <button type="button" x-show="response || error" @click="clearResponse()" class="px-4 py-2 text-sm font-medium border rounded-btn transition-transform hover:scale-110 active:scale-95" style="border-color: #dedbd6; color: #7b7b78;">
+                                Clear
+                            </button>
+                        </div>
+
+                        {{-- Error Display --}}
+                        <div x-show="error" x-cloak class="mb-4 p-3 rounded-btn text-sm" style="background-color: #fef2f2; border: 1px solid #fecaca; color: #991b1b;">
+                            <span x-text="error"></span>
+                        </div>
+
+                        {{-- Response Area --}}
+                        <div x-show="response || isLoading" x-cloak>
+                            <div class="rounded-card p-4 overflow-auto" style="background-color: #111111; color: #ffffff; max-height: 400px; font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace; font-size: 13px; line-height: 1.6;">
+                                <pre class="whitespace-pre-wrap break-words m-0" x-text="response || (isLoading ? '▊' : '')"></pre>
+                            </div>
+
+                            {{-- Stats --}}
+                            <div x-show="tokenInfo && !isLoading" x-cloak class="mt-3 flex flex-wrap items-center gap-4 text-xs" style="color: #7b7b78;">
+                                <span x-show="tokenInfo?.model">
+                                    Model: <span class="font-medium text-off-black" x-text="tokenInfo?.model"></span>
+                                </span>
+                                <span x-show="responseTime">
+                                    Response: <span class="font-medium text-off-black" x-text="responseTime + ' ms'"></span>
+                                </span>
+                                <span x-show="tokenInfo?.usage?.prompt_tokens">
+                                    Input: <span class="font-medium text-off-black" x-text="tokenInfo?.usage?.prompt_tokens?.toLocaleString()"></span> tokens
+                                </span>
+                                <span x-show="tokenInfo?.usage?.completion_tokens">
+                                    Output: <span class="font-medium text-off-black" x-text="tokenInfo?.usage?.completion_tokens?.toLocaleString()"></span> tokens
+                                </span>
+                                <span x-show="tokenInfo?.usage?.total_tokens">
+                                    Total: <span class="font-medium text-off-black" x-text="tokenInfo?.usage?.total_tokens?.toLocaleString()"></span> tokens
+                                </span>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <script>
+                function playground() {
+                    return {
+                        selectedKey: '{{ $apiKeys->first()?->key ?? '' }}',
+                        selectedModel: '{{ $freeModels->first()?->model_id ?? $paidModels->first()?->model_id ?? 'claude-sonnet-4.5' }}',
+                        prompt: '',
+                        response: '',
+                        isLoading: false,
+                        tokenInfo: null,
+                        responseTime: null,
+                        error: null,
+                        abortController: null,
+
+                        async sendMessage() {
+                            if (!this.prompt.trim() || this.isLoading) return;
+                            if (!this.selectedKey) {
+                                this.error = 'Pilih API key terlebih dahulu.';
+                                return;
+                            }
+
+                            this.response = '';
+                            this.error = null;
+                            this.tokenInfo = null;
+                            this.responseTime = null;
+                            this.isLoading = true;
+
+                            const startTime = performance.now();
+                            this.abortController = new AbortController();
+
+                            try {
+                                const res = await fetch('{{ url("/api/v1") }}/chat/completions', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Authorization': 'Bearer ' + this.selectedKey,
+                                        'Content-Type': 'application/json',
+                                        'Accept': 'text/event-stream',
+                                    },
+                                    body: JSON.stringify({
+                                        model: this.selectedModel,
+                                        messages: [{ role: 'user', content: this.prompt }],
+                                        stream: true,
+                                    }),
+                                    signal: this.abortController.signal,
+                                });
+
+                                if (!res.ok) {
+                                    const errBody = await res.text();
+                                    let errMsg = `HTTP ${res.status}: `;
+                                    try {
+                                        const errJson = JSON.parse(errBody);
+                                        errMsg += errJson.error?.message || errJson.message || errBody;
+                                    } catch {
+                                        errMsg += errBody;
+                                    }
+                                    this.error = errMsg;
+                                    this.isLoading = false;
+                                    return;
+                                }
+
+                                const reader = res.body.getReader();
+                                const decoder = new TextDecoder();
+                                let buffer = '';
+
+                                while (true) {
+                                    const { done, value } = await reader.read();
+                                    if (done) break;
+
+                                    buffer += decoder.decode(value, { stream: true });
+                                    const lines = buffer.split('\n');
+                                    buffer = lines.pop();
+
+                                    for (const line of lines) {
+                                        const trimmed = line.trim();
+                                        if (!trimmed || trimmed.startsWith(':')) continue;
+
+                                        if (trimmed === 'data: [DONE]') {
+                                            this.responseTime = Math.round(performance.now() - startTime);
+                                            this.isLoading = false;
+                                            return;
+                                        }
+
+                                        if (trimmed.startsWith('data: ')) {
+                                            try {
+                                                const json = JSON.parse(trimmed.slice(6));
+                                                const delta = json.choices?.[0]?.delta?.content;
+                                                if (delta) {
+                                                    this.response += delta;
+                                                }
+                                                // Capture usage info from final chunk
+                                                if (json.usage) {
+                                                    this.tokenInfo = { model: json.model, usage: json.usage };
+                                                }
+                                                if (json.model && !this.tokenInfo?.model) {
+                                                    this.tokenInfo = { ...this.tokenInfo, model: json.model };
+                                                }
+                                            } catch (e) {
+                                                // Skip malformed JSON
+                                            }
+                                        }
+                                    }
+                                }
+
+                                this.responseTime = Math.round(performance.now() - startTime);
+                            } catch (e) {
+                                if (e.name === 'AbortError') {
+                                    // User cancelled
+                                } else {
+                                    this.error = 'Gagal menghubungi API: ' + e.message;
+                                }
+                            } finally {
+                                this.isLoading = false;
+                                this.abortController = null;
+                            }
+                        },
+
+                        abortStream() {
+                            if (this.abortController) {
+                                this.abortController.abort();
+                                this.abortController = null;
+                            }
+                            this.isLoading = false;
+                            this.responseTime = Math.round(performance.now() - (this._startTime || performance.now()));
+                        },
+
+                        clearResponse() {
+                            this.response = '';
+                            this.error = null;
+                            this.tokenInfo = null;
+                            this.responseTime = null;
+                        }
+                    };
+                }
+            </script>
+
         </div>
     </div>
 </x-app-layout>

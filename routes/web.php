@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\BroadcastNotificationController as AdminBroadcastNotificationController;
 use App\Http\Controllers\Admin\SubscriptionController as AdminSubscriptionController;
 use App\Http\Controllers\Admin\SubscriptionPlanController as AdminSubscriptionPlanController;
+use App\Http\Controllers\Admin\ModelLimitController as AdminModelLimitController;
 use App\Http\Controllers\Admin\SupportTicketController as AdminSupportTicketController;
 use App\Http\Controllers\NotificationDismissalController;
 use App\Http\Controllers\SupportTicketController;
@@ -51,6 +52,11 @@ Route::get('/', function () {
 
 // Public pricing page
 Route::get('/pricing', [PricingController::class, 'index'])->name('pricing');
+
+// Legal pages
+Route::view('/terms', 'legal.terms')->name('legal.terms');
+Route::view('/privacy', 'legal.privacy')->name('legal.privacy');
+Route::view('/donation-policy', 'legal.donation')->name('legal.donation');
 
 // Public trial request (no auth required)
 Route::post('/trial-request', [TrialRequestController::class, 'store'])
@@ -136,6 +142,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/donations/{donation}/reject', [AdminDonationController::class, 'reject'])->name('donations.reject');
     Route::get('/donations/{donation}/proof', [AdminDonationController::class, 'showProof'])->name('donations.proof');
 
+    // Model Daily Limits (Emergency Rate Limiter)
+    Route::get('/model-limits', [AdminModelLimitController::class, 'index'])->name('model-limits.index');
+    Route::post('/model-limits', [AdminModelLimitController::class, 'update'])->name('model-limits.update');
+
     // Model Pricing
     Route::get('/model-pricing', [AdminModelPricingController::class, 'index'])->name('model-pricing.index');
     Route::get('/model-pricing/check-status', [AdminModelPricingController::class, 'checkStatus'])->name('model-pricing.check-status');
@@ -167,6 +177,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Subscription Management
     Route::get('/subscriptions', [AdminSubscriptionController::class, 'index'])->name('subscriptions.index');
+    Route::get('/subscriptions/{user}', [AdminSubscriptionController::class, 'show'])->name('subscriptions.show');
     Route::post('/subscriptions/assign', [AdminSubscriptionController::class, 'assign'])->name('subscriptions.assign');
     Route::post('/subscriptions/{subscription}/cancel', [AdminSubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
 

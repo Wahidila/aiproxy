@@ -193,17 +193,18 @@
                                     <td class="px-3 py-3 text-sm text-off-black text-right">{{ number_format($sub->daily_requests_used ?? 0) }}</td>
                                     <td class="px-3 py-3 text-sm text-off-black text-right">{{ number_format($sub->token_usage_total ?? 0) }}</td>
                                     <td class="px-3 py-3 text-center">
-                                        @if($sub->status === 'active' && $sub->plan_slug !== 'free')
-                                            <form action="{{ route('admin.subscriptions.cancel', $sub) }}" method="POST" class="inline"
-                                                onsubmit="return confirm('Cancel subscription {{ $sub->user->email ?? '' }}?')">
-                                                @csrf
-                                                <button type="submit" class="text-red-600 hover:text-red-800 text-sm font-medium">Cancel</button>
-                                            </form>
-                                        @elseif($sub->status === 'active' && $sub->plan_slug === 'free')
-                                            <span class="text-xs text-muted">Free plan</span>
-                                        @else
-                                            <span class="text-xs text-muted">—</span>
-                                        @endif
+                                        <div class="flex items-center justify-center space-x-2">
+                                            <a href="{{ route('admin.subscriptions.show', $sub->user_id) }}" class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-btn border border-oat hover:bg-canvas transition text-off-black">
+                                                Detail
+                                            </a>
+                                            @if($sub->status === 'active' && $sub->plan_slug !== 'free')
+                                                <form action="{{ route('admin.subscriptions.cancel', $sub) }}" method="POST" class="inline"
+                                                    onsubmit="return confirm('Cancel subscription {{ $sub->user->email ?? '' }}?')">
+                                                    @csrf
+                                                    <button type="submit" class="text-red-600 hover:text-red-800 text-xs font-medium">Cancel</button>
+                                                </form>
+                                            @endif
+                                        </div>
                                     </td>
                                 </tr>
                                 @empty

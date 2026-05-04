@@ -17,6 +17,7 @@ class ModelPricing extends Model
         'discount_percent',
         'is_free_tier',
         'is_active',
+        'max_context_tokens',
     ];
 
     protected $casts = [
@@ -25,6 +26,7 @@ class ModelPricing extends Model
         'discount_percent' => 'integer',
         'is_free_tier' => 'boolean',
         'is_active' => 'boolean',
+        'max_context_tokens' => 'integer',
     ];
 
     /**

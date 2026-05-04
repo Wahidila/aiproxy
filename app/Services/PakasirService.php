@@ -58,7 +58,14 @@ class PakasirService
             ]);
 
             if ($response->successful()) {
-                return $response->json() ?? [];
+                $data = $response->json() ?? [];
+
+                // Pakasir API wraps response in 'transaction' key — normalize to flat structure
+                if (isset($data['transaction']) && is_array($data['transaction'])) {
+                    return $data['transaction'];
+                }
+
+                return $data;
             }
 
             Log::warning('Pakasir verifyTransaction failed', [

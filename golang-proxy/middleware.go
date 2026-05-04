@@ -208,6 +208,55 @@ func formatLimit(limit *int) string {
 	return fmt.Sprintf("%d", *limit)
 }
 
+// ModelDailyLimitMiddleware enforces per-user daily request limits per model.
+// This runs AFTER AuthMiddleware so user context is available.
+func ModelDailyLimitMiddleware(db *Database, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		model := extractModelFromRequest(r)
+		if model == "" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		setting, err := db.GetModelDailyLimitSetting(model)
+		if err != nil {
+			log.Printf("MODEL_DAILY_LIMIT: error fetching setting for %s: %v", model, err)
+			// Don't block on DB error — let request through
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		if setting == nil || !setting.Enabled || setting.Limit <= 0 {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Get user from context (set by AuthMiddleware)
+		apiKey := r.Context().Value(ctxApiKey).(*ApiKeyInfo)
+
+		// Count today's requests for this model for THIS user
+		count, err := db.CountTodayModelRequestsPerUser(model, apiKey.UserID)
+		if err != nil {
+			log.Printf("MODEL_DAILY_LIMIT: error counting requests for user %d model %s: %v", apiKey.UserID, model, err)
+			// Don't block on DB error — let request through
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		if count >= setting.Limit {
+			log.Printf("MODEL_DAILY_LIMIT: limit reached for user %d model %s (%d/%d)", apiKey.UserID, model, count, setting.Limit)
+			writeError(w, 429, "model_daily_limit_exceeded",
+				fmt.Sprintf("Batas harian Anda untuk model %s telah tercapai (%d/%d request hari ini). Silakan coba lagi besok atau gunakan model lain.",
+					model, count, setting.Limit),
+				"rate_limit_error")
+			return
+		}
+
+		log.Printf("MODEL_DAILY_LIMIT: OK user=%d model=%s count=%d/%d", apiKey.UserID, model, count, setting.Limit)
+		next.ServeHTTP(w, r)
+	})
+}
+
 // ModelRestrictionMiddleware checks model access based on API key tier and subscription plan
 func ModelRestrictionMiddleware(db *Database, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

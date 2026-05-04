@@ -391,6 +391,89 @@ func (d *Database) IncrementTokenUsageTotal(userID int64, tokens int) error {
 	return err
 }
 
+// ── Model Daily Limit (global, platform-wide) ─────────────────────
+
+// ModelDailyLimitSetting holds the parsed setting for a model's daily limit
+type ModelDailyLimitSetting struct {
+	Enabled bool `json:"enabled"`
+	Limit   int  `json:"limit"`
+}
+
+// modelDailyLimitCache caches model daily limit settings in memory
+type modelDailyLimitCache struct {
+	mu   sync.RWMutex
+	data map[string]*modelDailyLimitCacheEntry
+}
+
+type modelDailyLimitCacheEntry struct {
+	setting   *ModelDailyLimitSetting // nil means no setting found
+	fetchedAt time.Time
+}
+
+var mdlLimitCache = &modelDailyLimitCache{
+	data: make(map[string]*modelDailyLimitCacheEntry),
+}
+
+const modelDailyLimitCacheTTL = 60 * time.Second
+
+// GetModelDailyLimitSetting returns the daily limit setting for a model from the settings table.
+// Returns nil if no setting exists or if it's disabled.
+func (d *Database) GetModelDailyLimitSetting(modelID string) (*ModelDailyLimitSetting, error) {
+	// Check cache first
+	mdlLimitCache.mu.RLock()
+	if entry, ok := mdlLimitCache.data[modelID]; ok {
+		if time.Since(entry.fetchedAt) < modelDailyLimitCacheTTL {
+			mdlLimitCache.mu.RUnlock()
+			return entry.setting, nil
+		}
+	}
+	mdlLimitCache.mu.RUnlock()
+
+	// Cache miss or expired — query DB
+	key := "model_daily_limit:" + modelID
+	var value string
+	err := d.db.QueryRow("SELECT `value` FROM settings WHERE `key` = ? LIMIT 1", key).Scan(&value)
+	if err != nil {
+		// No setting found — cache as nil
+		mdlLimitCache.mu.Lock()
+		mdlLimitCache.data[modelID] = &modelDailyLimitCacheEntry{
+			setting:   nil,
+			fetchedAt: time.Now(),
+		}
+		mdlLimitCache.mu.Unlock()
+		return nil, nil
+	}
+
+	var setting ModelDailyLimitSetting
+	if err := json.Unmarshal([]byte(value), &setting); err != nil {
+		log.Printf("ERROR: failed to parse model_daily_limit setting for %s: %v", modelID, err)
+		return nil, nil
+	}
+
+	mdlLimitCache.mu.Lock()
+	mdlLimitCache.data[modelID] = &modelDailyLimitCacheEntry{
+		setting:   &setting,
+		fetchedAt: time.Now(),
+	}
+	mdlLimitCache.mu.Unlock()
+
+	return &setting, nil
+}
+
+// CountTodayModelRequestsPerUser counts today's requests for a specific model for a specific user.
+// Uses Asia/Jakarta timezone (WIB) since the DB stores times in WIB.
+func (d *Database) CountTodayModelRequestsPerUser(modelID string, userID int64) (int, error) {
+	var count int
+	err := d.db.QueryRow(
+		"SELECT COUNT(*) FROM token_usages WHERE model = ? AND user_id = ? AND DATE(created_at) = CURDATE()",
+		modelID, userID,
+	).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
 // GetExchangeRate returns USD to IDR rate from settings
 func (d *Database) GetExchangeRate() (float64, error) {
 	var value string

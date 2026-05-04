@@ -16,8 +16,8 @@ func main() {
 
 	// Load config
 	cfg := LoadConfig()
-	log.Printf("Config loaded: port=%s, db=%s@%s:%s/%s, enowxai=%s",
-		cfg.Port, cfg.DBUsername, cfg.DBHost, cfg.DBPort, cfg.DBDatabase, cfg.EnowxAIBaseURL)
+	log.Printf("Config loaded: port=%s, db=%s@%s:%s/%s, upstream=%s",
+		cfg.Port, cfg.DBUsername, cfg.DBHost, cfg.DBPort, cfg.DBDatabase, cfg.UpstreamBaseURL)
 
 	// Connect to database
 	db, err := NewDatabase(cfg)
@@ -60,10 +60,12 @@ func main() {
 	authRoutes.HandleFunc("/v1/responses", handlers.HandleResponses)
 	authRoutes.HandleFunc("/v1/models", handlers.HandleModels)
 
-	// Apply middleware chain: CORS -> Auth -> RateLimit -> ModelRestriction -> Handler
+	// Apply middleware chain: CORS -> Auth -> ModelDailyLimit -> RateLimit -> ModelRestriction -> Handler
 	authed := AuthMiddleware(db,
-		RateLimitMiddleware(db, rateLimiter, concurrentLimiter, dailyCounter,
-			ModelRestrictionMiddleware(db, authRoutes),
+		ModelDailyLimitMiddleware(db,
+			RateLimitMiddleware(db, rateLimiter, concurrentLimiter, dailyCounter,
+				ModelRestrictionMiddleware(db, authRoutes),
+			),
 		),
 	)
 	mux.Handle("/v1/chat/completions", authed)

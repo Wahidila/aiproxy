@@ -90,6 +90,15 @@
                                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                     @enderror
                                 </div>
+                                <div>
+                                    <label for="max_context_tokens" class="block text-sm font-medium text-off-black mb-1">Max Context Tokens</label>
+                                    <input type="number" name="max_context_tokens" id="max_context_tokens" min="1000" step="1"
+                                        placeholder="e.g. 200000"
+                                        class="w-full rounded-lg border-oat focus:border-fin-orange focus:ring-fin-orange">
+                                    @error('max_context_tokens')
+                                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
                                 <div class="flex items-end">
                                     <label class="flex items-center space-x-2">
                                         <input type="checkbox" name="is_free_tier" value="1"
@@ -182,6 +191,7 @@
                                     <th class="px-3 py-3 text-center text-xs font-medium text-muted uppercase">Discount</th>
                                     <th class="px-3 py-3 text-right text-xs font-medium text-muted uppercase">Input IDR (Net)</th>
                                     <th class="px-3 py-3 text-right text-xs font-medium text-muted uppercase">Output IDR (Net)</th>
+                                    <th class="px-3 py-3 text-center text-xs font-medium text-muted uppercase">Max Context</th>
                                     <th class="px-3 py-3 text-center text-xs font-medium text-muted uppercase">Free Tier</th>
                                     <th class="px-3 py-3 text-center text-xs font-medium text-muted uppercase">Active</th>
                                     <th class="px-3 py-3 text-center text-xs font-medium text-muted uppercase">Actions</th>
@@ -209,6 +219,17 @@
                                         </td>
                                         <td class="px-3 py-3 text-sm font-medium text-right {{ $model->discount_percent > 0 ? 'text-green-700' : 'text-off-black' }}">
                                             Rp {{ number_format($outputIdrNet, 0, ',', '.') }}
+                                        </td>
+                                        <td class="px-3 py-3 text-sm text-off-black text-center">
+                                            @if($model->max_context_tokens)
+                                                @if($model->max_context_tokens >= 1000000)
+                                                    {{ round($model->max_context_tokens / 1000000, 1) }}M
+                                                @else
+                                                    {{ round($model->max_context_tokens / 1000) }}K
+                                                @endif
+                                            @else
+                                                &infin;
+                                            @endif
                                         </td>
                                         <td class="px-3 py-3 text-center">
                                             @if($model->is_free_tier)
@@ -238,7 +259,7 @@
                                     </tr>
                                     {{-- Edit Row --}}
                                     <tr x-show="editing" x-cloak class="bg-fin-orange-light">
-                                        <td colspan="12" class="px-3 py-4">
+                                        <td colspan="13" class="px-3 py-4">
                                             <form action="{{ route('admin.model-pricing.update', $model) }}" method="POST">
                                                 @csrf
                                                 @method('PATCH')
@@ -263,6 +284,13 @@
                                                         <label class="block text-xs font-medium text-muted mb-1">Discount %</label>
                                                         <input type="number" name="discount_percent" min="0" max="100"
                                                             value="{{ $model->discount_percent }}"
+                                                            class="w-full text-sm rounded-lg border-oat focus:border-fin-orange focus:ring-fin-orange">
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-xs font-medium text-muted mb-1">Max Context</label>
+                                                        <input type="number" name="max_context_tokens" min="1000" step="1"
+                                                            value="{{ $model->max_context_tokens }}"
+                                                            placeholder="No limit"
                                                             class="w-full text-sm rounded-lg border-oat focus:border-fin-orange focus:ring-fin-orange">
                                                     </div>
                                                     <div class="flex items-center space-x-4 pb-1">
@@ -292,7 +320,7 @@
                                 </tbody>
                                 @empty
                                     <tr>
-                                        <td colspan="12" class="px-3 py-6 text-sm text-muted text-center">No models configured yet. Add your first model above.</td>
+                                        <td colspan="13" class="px-3 py-6 text-sm text-muted text-center">No models configured yet. Add your first model above.</td>
                                     </tr>
                                 @endforelse
                             </tbody>

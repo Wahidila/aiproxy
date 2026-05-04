@@ -82,6 +82,7 @@ class ModelPricingController extends Controller
             'output_price_usd' => 'required|numeric|min:0',
             'discount_percent' => 'required|integer|min:0|max:100',
             'is_free_tier' => 'boolean',
+            'max_context_tokens' => 'nullable|integer|min:1000',
         ]);
 
         ModelPricing::create([
@@ -92,6 +93,7 @@ class ModelPricingController extends Controller
             'discount_percent' => $request->discount_percent,
             'is_free_tier' => $request->boolean('is_free_tier'),
             'is_active' => true,
+            'max_context_tokens' => $request->max_context_tokens,
         ]);
 
         return redirect()->route('admin.model-pricing.index')
@@ -106,6 +108,7 @@ class ModelPricingController extends Controller
             'discount_percent' => 'required|integer|min:0|max:100',
             'is_free_tier' => 'boolean',
             'is_active' => 'boolean',
+            'max_context_tokens' => 'nullable|integer|min:1000',
         ]);
 
         $modelPricing->update([
@@ -114,6 +117,7 @@ class ModelPricingController extends Controller
             'discount_percent' => $request->discount_percent,
             'is_free_tier' => $request->boolean('is_free_tier'),
             'is_active' => $request->boolean('is_active'),
+            'max_context_tokens' => $request->max_context_tokens,
         ]);
 
         return redirect()->route('admin.model-pricing.index')

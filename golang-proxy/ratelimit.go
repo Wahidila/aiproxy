@@ -169,11 +169,8 @@ func NewDailyCounter(db *Database) *DailyCounter {
 // LoadOrIncrement loads the user's daily count from DB (if not cached),
 // checks the limit, and increments if allowed.
 // Returns (allowed, currentCount, limit).
+// Always tracks daily usage even for unlimited plans (for monitoring/dashboard).
 func (dc *DailyCounter) LoadOrIncrement(userID int64, limit *int, dbUsed int, dbResetAt *time.Time) (bool, int, int) {
-	if limit == nil {
-		return true, 0, 0 // unlimited
-	}
-
 	dc.mu.Lock()
 	state, ok := dc.users[userID]
 	if !ok {
@@ -201,11 +198,20 @@ func (dc *DailyCounter) LoadOrIncrement(userID int64, limit *int, dbUsed int, db
 		go dc.syncToDB(userID, 0, state.resetAt)
 	}
 
-	if state.count >= *limit {
+	// Always increment counter (for tracking/monitoring)
+	state.count++
+
+	// If unlimited, always allow
+	if limit == nil {
+		return true, state.count, 0
+	}
+
+	// Check if over limit
+	if state.count > *limit {
+		state.count-- // rollback increment
 		return false, state.count, *limit
 	}
 
-	state.count++
 	return true, state.count, *limit
 }
 

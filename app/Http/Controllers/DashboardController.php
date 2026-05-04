@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ApiKey;
 use App\Models\ModelPricing;
+use App\Models\Setting;
 use App\Models\TokenUsage;
 use App\Services\TokenTrackingService;
 use Carbon\Carbon;
@@ -154,7 +156,12 @@ class DashboardController extends Controller
         $activeSubscription = $user->activeSubscription();
         $activePlan = $user->getActivePlan();
 
-        return view('dashboard', compact('quota', 'stats', 'recentUsages', 'recentTransactions', 'showBalanceAlert', 'modelComparison', 'spendingForecast', 'activeSubscription', 'activePlan'));
+        // Playground data
+        $apiKeys = $user->apiKeys()->where('is_active', true)->latest()->get();
+        $freeModels = ModelPricing::where('is_active', true)->where('is_free_tier', true)->orderBy('model_name')->get();
+        $paidModels = ModelPricing::where('is_active', true)->where('is_free_tier', false)->orderBy('model_name')->get();
+
+        return view('dashboard', compact('quota', 'stats', 'recentUsages', 'recentTransactions', 'showBalanceAlert', 'modelComparison', 'spendingForecast', 'activeSubscription', 'activePlan', 'apiKeys', 'freeModels', 'paidModels'));
     }
 
     public function saveAlertSettings(Request $request)

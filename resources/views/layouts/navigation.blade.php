@@ -38,8 +38,14 @@
                         </span>
                     </x-nav-link>
                     @if(Auth::user()->isAdmin())
-                    <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.*') && !request()->routeIs('admin.broadcast-notifications.*') && !request()->routeIs('admin.support.*')" class="!text-fin-orange">
+                    <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.*') && !request()->routeIs('admin.broadcast-notifications.*') && !request()->routeIs('admin.support.*') && !request()->routeIs('admin.model-limits.*')" class="!text-fin-orange">
                         Admin
+                    </x-nav-link>
+                    <x-nav-link :href="route('admin.model-limits.index')" :active="request()->routeIs('admin.model-limits.*')" class="!text-red-600">
+                        <span class="flex items-center gap-1.5">
+                            <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i>
+                            Model Limits
+                        </span>
                     </x-nav-link>
                     <x-nav-link :href="route('admin.broadcast-notifications.index')" :active="request()->routeIs('admin.broadcast-notifications.*')" class="!text-fin-orange">
                         <span class="flex items-center gap-1.5">
@@ -133,8 +139,11 @@
                 Support
             </x-responsive-nav-link>
             @if(Auth::user()->isAdmin())
-            <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.*') && !request()->routeIs('admin.broadcast-notifications.*')">
+            <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.*') && !request()->routeIs('admin.broadcast-notifications.*') && !request()->routeIs('admin.model-limits.*')">
                 Admin Panel
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('admin.model-limits.index')" :active="request()->routeIs('admin.model-limits.*')">
+                Model Limits
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('admin.broadcast-notifications.index')" :active="request()->routeIs('admin.broadcast-notifications.*')">
                 Broadcast Notifications
